@@ -25,11 +25,12 @@
     </a>
     <div class="nav-links">
       <a href="#thesis">Thesis</a>
+      <a href="#maturity">Maturity</a>
       <a href="#kpi">KPI</a>
       <a href="#success">Success</a>
       <a href="#monitor">Monitor</a>
       <a href="#roadmap">Roadmap</a>
-      <a href="docs/PLAN.md" class="nav-cta">기획안 PDF →</a>
+      <a href="PLAN.md" class="nav-cta">기획안 전문 →</a>
     </div>
   </div>
 </nav>
@@ -120,14 +121,64 @@
   </div>
 </section>
 
-<!-- KPI -->
-<section id="kpi" class="section section-alt">
+<!-- Maturity Model -->
+<section id="maturity" class="section section-alt">
   <div class="section-head">
     <span class="section-num">02</span>
+    <span class="section-kicker">Maturity Model</span>
+  </div>
+
+  <h2 class="section-title">조직은 지금 <em>어디</em>에 서 있는가</h2>
+  <p class="section-lead">
+    AX의 성숙도는 다섯 단계로 나뉜다. 대부분의 조직은 Lv1—Lv2 사이에 머문다.
+    본 운영 체계는 Lv3 이상으로 올라가기 위한 골격이다.
+  </p>
+
+  <div class="maturity">
+    <div class="mt-row">
+      <div class="mt-lv">Lv1</div>
+      <div class="mt-name">탐색</div>
+      <div class="mt-desc">일부 사용자가 개인 도구로 사용. 조직 차원의 측정·운영 없음.</div>
+      <div class="mt-tags"><span>&lt; 10% coverage</span></div>
+    </div>
+    <div class="mt-row">
+      <div class="mt-lv">Lv2</div>
+      <div class="mt-name">시범</div>
+      <div class="mt-desc">특정 업무에 부분 도입. KPI 정의와 베이스라인 측정 시작.</div>
+      <div class="mt-tags"><span>10—30%</span><span>측정 시작</span></div>
+    </div>
+    <div class="mt-row mt-row-active">
+      <div class="mt-lv">Lv3</div>
+      <div class="mt-name">통합</div>
+      <div class="mt-desc">다수 프로세스에 운영 적용. 단위 비용 안정화. 본 체계의 도착점.</div>
+      <div class="mt-tags"><span>30—60% coverage</span><span>70%+ success</span></div>
+    </div>
+    <div class="mt-row">
+      <div class="mt-lv">Lv4</div>
+      <div class="mt-name">자율</div>
+      <div class="mt-desc">AI가 수행 주체, 인간은 감독자. 단위 비용 감소 추세.</div>
+      <div class="mt-tags"><span>60—80%</span><span>85%+ success</span></div>
+    </div>
+    <div class="mt-row">
+      <div class="mt-lv">Lv5</div>
+      <div class="mt-name">최적화</div>
+      <div class="mt-desc">자기개선 루프 작동. 비용과 품질 동시 개선.</div>
+      <div class="mt-tags"><span>&gt; 80%</span><span>95%+ success</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- KPI -->
+<section id="kpi" class="section">
+  <div class="section-head">
+    <span class="section-num">03</span>
     <span class="section-kicker">KPI Framework</span>
   </div>
 
   <h2 class="section-title">세 축, 열두 지표</h2>
+  <p class="section-lead">
+    KPI는 세 그룹으로 묶인다. 각 지표 옆의 라벨은 통합 단계(Lv3) 진입의 <strong>1차 목표치</strong>다.
+  </p>
 
   <div class="kpi-grid">
     <!-- Coverage -->
@@ -137,10 +188,10 @@
         <h3 class="kpi-col-title">얼마나 맡길 수 있는가</h3>
       </div>
       <ul class="kpi-list">
-        <li><span class="kpi-name">AI 수행 비율</span><span class="kpi-unit">%</span></li>
-        <li><span class="kpi-name">AI 자율 수행 시간</span><span class="kpi-unit">min</span></li>
-        <li><span class="kpi-name">개입 빈도</span><span class="kpi-unit">회/task</span></li>
-        <li><span class="kpi-name">세션당 토큰 비용</span><span class="kpi-unit">KRW</span></li>
+        <li><span class="kpi-name">AI 수행 비율</span><span class="kpi-target">≥ 40</span><span class="kpi-unit">%</span></li>
+        <li><span class="kpi-name">AI 자율 수행 시간</span><span class="kpi-target">≥ 30</span><span class="kpi-unit">min</span></li>
+        <li><span class="kpi-name">개입 빈도</span><span class="kpi-target">≤ 2</span><span class="kpi-unit">회/task</span></li>
+        <li><span class="kpi-name">세션당 토큰 비용</span><span class="kpi-target">추세 ↓</span><span class="kpi-unit">KRW</span></li>
       </ul>
     </div>
 
@@ -151,11 +202,11 @@
         <h3 class="kpi-col-title">얼마나 잘 해내는가</h3>
       </div>
       <ul class="kpi-list">
-        <li><span class="kpi-name">작업 성공률</span><span class="kpi-unit">%</span></li>
-        <li><span class="kpi-name">첫 시도 성공률</span><span class="kpi-unit">%</span></li>
-        <li><span class="kpi-name">재시도 횟수</span><span class="kpi-unit">회</span></li>
-        <li><span class="kpi-name">품질 등급 분포</span><span class="kpi-unit">%</span></li>
-        <li><span class="kpi-name">실패 회복률</span><span class="kpi-unit">%</span></li>
+        <li><span class="kpi-name">작업 성공률</span><span class="kpi-target">≥ 80</span><span class="kpi-unit">%</span></li>
+        <li><span class="kpi-name">첫 시도 성공률</span><span class="kpi-target">≥ 60</span><span class="kpi-unit">%</span></li>
+        <li><span class="kpi-name">재시도 횟수</span><span class="kpi-target">≤ 1.5</span><span class="kpi-unit">회</span></li>
+        <li><span class="kpi-name">품질 등급 분포</span><span class="kpi-target">우수+허용 ≥ 85</span><span class="kpi-unit">%</span></li>
+        <li><span class="kpi-name">실패 회복률</span><span class="kpi-target">≥ 70</span><span class="kpi-unit">%</span></li>
       </ul>
     </div>
 
@@ -166,9 +217,9 @@
         <h3 class="kpi-col-title">인간은 얼마나 감당하는가</h3>
       </div>
       <ul class="kpi-list">
-        <li><span class="kpi-name">동시 세션 처리 수</span><span class="kpi-unit">개/인</span></li>
-        <li><span class="kpi-name">개입 응답 시간</span><span class="kpi-unit">초</span></li>
-        <li><span class="kpi-name">피드백 효과도</span><span class="kpi-unit">Δ%</span></li>
+        <li><span class="kpi-name">동시 세션 처리 수</span><span class="kpi-target">≥ 5</span><span class="kpi-unit">개/인</span></li>
+        <li><span class="kpi-name">개입 응답 시간</span><span class="kpi-target">≤ 120</span><span class="kpi-unit">초</span></li>
+        <li><span class="kpi-name">피드백 효과도</span><span class="kpi-target">추세 관리</span><span class="kpi-unit">Δ%</span></li>
       </ul>
     </div>
   </div>
@@ -188,9 +239,9 @@
 </section>
 
 <!-- Success management -->
-<section id="success" class="section">
+<section id="success" class="section section-alt">
   <div class="section-head">
-    <span class="section-num">03</span>
+    <span class="section-num">04</span>
     <span class="section-kicker">Success Management</span>
   </div>
 
@@ -262,10 +313,104 @@
   </div>
 </section>
 
+<!-- Resource Model -->
+<section id="resource" class="section">
+  <div class="section-head">
+    <span class="section-num">05</span>
+    <span class="section-kicker">Resource Model</span>
+  </div>
+
+  <h2 class="section-title">백로그 → 인력·비용 <em>자동 산정</em></h2>
+  <p class="section-lead">
+    프로젝트 백로그를 입력하면 필요 인력과 비용이 즉시 계산된다.
+    성공률이 변할 때마다 재시도 보정으로 비용도 함께 갱신된다.
+  </p>
+
+  <div class="calc">
+    <div class="calc-inputs">
+      <div class="calc-head">Inputs · 6개월 가상 프로젝트</div>
+      <div class="calc-row">
+        <span class="calc-key">총 작업 수</span>
+        <span class="calc-val">1,200 건</span>
+      </div>
+      <div class="calc-row">
+        <span class="calc-key">평균 동시 세션 / 작업</span>
+        <span class="calc-val">1.5</span>
+      </div>
+      <div class="calc-row">
+        <span class="calc-key">1인당 동시 처리</span>
+        <span class="calc-val">5 세션</span>
+      </div>
+      <div class="calc-row">
+        <span class="calc-key">작업당 토큰 비용</span>
+        <span class="calc-val">₩ 8,000</span>
+      </div>
+      <div class="calc-row">
+        <span class="calc-key">시니어 인건비 / 월</span>
+        <span class="calc-val">₩ 8,000,000</span>
+      </div>
+    </div>
+
+    <div class="calc-output">
+      <div class="calc-head">Outputs</div>
+      <div class="calc-eq">
+        <span class="eq-label">세션 총량</span>
+        <span class="eq-formula">1,200 × 1.5</span>
+        <span class="eq-result">= 1,800 세션</span>
+      </div>
+      <div class="calc-eq">
+        <span class="eq-label">필요 인력</span>
+        <span class="eq-formula">1,800 ÷ 5 ÷ 6mo</span>
+        <span class="eq-result">≈ 3 명</span>
+      </div>
+      <div class="calc-eq">
+        <span class="eq-label">인건비</span>
+        <span class="eq-formula">3 × ₩8M × 6mo</span>
+        <span class="eq-result">= ₩ 144 M</span>
+      </div>
+      <div class="calc-eq">
+        <span class="eq-label">토큰 비용</span>
+        <span class="eq-formula">1,200 × ₩8k</span>
+        <span class="eq-result">= ₩ 9.6 M</span>
+      </div>
+      <div class="calc-eq calc-eq-total">
+        <span class="eq-label">총 비용</span>
+        <span class="eq-formula">@ success 100%</span>
+        <span class="eq-result">≈ ₩ 153.6 M</span>
+      </div>
+      <div class="calc-eq calc-eq-warn">
+        <span class="eq-label">@ success 70%</span>
+        <span class="eq-formula">재시도 × 1.4 보정</span>
+        <span class="eq-result">≈ ₩ 157.4 M</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="decision-grid">
+    <div class="dg-head">성공률 기반 <em>의사결정</em></div>
+    <div class="dg-row">
+      <div class="dg-decision">자동화 vs 인간 수행</div>
+      <div class="dg-basis">성공률 낮고 개선 어려우면 인간 유지</div>
+    </div>
+    <div class="dg-row">
+      <div class="dg-decision">휴먼 게이트 위치</div>
+      <div class="dg-basis">누적 성공률 급락 구간 앞에 배치</div>
+    </div>
+    <div class="dg-row">
+      <div class="dg-decision">세션 할당 우선순위</div>
+      <div class="dg-basis">성공률 낮은 작업은 시니어에 우선 배정</div>
+    </div>
+    <div class="dg-row">
+      <div class="dg-decision">작업 ROI</div>
+      <div class="dg-basis">성공률 × 가치 ÷ 토큰 비용</div>
+    </div>
+  </div>
+</section>
+
 <!-- Monitoring System Mockup -->
 <section id="monitor" class="section section-alt">
   <div class="section-head">
-    <span class="section-num">04</span>
+    <span class="section-num">06</span>
     <span class="section-kicker">Monitoring System · Mockup</span>
   </div>
 
@@ -603,7 +748,7 @@
 <!-- Roadmap -->
 <section id="roadmap" class="section">
   <div class="section-head">
-    <span class="section-num">05</span>
+    <span class="section-num">07</span>
     <span class="section-kicker">Roadmap</span>
   </div>
 
@@ -614,25 +759,66 @@
       <div class="rm-phase">Phase 01</div>
       <div class="rm-dur">M1—M2</div>
       <div class="rm-title">KPI 체계 수립</div>
-      <div class="rm-detail">KPI 정의서, 베이스라인 측정, 측정 도구 통합</div>
+      <div class="rm-detail">KPI 정의서, 베이스라인 측정 · 측정 가능 KPI ≥ 8개</div>
     </div>
     <div class="rm-row">
       <div class="rm-phase">Phase 02</div>
       <div class="rm-dur">M3—M4</div>
       <div class="rm-title">모니터링 MVP</div>
-      <div class="rm-detail">백로그 연동, 그래프 시각화 프로토타입, 4대 대시보드</div>
+      <div class="rm-detail">백로그 연동, 그래프 시각화 · 파일럿 1건 실시간 가시화</div>
     </div>
     <div class="rm-row">
       <div class="rm-phase">Phase 03</div>
       <div class="rm-dur">M5—M6</div>
       <div class="rm-title">성공률 개선 루프</div>
-      <div class="rm-detail">A/B 실험 플랫폼, 골든셋, 조직 지식베이스</div>
+      <div class="rm-detail">A/B 실험 플랫폼, 지식베이스 · DDEL 1회전 + 성공률 +10pt</div>
     </div>
     <div class="rm-row">
       <div class="rm-phase">Phase 04</div>
       <div class="rm-dur">M7—M9</div>
       <div class="rm-title">자동화 · 확산</div>
-      <div class="rm-detail">인력·비용 자동 산정, 파일럿 → 전사 확산</div>
+      <div class="rm-detail">인력·비용 자동 산정 · 3개 부서 적용, AX 지수 추세 보고</div>
+    </div>
+  </div>
+</section>
+
+<!-- Risks -->
+<section id="risks" class="section section-alt">
+  <div class="section-head">
+    <span class="section-num">08</span>
+    <span class="section-kicker">Risks &amp; Mitigation</span>
+  </div>
+
+  <h2 class="section-title">무엇이 잘못될 수 있는가</h2>
+  <p class="section-lead">
+    측정 체계와 운영 시스템 모두 다음 위험에 노출된다. 도입 전부터 완화 장치를 함께 설계한다.
+  </p>
+
+  <div class="risks">
+    <div class="risk-row">
+      <div class="risk-name">측정 데이터 신뢰성 부족</div>
+      <div class="risk-impact">잘못된 의사결정</div>
+      <div class="risk-mitig">자동 로깅 우선 · 인간 평가는 샘플링 + 이중 평가 캘리브레이션</div>
+    </div>
+    <div class="risk-row">
+      <div class="risk-name">평가 편향 (LLM-as-Judge)</div>
+      <div class="risk-impact">성공률 과대평가</div>
+      <div class="risk-mitig">인간 검수와 정기 캘리브레이션 · rubric 재학습</div>
+    </div>
+    <div class="risk-row">
+      <div class="risk-name">현장 저항</div>
+      <div class="risk-impact">도입 지연 · 데이터 누락</div>
+      <div class="risk-mitig">감독자 역할의 가치 명확화 · 인센티브 설계</div>
+    </div>
+    <div class="risk-row">
+      <div class="risk-name">모델 · API 변경</div>
+      <div class="risk-impact">성공률 급변</div>
+      <div class="risk-mitig">회귀 테스트 자동화 · 변경 시 섀도우 비교 운영</div>
+    </div>
+    <div class="risk-row">
+      <div class="risk-name">비용 폭주</div>
+      <div class="risk-impact">ROI 악화</div>
+      <div class="risk-mitig">단위 비용 일간 추적 · 임계치 초과 시 자동 알림</div>
     </div>
   </div>
 </section>
@@ -646,19 +832,21 @@
     </div>
     <div class="footer-col">
       <div class="footer-label">Documents</div>
-      <a href="docs/PLAN.md">기획안 전문 (Markdown)</a>
-      <a href="https://github.com/">GitHub Repository</a>
+      <a href="PLAN.md">기획안 전문 (Markdown)</a>
+      <a href="https://github.com/k31001/ax-framework">GitHub Repository</a>
     </div>
     <div class="footer-col">
       <div class="footer-label">Sections</div>
       <a href="#thesis">Thesis</a>
+      <a href="#maturity">Maturity</a>
       <a href="#kpi">KPI</a>
       <a href="#monitor">Monitor</a>
+      <a href="#risks">Risks</a>
     </div>
   </div>
   <div class="footer-base">
     <span>© 2026 AX Framework</span>
-    <span class="mono">v1.0 · drafted 2026.05</span>
+    <span class="mono">v1.1 · drafted 2026.05</span>
   </div>
 </footer>
 
