@@ -14,11 +14,23 @@ AX 종합 지수 = Coverage × Success × (1 / Cost)
 
 사이트 자체는 **문서·개념 전달용 정적 페이지**이며, 백엔드·빌드 시스템·패키지 매니저·테스트 스위트가 **없다**. 프레임워크의 "본문"(KPI 정의, 성공률 측정 방법론, 모니터링 시스템 설계)은 `PLAN.md` 에 있다.
 
+## 디렉토리 구조
+
+레포 루트가 곧 GitHub Pages의 서빙 루트다. 사이트 자산은 모두 루트에 있다.
+
+```
+index.html      ← 랜딩 페이지 + 인터랙티브 목업
+styles.css      ← 전체 스타일
+script.js       ← 4개의 DOM 인터랙션 (아래 참조)
+.nojekyll       ← Pages가 Jekyll 처리하지 않도록 함
+README.md       ← 프로젝트 개요
+DEPLOY.md       ← GitHub Pages 배포 절차
+PLAN.md         ← 프레임워크 본문 (KPI / 성공률 / 모니터링 설계)
+```
+
 ## 로컬 실행
 
 ```bash
-# ax-framework/ 디렉토리에서 띄울 것. (레포 루트에서 띄우면 깨진다 — 아래 "디렉토리 중복 함정" 참고)
-cd ax-framework
 python3 -m http.server 8000
 # → http://localhost:8000
 ```
@@ -27,25 +39,7 @@ install / build / lint / format / test 명령은 존재하지 않는다. `.html`
 
 ## 배포
 
-GitHub Pages가 이 레포를 서빙한다 (자세한 절차는 `DEPLOY.md`). `main` 에 푸시하면 1~2분 안에 재빌드된다. Jekyll 처리를 끄는 `.nojekyll` 은 `ax-framework/` 아래에 있다. CI는 없다.
-
-## ⚠️ 디렉토리 중복 함정 — 중요
-
-레포 루트와 `ax-framework/` 가 다음 파일들을 **동일한 내용으로 중복 보관**한다.
-
-| 루트 | `ax-framework/` |
-|---|---|
-| `README.md` | `README.md` |
-| `DEPLOY.md` | `DEPLOY.md` |
-| `index.html` | `index.html` |
-| `PLAN.md` | `docs/PLAN.md` |
-
-하지만 `styles.css` 와 `script.js` 는 **오직 `ax-framework/` 안에만** 존재한다. 루트 `index.html` 은 이들을 상대 경로로 참조하므로 **레포 루트에서 정적 서버를 띄우면 스타일·스크립트가 깨진 페이지**가 나온다.
-
-**규칙: `ax-framework/` 를 정본(canonical source)으로 취급한다.**
-
-- 사이트 내용을 고칠 때는 `ax-framework/index.html` (그리고 `styles.css` / `script.js`)을 편집한다.
-- 루트의 중복본은 stale duplicate 다. 사용자가 명시적으로 동기화하라고 하지 않는 한 건드리지 말고, 발견했다면 사용자에게 동기화 여부를 먼저 물어볼 것.
+GitHub Pages가 이 레포의 `main` 브랜치 루트(`/`)를 서빙한다 (자세한 절차는 `DEPLOY.md`). `main` 에 푸시하면 1~2분 안에 재빌드된다. `index.html` 은 `styles.css` / `script.js` 를 **상대 경로**로 참조하므로 자산을 옮기거나 이름을 바꿀 때 링크도 같이 갱신한다. CI는 없다.
 
 ## 아키텍처 / 핵심 개념
 
