@@ -29,6 +29,7 @@
       <a href="#kpi">KPI</a>
       <a href="#success">Success</a>
       <a href="#monitor">Monitor</a>
+      <a href="#cases">Cases</a>
       <a href="#roadmap">Roadmap</a>
       <a href="PLAN.md" class="nav-cta">기획안 전문 →</a>
     </div>
@@ -745,10 +746,185 @@
   </p>
 </section>
 
-<!-- Roadmap -->
-<section id="roadmap" class="section">
+<!-- Case Studies -->
+<section id="cases" class="section">
   <div class="section-head">
     <span class="section-num">07</span>
+    <span class="section-kicker">Case Studies · Semiconductor</span>
+  </div>
+
+  <h2 class="section-title">반도체 도메인 <em>적용 사례</em></h2>
+  <p class="section-lead">
+    SSD Controller 설계와 HW/SW Co-Verification — 두 가지 반도체 업무에 본 프레임워크를 적용하면
+    각 단계에서 AX 가 어떻게 작동하고 어떤 효과를 만드는지가 보인다.
+  </p>
+
+  <div class="cases-grid">
+
+    <!-- Case 1: SSD Controller Design -->
+    <article class="case-card">
+      <header class="case-head">
+        <span class="case-tag" data-domain="design">DESIGN</span>
+        <h3 class="case-title">SSD Controller 설계</h3>
+        <p class="case-sub">NVMe SoC · 사양 → RTL → 검증 → 사인오프 · 6 개월</p>
+      </header>
+
+      <div class="case-metrics">
+        <div class="cm"><div class="cm-k">Coverage</div><div class="cm-v">≥ 40<span>%</span></div></div>
+        <div class="cm"><div class="cm-k">Success</div><div class="cm-v">≥ 80<span>%</span></div></div>
+        <div class="cm"><div class="cm-k">Headcount</div><div class="cm-v">~3<span>명</span></div></div>
+        <div class="cm"><div class="cm-k">Total Cost</div><div class="cm-v">₩192<span>M</span></div></div>
+      </div>
+
+      <div class="case-pipeline">
+        <div class="pp-stage gate"><div class="pp-name">사양</div><div class="pp-sr">95%</div></div>
+        <div class="pp-arrow">→</div>
+        <div class="pp-stage gate"><div class="pp-name">아키</div><div class="pp-sr">92%</div></div>
+        <div class="pp-arrow">→</div>
+        <div class="pp-stage"><div class="pp-name">RTL</div><div class="pp-sr warn">81%</div></div>
+        <div class="pp-arrow">→</div>
+        <div class="pp-stage gate"><div class="pp-name">리뷰</div><div class="pp-sr warn">78%</div></div>
+        <div class="pp-arrow">→</div>
+        <div class="pp-stage"><div class="pp-name">회귀</div><div class="pp-sr">96%</div></div>
+        <div class="pp-arrow">→</div>
+        <div class="pp-stage gate"><div class="pp-name">사인오프</div><div class="pp-sr">99%</div></div>
+      </div>
+      <div class="pp-legend"><span class="gate-dot"></span>휴먼 게이트 (5 곳)</div>
+
+      <div class="case-mix">
+        <div class="cmx-head">작업 유형 분포 (백로그 13 건 기준)</div>
+        <div class="cmx-row">
+          <span class="cmx-label">결정론적</span>
+          <div class="cmx-bar"><span style="width: 38%"></span></div>
+          <span class="cmx-val">38%</span>
+        </div>
+        <div class="cmx-row">
+          <span class="cmx-label">생성형</span>
+          <div class="cmx-bar gen"><span style="width: 31%"></span></div>
+          <span class="cmx-val">31%</span>
+        </div>
+        <div class="cmx-row">
+          <span class="cmx-label">의사결정</span>
+          <div class="cmx-bar dec"><span style="width: 15%"></span></div>
+          <span class="cmx-val">15%</span>
+        </div>
+        <div class="cmx-row">
+          <span class="cmx-label">에이전트</span>
+          <div class="cmx-bar agt"><span style="width: 16%"></span></div>
+          <span class="cmx-val">16%</span>
+        </div>
+      </div>
+
+      <div class="case-list">
+        <div class="cl-head">대표 백로그 · TOP 5</div>
+        <div class="cl-row"><span class="cl-num">03</span><span class="cl-task">RTL 블록 설계 (FTL · ECC · DMA)</span><span class="cl-type gen">생성형</span></div>
+        <div class="cl-row"><span class="cl-num">05</span><span class="cl-task">UVM 테스트벤치 설계</span><span class="cl-type gen">생성형</span></div>
+        <div class="cl-row"><span class="cl-num">07</span><span class="cl-task">모듈 단위 검증 회귀</span><span class="cl-type det">결정론적</span></div>
+        <div class="cl-row"><span class="cl-num">10</span><span class="cl-task">합성 (synthesis)</span><span class="cl-type det">결정론적</span></div>
+        <div class="cl-row"><span class="cl-num">11</span><span class="cl-task">타이밍 클로저</span><span class="cl-type agt">에이전트</span></div>
+      </div>
+
+      <footer class="case-foot">
+        <div class="cf-lv">Lv1—Lv2 <span class="cf-arrow">→</span> <strong>Lv3</strong></div>
+        <div class="cf-note">검증 회귀 자동화가 핵심 효과 영역 · 인력 30—40% ↓ 잠재</div>
+      </footer>
+    </article>
+
+    <!-- Case 2: HW/SW Co-Verification -->
+    <article class="case-card">
+      <header class="case-head">
+        <span class="case-tag" data-domain="verify">VERIFY</span>
+        <h3 class="case-title">HW/SW Co-Verification</h3>
+        <p class="case-sub">Pre + Post Silicon · 회귀 → 트리아지 → 브링업 · 9 개월</p>
+      </header>
+
+      <div class="case-metrics">
+        <div class="cm"><div class="cm-k">Coverage</div><div class="cm-v">≥ 60<span>%</span></div></div>
+        <div class="cm"><div class="cm-k">Success</div><div class="cm-v">≥ 85<span>%</span></div></div>
+        <div class="cm"><div class="cm-k">Headcount</div><div class="cm-v">~2.5<span>명</span></div></div>
+        <div class="cm"><div class="cm-k">Total Cost</div><div class="cm-v">₩229<span>M</span></div></div>
+      </div>
+
+      <div class="case-pipeline">
+        <div class="pp-stage gate"><div class="pp-name">시나리오</div><div class="pp-sr">93%</div></div>
+        <div class="pp-arrow">→</div>
+        <div class="pp-stage"><div class="pp-name">회귀</div><div class="pp-sr">94%</div></div>
+        <div class="pp-arrow">→</div>
+        <div class="pp-stage"><div class="pp-name">트리아지</div><div class="pp-sr warn">82%</div></div>
+        <div class="pp-arrow">→</div>
+        <div class="pp-stage"><div class="pp-name">디버그</div><div class="pp-sr warn">76%</div></div>
+        <div class="pp-arrow">→</div>
+        <div class="pp-stage gate"><div class="pp-name">브링업</div><div class="pp-sr warn">71%</div></div>
+        <div class="pp-arrow">→</div>
+        <div class="pp-stage gate"><div class="pp-name">컴플라이언스</div><div class="pp-sr">97%</div></div>
+      </div>
+      <div class="pp-legend"><span class="gate-dot"></span>휴먼 게이트 (5 곳)</div>
+
+      <div class="case-mix">
+        <div class="cmx-head">작업 유형 분포 (백로그 14 건 기준)</div>
+        <div class="cmx-row">
+          <span class="cmx-label">결정론적</span>
+          <div class="cmx-bar"><span style="width: 50%"></span></div>
+          <span class="cmx-val">50%</span>
+        </div>
+        <div class="cmx-row">
+          <span class="cmx-label">생성형</span>
+          <div class="cmx-bar gen"><span style="width: 21%"></span></div>
+          <span class="cmx-val">21%</span>
+        </div>
+        <div class="cmx-row">
+          <span class="cmx-label">의사결정</span>
+          <div class="cmx-bar dec"><span style="width: 7%"></span></div>
+          <span class="cmx-val">7%</span>
+        </div>
+        <div class="cmx-row">
+          <span class="cmx-label">에이전트</span>
+          <div class="cmx-bar agt"><span style="width: 22%"></span></div>
+          <span class="cmx-val">22%</span>
+        </div>
+      </div>
+
+      <div class="case-list">
+        <div class="cl-head">대표 백로그 · TOP 5</div>
+        <div class="cl-row"><span class="cl-num">06</span><span class="cl-task">시나리오 회귀 자동 실행</span><span class="cl-type det">결정론적</span></div>
+        <div class="cl-row"><span class="cl-num">07</span><span class="cl-task">결과 분류 · 버그 트리아지</span><span class="cl-type dec">의사결정</span></div>
+        <div class="cl-row"><span class="cl-num">08</span><span class="cl-task">펌웨어 디버그 · 재현</span><span class="cl-type agt">에이전트</span></div>
+        <div class="cl-row"><span class="cl-num">11</span><span class="cl-task">실리콘 브링업</span><span class="cl-type agt">에이전트</span></div>
+        <div class="cl-row"><span class="cl-num">12</span><span class="cl-task">컴플라이언스 (NVMe · PCIe)</span><span class="cl-type det">결정론적</span></div>
+      </div>
+
+      <footer class="case-foot">
+        <div class="cf-lv">Lv2 <span class="cf-arrow">→</span> <strong>Lv3—Lv4</strong></div>
+        <div class="cf-note">회귀 사이클 시간 50%+ ↓ 가 가장 큰 ROI</div>
+      </footer>
+    </article>
+
+  </div>
+
+  <!-- Executive Summary -->
+  <div class="case-summary">
+    <div class="cs-head">경영진 <em>한 줄 요약</em></div>
+    <div class="cs-grid">
+      <div class="cs-cell">
+        <div class="cs-k">Coverage</div>
+        <div class="cs-v">결정론적 작업 — 회귀 · 합성 · 컴플라이언스 · 신뢰성 — 자동화가 가장 빠르게 상승한다.</div>
+      </div>
+      <div class="cs-cell">
+        <div class="cs-k">Success</div>
+        <div class="cs-v">RTL 리뷰와 버그 트리아지처럼 <strong>의사결정 작업의 정확도</strong>가 전체 성숙도를 좌우한다.</div>
+      </div>
+      <div class="cs-cell">
+        <div class="cs-k" data-axis="cost">Cost</div>
+        <div class="cs-v">EDA · 에뮬레이터 라이선스 비용이 토큰 비용보다 훨씬 크다. <strong>회귀 시간 · 인력 시간 단축 ROI</strong> 가 결정 변수.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Roadmap -->
+<section id="roadmap" class="section section-alt">
+  <div class="section-head">
+    <span class="section-num">08</span>
     <span class="section-kicker">Roadmap</span>
   </div>
 
@@ -783,9 +959,9 @@
 </section>
 
 <!-- Risks -->
-<section id="risks" class="section section-alt">
+<section id="risks" class="section">
   <div class="section-head">
-    <span class="section-num">08</span>
+    <span class="section-num">09</span>
     <span class="section-kicker">Risks &amp; Mitigation</span>
   </div>
 
@@ -841,6 +1017,7 @@
       <a href="#maturity">Maturity</a>
       <a href="#kpi">KPI</a>
       <a href="#monitor">Monitor</a>
+      <a href="#cases">Cases</a>
       <a href="#risks">Risks</a>
     </div>
   </div>
