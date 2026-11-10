@@ -513,7 +513,7 @@ def bass_voice() -> np.ndarray:
 
 # 층별 기본 음량(선형). 구간별 변화는 arrange() 안의 곡선이 맡는다.
 LV = dict(pad=0.074, padhi=0.050, bass=0.15, pulse=0.110, arp=0.140, lead=0.190,
-          bell=0.110, sigh=0.085, hat=0.050)
+          bell=0.100, sigh=0.085, hat=0.050)
 
 # reverb로 보내는 양
 SEND = dict(pad=0.30, padhi=0.50, bass=0.0, pulse=0.16, arp=0.34, lead=0.45, bell=0.60, hat=0.15)
@@ -611,7 +611,7 @@ def arrange(rng) -> dict[str, Bus]:
         elif t0 in (HIT, FINAL):
             atk = 0.16
         elif t0 in PROBLEM_TIMES or t0 in RESOLVE_TIMES:
-            atk = 0.3
+            atk = 0.4
         for j, m in enumerate(c["pad"]):
             w = 1.0 if j == 0 else (0.9 if j < 3 else 0.75)
             body, air = pad_note(m, t1 - t0, atk, rel, rng)
