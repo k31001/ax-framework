@@ -13,7 +13,7 @@ import { LEVEL, RESUMED, SPAN_H, X, Y, dayTicks, fwSpans, hwWavePath } from "./l
 //   해결              붉은 칸이 풀리고 trace 가 다시 이어진다
 
 const LABELS = FIG["S5-5"];
-const STALL = 14; // 멈춘 칸이 timeout 까지 늘어나는 시간
+const STALL = 20; // 멈춘 칸이 timeout 까지 늘어나는 시간
 const CUT = { top: 58, bottom: 242 } as const;
 
 export const LongRun: React.FC<{
@@ -190,7 +190,7 @@ export const LongRun: React.FC<{
                 fill={withAlpha(color.inkSoft, 0.1)}
                 stroke={color.inkSoft}
                 strokeWidth={stroke.hair}
-                opacity={progress(frame, resolvedAt + 10 + i * 4, 10)}
+                opacity={progress(frame, resolvedAt + 10 + i * 3, 10)}
               />
             ))
           : null}

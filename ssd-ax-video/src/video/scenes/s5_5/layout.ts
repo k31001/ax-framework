@@ -11,9 +11,9 @@ export const Y = { hw: 92, mid: 150, fw: 208 } as const;
 export const X = {
   start: 136, // 시간축이 시작하는 곳 (줄 이름의 오른쪽)
   divide: 292, // 가상 플랫폼 → emulator · FPGA
-  stall: 508, // FW 가 멈춘 command 를 시작한 곳
-  cut: 522, // 완료 두 건이 온 시점. 교차 분석의 세로선
-  end: 560, // timeout
+  stall: 470, // FW 가 멈춘 command 를 시작한 곳
+  cut: 484, // 완료 두 건이 온 시점. 교차 분석의 세로선
+  end: 560, // timeout. 멈춘 칸은 여느 칸보다 훨씬 길다
   tick: 18, // 매일 구동의 눈금 간격
 } as const;
 
@@ -66,6 +66,8 @@ export const RESUMED: Span[] = [
   { x: X.stall, w: 16 },
   { x: X.stall + 20, w: 10 },
   { x: X.stall + 34, w: 18 },
+  { x: X.stall + 56, w: 12 },
+  { x: X.stall + 72, w: 18 },
 ];
 
 /** 매일 구동의 눈금 자리 */
