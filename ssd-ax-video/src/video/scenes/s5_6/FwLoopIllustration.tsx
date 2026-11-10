@@ -122,9 +122,9 @@ export const FwLoopIllustration: Illustration = ({ width, height, beats, frames 
     return runnerP * clamp01(1 - Math.abs(d) / 42);
   };
 
-  // 대상: 짝수 바퀴는 가상 플랫폼, 홀수 바퀴는 보드
-  const turn = progress(frame, t0 + lap * LAP, 10, ease.inOut);
-  const board = lap === 0 ? 0 : lap % 2 === 1 ? turn : 1 - turn;
+  // 대상: 앞 두 바퀴는 가상 플랫폼, 그 뒤는 보드 (가상에서 먼저 돌리고 보드로 넘어간다)
+  const turn = progress(frame, t0 + 2 * LAP, 10, ease.inOut);
+  const board = lap < 2 ? 0 : turn;
   const tabsP = progress(frame, tLoop + 2, 14);
 
   // ── 관문 ──

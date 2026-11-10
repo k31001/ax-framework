@@ -251,14 +251,14 @@ export const S8 = {
 // ── S9 Closing ─────────────────────────────────────────────────────────
 export const S9 = {
   rolesAt: 0.4,
-  roleGap: 0.9,
+  roleGap: 0.8,
   roles: [
     { role: "설계", before: "RTL 작성", after: "구조 · 계약 결정" },
     { role: "검증", before: "테스트 작성", after: "기준 정의 · 독립 판정" },
     { role: "FW", before: "규약 구현", after: "정책 · 불변식 정의" },
     { role: "테스트 · 퀄", before: "로그 분석", after: "신규 불량 판단 · 퀄 판정" },
   ],
-  shift: { at: 5.0, text: "작성자에서 설계자로" },
+  shift: { at: 5.3, text: "작성자에서 설계자로" },
   headline: { at: 6.6, text: "AI 중심 재설계" },
   endCard: { at: 8.4, text: "SSD Controller SoC · AX 전략" },
 } as const;

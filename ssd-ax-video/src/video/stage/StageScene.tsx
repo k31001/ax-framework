@@ -98,6 +98,8 @@ export const StageScene: React.FC<{
   // ── 시점 ──
   const before = stage.beats.filter((b) => b.kind === "before")[0];
   const note = stage.beats.filter((b) => b.kind === "note")[0];
+  // 강조 문구는 다음 흐름도 항목이 나오기 직전에 물러난다. 다음 항목이 없으면 원칙 띠가 나오기 전에.
+  const afterNote = note ? stage.beats.find((b) => b.at > note.at && b.kind !== "note") : undefined;
   const flowBeats = stage.beats.filter((b) => isFlowKind(b.kind));
   if (flowBeats.length !== layout.slots.length) {
     throw new Error(`${stage.id}: 흐름도 항목 ${flowBeats.length}개, 배치 설정 ${layout.slots.length}개`);
@@ -112,6 +114,7 @@ export const StageScene: React.FC<{
   const lanesAt = items[0].at - 16;
   const recordAt = f(stage.recordAt);
   const principleAt = stage.principle ? f(stage.principle.at) : null;
+  const noteOut = afterNote ? f(afterNote.at) - 8 : principleAt === null ? undefined : principleAt - 12;
   const closingAt = stage.closing ? f(stage.closing.at) : null;
 
   // ── 카드와 진행 표시: 앞 단계에서 이 단계로 ──
@@ -246,7 +249,7 @@ export const StageScene: React.FC<{
             text={note.text}
             {...layout.note}
             at={f(note.at)}
-            out={principleAt === null ? undefined : principleAt - 12}
+            out={noteOut}
           />
         ) : null}
 
