@@ -1,32 +1,33 @@
 import React from "react";
-import { useCurrentFrame } from "remotion";
-import { f, progress } from "../anim";
-import { DraftScene } from "../components/DraftScene";
-import { RequirementCard } from "../components/RequirementCard";
-import { CARD, S4 as content, S5 } from "../content";
+import { Sheet } from "../components/Sheet";
+import { Caption, Title } from "../components/Text";
+import { S4 as content } from "../content";
+import { color, size } from "../theme";
+import { CardBuild } from "./s4/CardBuild";
+import { Recovery } from "./s4/Recovery";
+import { SETTING, T, TITLE } from "./s4/layout";
 
-// S4 사례 소개 — 임시 씬. 씬 제작자가 통째로 다시 만든다.
-// 요구사항 카드는 공통 컴포넌트(RequirementCard)를 쓴다. 기록이 하나도 붙지 않은 상태(attached=0)다.
+// S4 사례 소개.
+//
+//   0.3s  제목
+//   1.2s  과제 설정 (작은 글자)
+//   3.0s  요구사항 카드가 만들어진다. 이어서 카드의 수용 기준 칸에서 기준선이 뻗어 나온다
+//   6.0s  오류 복구 3단계가 차례로 내려가며 지연 막대가 길어진다. 마지막 막대가 기준선을 넘는다
 
-export const S4: React.FC = () => {
-  const frame = useCurrentFrame();
-  return (
-    <DraftScene
-      id="S4"
-      lines={[
-        { at: content.title.at, text: content.title.text },
-        { at: content.setting.at, text: content.setting.text, minor: true },
-        ...content.recovery.steps.map((step, i) => ({ at: content.recovery.at + i * 0.6, text: step, minor: true })),
-      ]}
-    >
-      <RequirementCard
-        card={CARD}
-        left={1100}
-        top={440}
-        records={S5.map((s) => s.record)}
-        attached={0}
-        appear={progress(frame, f(content.cardAt), 26)}
-      />
-    </DraftScene>
-  );
-};
+export const S4: React.FC = () => (
+  <Sheet id="S4">
+    <Title text={content.title.text} label="CASE STUDY" x={TITLE.x} y={TITLE.y} at={T.title} />
+    <Caption
+      text={content.setting.text}
+      x={SETTING.x}
+      y={SETTING.y}
+      align="left"
+      at={T.setting}
+      px={size.body}
+      weight={500}
+      color={color.inkSoft}
+    />
+    <CardBuild />
+    <Recovery steps={content.recovery.steps} />
+  </Sheet>
+);
