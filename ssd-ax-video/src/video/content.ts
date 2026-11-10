@@ -262,3 +262,52 @@ export const S9 = {
   headline: { at: 6.6, text: "AI 중심 재설계" },
   endCard: { at: 8.4, text: "SSD Controller SoC · AX 전략" },
 } as const;
+
+// ── S5 그림 속 라벨 ────────────────────────────────────────────────────
+// 단계별 그림(illustration) 안에 들어가는 짧은 이름표. 자막이 아니다.
+// 그림에 한글 라벨이 필요하면 여기에 있는 것만 쓴다. 영문 기술 라벨은 그림에서 직접 써도 된다.
+export const FIG = {
+  "S5-1": {
+    docs: ["고객 요구서", "NAND 스펙", "표준"],
+    nodes: { a: "QLC 오류율", b: "read 지연" },
+    conflict: "충돌 위험",
+    criterion: "수용 기준",
+  },
+  "S5-2": {
+    axes: { x: "면적", y: "지연" },
+    chosen: "선택안",
+    queue: { host: "host read", gc: "GC read", decoder: "soft decoder" },
+    limit: "P99.99 기준",
+  },
+  "S5-3": {
+    from: "API 문서",
+    contract: "계약",
+    outputs: ["RTL", "C++ header", "assertion"],
+    area: "ECC 면적",
+    budget: "예산",
+    model: "구조 모델",
+  },
+  "S5-4": {
+    clusters: [148, 87, 52, 25], // 합 312
+    signals: ["retry_req", "dec_done"],
+  },
+  "S5-5": {
+    rows: { hw: "HW 파형", fw: "FW trace" },
+    lost: "1건 유실",
+    queue: "큐",
+    platforms: ["가상 플랫폼", "emulator · FPGA"],
+  },
+  "S5-6": {
+    loop: ["빌드", "실행", "수정"],
+    targets: ["가상 플랫폼", "보드"],
+    invariant: "불변식",
+    table: "read retry table",
+  },
+  "S5-7": {
+    logs: "테스트 로그",
+    known: "기존 불량",
+    fresh: "신규 불량 후보",
+    pack: "퀄 패키지",
+    sign: "서명",
+  },
+} as const;
