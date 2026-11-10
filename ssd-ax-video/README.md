@@ -1,54 +1,26 @@
-# Remotion video
+# SSD 컨트롤러 SoC AX 전략 영상
 
-<p align="center">
-  <a href="https://github.com/remotion-dev/logo">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-dark.apng">
-      <img alt="Animated Remotion Logo" src="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-light.gif">
-    </picture>
-  </a>
-</p>
+SSD 컨트롤러 SoC를 설계·검증하는 팀의 AI Transformation(AX) 전략과, 그 전략을 소개하는 약 3분짜리 모션그래픽 영상의 소스다. 영상은 [Remotion](https://www.remotion.dev)으로 만든다.
 
-Welcome to your Remotion project!
+## 문서
 
-## Commands
+| 파일 | 내용 |
+|---|---|
+| `docs/01-strategy.md` | 전략 제안서 |
+| `docs/02-storyboard.md` | 영상 대본·스토리보드 |
+| `docs/research/` | 도메인별 리서치 4건 (출처 URL과 확인 수준 표기) |
 
-**Install Dependencies**
+## 실행
 
-```console
-npm i --loglevel=error
+```bash
+npm install
+npm run dev              # Remotion Studio 미리보기
+npx remotion render      # MP4 렌더
 ```
 
-**Start Preview**
+## 폰트
 
-```console
-npm run dev
-```
+`public/fonts/` 에 들어 있는 폰트는 둘 다 SIL Open Font License 1.1이다.
 
-**Render video**
-
-```console
-npx remotion render
-```
-
-**Upgrade Remotion**
-
-```console
-npx remotion upgrade
-```
-
-## Docs
-
-Get started with Remotion by reading the [fundamentals page](https://www.remotion.dev/docs/the-fundamentals).
-
-## Help
-
-We provide help on our [Discord server](https://discord.gg/6VzzNDwUwV).
-
-## Issues
-
-Found an issue with Remotion? [File an issue here](https://github.com/remotion-dev/remotion/issues/new).
-
-## License
-
-Note that for some entities a company license is needed. [Read the terms here](https://github.com/remotion-dev/remotion/blob/main/LICENSE.md).
+- Pretendard (한글·영문 본문)
+- JetBrains Mono (코드·기술 표기)
