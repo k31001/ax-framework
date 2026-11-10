@@ -33,7 +33,7 @@ export const BARS: readonly { x0: number; x1: number; y: number }[] = [
   { x0: 330, x1: 800, y: 664 },
   { x0: 800, x1: LIMIT_X + OVERSHOOT, y: 832 },
 ];
-export const BAR_H = 12;
+export const BAR_H = 16;
 
 // ── 시점 (프레임) ──────────────────────────────────────────────────────
 const card = f(content.cardAt);

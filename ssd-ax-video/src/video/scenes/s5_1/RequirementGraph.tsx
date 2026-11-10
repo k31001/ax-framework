@@ -422,7 +422,7 @@ export const RequirementGraph: Illustration = ({ width, height, beats, frames, c
           <path
             d={`M ${SPINE} ${MARK_Y - 8} V ${MARK_Y + 2} M ${SPINE} ${MARK_Y + 6.5} V ${MARK_Y + 9}`}
             stroke={color.bg}
-            strokeWidth={3}
+            strokeWidth={stroke.bold}
             fill="none"
             opacity={sub(markP, 0.4, 0.8) * (1 - sub(drain, 0, 0.4))}
           />

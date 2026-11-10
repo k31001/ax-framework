@@ -42,7 +42,7 @@ export const S55Illustration: Illustration = ({ width, height, beats, frames }) 
         resolvedAt={resolvedAt}
       />
       <Zoom
-        x={width - ZOOM.w}
+        x={width - ZOOM.w - 1}
         crossAt={crossAt}
         hypothesisAt={hypothesisAt}
         decisionAt={decisionAt}

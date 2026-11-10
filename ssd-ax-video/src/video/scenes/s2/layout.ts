@@ -12,7 +12,7 @@ import { safe } from "../../theme";
 export const CAPTION = { x: safe.left, y: 104 } as const;
 
 // ── 7단계 흐름 ─────────────────────────────────────────────────────────
-export const ROW = { x0: safe.left, x1: safe.right, y: 500 } as const;
+export const ROW = { x0: safe.left, x1: safe.right, y: 460 } as const;
 export const COUNT = STAGES.length;
 export const SLOT = (ROW.x1 - ROW.x0) / COUNT;
 export const stageX = (i: number): number => ROW.x0 + SLOT * (i + 0.5);
@@ -28,7 +28,7 @@ export const JAMS: readonly { stage: number; count: number }[] = [
 ];
 
 // ── 치수선과 수치 ──────────────────────────────────────────────────────
-export const DIM_Y = 650;
+export const DIM_Y = 610;
 /** 검증 구간(두 단계)의 가로 범위 */
 export const VERIFY = { x0: ROW.x0 + SLOT * 3, x1: ROW.x0 + SLOT * 5 } as const;
 const total = ROW.x1 - ROW.x0;
@@ -39,7 +39,7 @@ export const SHARE = {
   outer: [mid - total * 0.35, mid + total * 0.35] as const,
 };
 export const BRACKET_Y = ROW.y + 76;
-export const STAT = { x: safe.left, y: 724 } as const;
+export const STAT = { x: safe.left, y: 690 } as const;
 
 // ── 시점 (프레임) ──────────────────────────────────────────────────────
 const c0 = f(content.captions[0].at);
@@ -60,15 +60,15 @@ export const T = {
   dim: c0 + 50,
   /** 조각이 쏟아지기 시작한다 */
   emit: c1 + 6,
-  emitStep: 1.75,
+  emitStep: 1.5,
   stat,
   end: 360,
 } as const;
 
 // ── 작업 조각 ──────────────────────────────────────────────────────────
 // 앞 단계의 점에서 나와 흐름을 따라 가다가, 쌓이는 자리에서 위로 올라가 칸에 놓인다.
-export const PIECE = 14;
-const PITCH = 22;
+export const PIECE = 16;
+const PITCH = 24;
 const COLS = 4;
 
 export type Piece = {
@@ -87,7 +87,7 @@ export type Piece = {
 const slotOf = (jam: number, order: number): { x: number; y: number } => {
   const col = order % COLS;
   const row = Math.floor(order / COLS);
-  return { x: stageX(JAMS[jam].stage) - 30 - col * PITCH, y: ROW.y - 24 - row * PITCH };
+  return { x: stageX(JAMS[jam].stage) - 32 - col * PITCH, y: ROW.y - 26 - row * PITCH };
 };
 
 const buildPieces = (): Piece[] => {
@@ -107,7 +107,7 @@ const buildPieces = (): Piece[] => {
   }
   // 도착하는 순서대로 아래 칸부터 채운다. 움직이는 시간은 거리에 비례하므로 칸을 정하기 전에 어림한다.
   const eta = (r: { start: number; from: number; jam: number }): number =>
-    r.start + 12 + (stageX(JAMS[r.jam].stage) - r.from) / 36;
+    r.start + 10 + (stageX(JAMS[r.jam].stage) - r.from) / 44;
   const pieces: Piece[] = [];
   JAMS.forEach((_, jam) => {
     raw
@@ -116,7 +116,14 @@ const buildPieces = (): Piece[] => {
       .forEach((r, order) => {
         const slot = slotOf(jam, order);
         const length = slot.x - r.from + (ROW.y - slot.y);
-        pieces.push({ start: r.start, duration: Math.round(12 + length / 36), from: r.from, x: slot.x, y: slot.y, jam });
+        pieces.push({
+          start: r.start,
+          duration: Math.round(10 + length / 44),
+          from: r.from,
+          x: slot.x,
+          y: slot.y,
+          jam,
+        });
       });
   });
   return pieces;
@@ -126,8 +133,8 @@ export const PIECES: Piece[] = buildPieces();
 /** 조각이 모두 놓이는 프레임 */
 export const PIECES_DONE = PIECES.reduce((m, p) => Math.max(m, p.start + p.duration), 0);
 /** 쌓인 더미의 윗변 y. count 는 놓인 조각 수(소수 가능) */
-export const pileTop = (count: number): number => ROW.y - 24 - (Math.ceil(count / COLS) - 1) * PITCH - PIECE / 2;
-export const pileCenterX = (jam: number): number => stageX(JAMS[jam].stage) - 30 - ((COLS - 1) * PITCH) / 2;
+export const pileTop = (count: number): number => ROW.y - 26 - (Math.ceil(count / COLS) - 1) * PITCH - PIECE / 2;
+export const pileCenterX = (jam: number): number => stageX(JAMS[jam].stage) - 32 - ((COLS - 1) * PITCH) / 2;
 
 /** frame 까지 그 더미에 놓인 조각 수. 놓이는 중인 조각은 소수로 센다. */
 export const landedCount = (frame: number, jam: number): number => {

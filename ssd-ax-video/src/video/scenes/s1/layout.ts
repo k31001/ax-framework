@@ -20,7 +20,7 @@ const c = content.captions.map((caption) => f(caption.at));
 export const T = {
   caption: c,
   /** 자막이 물러나는 프레임. 둘째 자막은 나무가 자라기 전에 물러난다 */
-  captionOut: [c[1] - DUR.exit, c[2] - 16] as const,
+  captionOut: [c[1] - DUR.exit, c[2] - 12] as const,
   /** i번째 조각이 켜진다 */
   on: (i: number) => c[0] + 11 + i * 14,
   /** i번째 작업이 끝난다: 완료 표시와 이름 */

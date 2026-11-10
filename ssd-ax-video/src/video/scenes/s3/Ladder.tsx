@@ -3,16 +3,7 @@ import { useCurrentFrame } from "remotion";
 import { ease, enter, lerp, progress, sub } from "../../anim";
 import { Pad, Trace, Via } from "../../components/Trace";
 import { color, fullSvg, mono, pad2, sans, size, stroke, withAlpha } from "../../theme";
-import {
-  FLOOR,
-  RISE_X,
-  STEP_SPAN,
-  STEP_X,
-  T,
-  TREAD_Y,
-  UNDER_X0,
-  UNDER_Y,
-} from "./layout";
+import { FLOOR, RISE_X, STEP_SPAN, STEP_X, T, TREAD_Y, UNDER_X0, UNDER_Y } from "./layout";
 
 // 3단 계단(단면도)과 청록 trace.
 //   - 단이 왼쪽부터 하나씩 바닥에서 올라온다. 빗금 친 단면과 윗선이 함께 올라온다.

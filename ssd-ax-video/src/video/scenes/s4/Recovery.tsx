@@ -18,7 +18,9 @@ export const Recovery: React.FC<{ steps: readonly string[] }> = ({ steps }) => {
   const axis = progress(frame, T.axis, 24, ease.inOut);
   const last = BARS[BARS.length - 1];
 
-  const bar = BARS.map((_, k) => progress(frame, T.step(k) + 4, T.barDur(k), k === BARS.length - 1 ? ease.inOut : ease.out));
+  const bar = BARS.map((_, k) =>
+    progress(frame, T.step(k) + 4, T.barDur(k), k === BARS.length - 1 ? ease.inOut : ease.out),
+  );
   // 마지막 막대의 머리가 기준선에 닿은 뒤
   const headX = lerp(last.x0, last.x1, bar[bar.length - 1]);
   const crossed = headX >= LIMIT_X;
@@ -103,7 +105,13 @@ export const Recovery: React.FC<{ steps: readonly string[] }> = ({ steps }) => {
           const isLast = k === BARS.length - 1;
           return (
             <g key={`bar${k}`}>
-              <rect x={b.x0} y={b.y - BAR_H / 2} width={Math.max(0, (isLast ? safeEnd : x1) - b.x0)} height={BAR_H} fill={color.inkSoft} />
+              <rect
+                x={b.x0}
+                y={b.y - BAR_H / 2}
+                width={Math.max(0, (isLast ? safeEnd : x1) - b.x0)}
+                height={BAR_H}
+                fill={color.inkSoft}
+              />
               {isLast && x1 > LIMIT_X ? (
                 <rect x={LIMIT_X} y={b.y - BAR_H / 2} width={x1 - LIMIT_X} height={BAR_H} fill={color.problem} />
               ) : null}
@@ -120,7 +128,7 @@ export const Recovery: React.FC<{ steps: readonly string[] }> = ({ steps }) => {
             <circle
               cx={LIMIT_X}
               cy={last.y}
-              r={lerp(18, 40, beat)}
+              r={lerp(24, 52, beat)}
               fill="none"
               stroke={color.problem}
               strokeWidth={stroke.thin}
@@ -129,13 +137,13 @@ export const Recovery: React.FC<{ steps: readonly string[] }> = ({ steps }) => {
             <circle
               cx={LIMIT_X}
               cy={last.y}
-              r={lerp(8, 18, hit)}
+              r={lerp(10, 24, hit)}
               fill={color.bg}
               stroke={color.problem}
               strokeWidth={stroke.bold}
               opacity={hit}
             />
-            <rect x={LIMIT_X - 4} y={last.y - 4} width={8} height={8} fill={color.problem} opacity={hit} />
+            <rect x={LIMIT_X - 5} y={last.y - 5} width={10} height={10} fill={color.problem} opacity={hit} />
           </g>
         ) : null}
       </svg>

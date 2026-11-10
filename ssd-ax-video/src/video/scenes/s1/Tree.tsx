@@ -12,6 +12,8 @@ import { T } from "./layout";
 
 const GROUND = 944;
 const TRUNK_X = 1090;
+/** 나무 전체를 옮기는 거리. 가지의 좌표는 옮기기 전 값으로 적는다 */
+const SHIFT_X = -60;
 const REACH_Y = 678;
 
 type Branch = {
@@ -23,19 +25,115 @@ type Branch = {
 };
 
 const BRANCHES: readonly Branch[] = [
-  /* 0 줄기 */ { from: -1, pts: [[TRUNK_X, GROUND], [TRUNK_X, 262], [1030, 262], [1030, 226], [996, 226]], fruit: true },
+  /* 0 줄기 */ {
+    from: -1,
+    pts: [
+      [TRUNK_X, GROUND],
+      [TRUNK_X, 262],
+      [1030, 262],
+      [1030, 226],
+      [996, 226],
+    ],
+    fruit: true,
+  },
   // 낮은 가지 (손이 닿는다)
-  /* 1 */ { from: 0, pts: [[TRUNK_X, 860], [906, 860], [906, 800], [846, 800]], fruit: true },
-  /* 2 */ { from: 0, pts: [[TRUNK_X, 820], [1262, 820], [1262, 760], [1326, 760]], fruit: true },
-  /* 3 */ { from: 0, pts: [[TRUNK_X, 764], [990, 764], [990, 716], [950, 716]], fruit: true },
+  /* 1 */ {
+    from: 0,
+    pts: [
+      [TRUNK_X, 860],
+      [906, 860],
+      [906, 800],
+      [846, 800],
+    ],
+    fruit: true,
+  },
+  /* 2 */ {
+    from: 0,
+    pts: [
+      [TRUNK_X, 820],
+      [1262, 820],
+      [1262, 760],
+      [1326, 760],
+    ],
+    fruit: true,
+  },
+  /* 3 */ {
+    from: 0,
+    pts: [
+      [TRUNK_X, 764],
+      [990, 764],
+      [990, 716],
+      [950, 716],
+    ],
+    fruit: true,
+  },
   // 높은 가지
-  /* 4 */ { from: 0, pts: [[TRUNK_X, 640], [1396, 640], [1396, 440], [1350, 440]], fruit: true },
-  /* 5 */ { from: 4, pts: [[1396, 524], [1466, 524]], fruit: true },
-  /* 6 */ { from: 0, pts: [[TRUNK_X, 606], [800, 606], [800, 410], [846, 410]], fruit: true },
-  /* 7 */ { from: 6, pts: [[800, 494], [730, 494]], fruit: true },
-  /* 8 */ { from: 0, pts: [[TRUNK_X, 462], [1240, 462], [1240, 346], [1296, 346]], fruit: true },
-  /* 9 */ { from: 0, pts: [[TRUNK_X, 492], [950, 492], [950, 362], [900, 362]], fruit: true },
-  /* 10 */ { from: 0, pts: [[TRUNK_X, 330], [1160, 330], [1160, 250], [1196, 250]], fruit: true },
+  /* 4 */ {
+    from: 0,
+    pts: [
+      [TRUNK_X, 640],
+      [1396, 640],
+      [1396, 440],
+      [1350, 440],
+    ],
+    fruit: true,
+  },
+  /* 5 */ {
+    from: 4,
+    pts: [
+      [1396, 524],
+      [1466, 524],
+    ],
+    fruit: true,
+  },
+  /* 6 */ {
+    from: 0,
+    pts: [
+      [TRUNK_X, 606],
+      [800, 606],
+      [800, 410],
+      [846, 410],
+    ],
+    fruit: true,
+  },
+  /* 7 */ {
+    from: 6,
+    pts: [
+      [800, 494],
+      [730, 494],
+    ],
+    fruit: true,
+  },
+  /* 8 */ {
+    from: 0,
+    pts: [
+      [TRUNK_X, 462],
+      [1240, 462],
+      [1240, 346],
+      [1296, 346],
+    ],
+    fruit: true,
+  },
+  /* 9 */ {
+    from: 0,
+    pts: [
+      [TRUNK_X, 492],
+      [950, 492],
+      [950, 362],
+      [900, 362],
+    ],
+    fruit: true,
+  },
+  /* 10 */ {
+    from: 0,
+    pts: [
+      [TRUNK_X, 330],
+      [1160, 330],
+      [1160, 250],
+      [1196, 250],
+    ],
+    fruit: true,
+  },
 ];
 
 /** 수확되는 가지(BRANCHES 의 순서). 낮은 것부터 */
@@ -43,7 +141,8 @@ const PICKED: readonly number[] = [1, 2, 3];
 
 const lengthOf = (pts: readonly Pt[]): number => {
   let total = 0;
-  for (let i = 1; i < pts.length; i++) total += Math.abs(pts[i][0] - pts[i - 1][0]) + Math.abs(pts[i][1] - pts[i - 1][1]);
+  for (let i = 1; i < pts.length; i++)
+    total += Math.abs(pts[i][0] - pts[i - 1][0]) + Math.abs(pts[i][1] - pts[i - 1][1]);
   return total;
 };
 
@@ -72,67 +171,69 @@ const REACHED = END.reduce((m, v) => Math.max(m, v), 0);
 export const Tree: React.FC = () => {
   const frame = useCurrentFrame();
   const grow = progress(frame, T.grow, T.growDur, ease.inOut);
-  if (grow <= 0 && frame < T.grow - 8) return null;
+  if (frame < T.grow - 4) return null;
   const front = grow * REACHED; // 자란 거리
-  const ground = progress(frame, T.grow - 8, 16);
+  const ground = progress(frame, T.grow - 4, 16);
   const reach = progress(frame, T.reach, 18, ease.inOut);
 
   return (
     <>
       <svg {...fullSvg}>
-        {/* 땅 */}
-        <DimLine from={[720, GROUND]} to={[1460, GROUND]} stroke={color.inkSoft} tick={0} p={ground} />
-        <g stroke={color.lineStrong} strokeWidth={stroke.hair} opacity={ground}>
-          {Array.from({ length: 19 }, (_, i) => {
-            const x = 740 + i * 40;
-            return <line key={i} x1={x} x2={x - 14} y1={GROUND + 4} y2={GROUND + 18} />;
+        <g transform={`translate(${SHIFT_X} 0)`}>
+          {/* 땅 */}
+          <DimLine from={[720, GROUND]} to={[1460, GROUND]} stroke={color.inkSoft} tick={0} p={ground} />
+          <g stroke={color.lineStrong} strokeWidth={stroke.hair} opacity={ground}>
+            {Array.from({ length: 19 }, (_, i) => {
+              const x = 740 + i * 40;
+              return <line key={i} x1={x} x2={x - 14} y1={GROUND + 4} y2={GROUND + 18} />;
+            })}
+          </g>
+
+          {/* 손이 닿는 높이 */}
+          {reach > 0 ? (
+            <>
+              <line
+                x1={664}
+                x2={664 + (1520 - 664) * reach}
+                y1={REACH_Y}
+                y2={REACH_Y}
+                stroke={color.lineStrong}
+                strokeWidth={stroke.thin}
+                strokeDasharray="10 8"
+              />
+              <DimLine from={[640, GROUND]} to={[640, REACH_Y]} stroke={color.lineStrong} p={reach} />
+            </>
+          ) : null}
+
+          {/* 줄기와 가지 */}
+          {BRANCHES.map((b, i) => (
+            <Trace
+              key={i}
+              pts={b.pts}
+              stroke={color.inkSoft}
+              width={i === 0 ? stroke.bold : stroke.trace}
+              chamfer={10}
+              progress={clamp01((front - START[i]) / (END[i] - START[i]))}
+            />
+          ))}
+
+          {/* 열매 */}
+          {BRANCHES.map((b, i) => {
+            if (!b.fruit) return null;
+            const tip = b.pts[b.pts.length - 1];
+            // 가지가 끝까지 자란 프레임
+            const tipAt = T.grow + T.growDur * tipTime(END[i] / REACHED);
+            const order = PICKED.indexOf(i);
+            const picked = order < 0 ? 0 : progress(frame, T.harvest + order * T.harvestStep, 14, ease.linear);
+            return <Fruit key={i} x={tip[0]} y={tip[1]} p={progress(frame, tipAt, 10)} picked={picked} />;
           })}
         </g>
-
-        {/* 손이 닿는 높이 */}
-        {reach > 0 ? (
-          <>
-            <line
-              x1={664}
-              x2={664 + (1520 - 664) * reach}
-              y1={REACH_Y}
-              y2={REACH_Y}
-              stroke={color.lineStrong}
-              strokeWidth={stroke.thin}
-              strokeDasharray="10 8"
-            />
-            <DimLine from={[640, GROUND]} to={[640, REACH_Y]} stroke={color.lineStrong} p={reach} />
-          </>
-        ) : null}
-
-        {/* 줄기와 가지 */}
-        {BRANCHES.map((b, i) => (
-          <Trace
-            key={i}
-            pts={b.pts}
-            stroke={color.inkSoft}
-            width={i === 0 ? stroke.bold : stroke.trace}
-            chamfer={10}
-            progress={clamp01((front - START[i]) / (END[i] - START[i]))}
-          />
-        ))}
-
-        {/* 열매 */}
-        {BRANCHES.map((b, i) => {
-          if (!b.fruit) return null;
-          const tip = b.pts[b.pts.length - 1];
-          // 가지가 끝까지 자란 프레임
-          const tipAt = T.grow + T.growDur * tipTime(END[i] / REACHED);
-          const order = PICKED.indexOf(i);
-          const picked = order < 0 ? 0 : progress(frame, T.harvest + order * T.harvestStep, 14, ease.linear);
-          return <Fruit key={i} x={tip[0]} y={tip[1]} p={progress(frame, tipAt, 10)} picked={picked} />;
-        })}
       </svg>
 
       <div
         style={{
           position: "absolute",
-          left: 664,
+          left: 664 + SHIFT_X,
           top: REACH_Y - 34,
           ...mono(size.label, 700),
           color: color.inkDim,

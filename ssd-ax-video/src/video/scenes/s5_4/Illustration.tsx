@@ -9,7 +9,7 @@ import { buildField, hash, mix } from "./field";
 
 // S5-4 시뮬레이션 검증의 그림. 흐름도 위쪽 띠(1020×120), 붉은 깃발의 오른쪽.
 //
-//   문제          실패 312건의 붉은 점이 깃발에서 쏟아져 나와 띠 전체에 흩어진다
+//   문제          실패 312건의 붉은 점이 깃발 쪽에서 쏟아져 나와 띠 전체에 흩어진다
 //   원인 분류     흩어진 점이 네 묶음으로 모인다 (148 · 87 · 52 · 25)
 //   원인 가설     가장 큰 묶음에 고리가 쳐지고, 거기서 선이 오른쪽 파형으로 이어진다.
 //                 retry_req 와 dec_done 이 같은 cycle 에 겹치는 자리가 붉은 띠로 켜진다
@@ -30,7 +30,9 @@ const HIGH = [
   [3, 5],
 ] as const;
 
-const POUR = 18; // 점 하나가 깃발에서 제자리까지 가는 시간
+const POUR = 18; // 점 하나가 제자리까지 미끄러져 가는 시간
+const POUR_SPREAD = 22; // 쏟아지는 앞머리가 띠의 오른쪽 끝에 닿기까지
+const POUR_REACH = 150; // 점 하나가 미끄러지는 거리 (깃발 가까이의 점은 깃발에서 나온다)
 const GATHER = 26; // 점 하나가 묶음으로 모이는 시간
 const SWEEP = 30; // 재확인 선이 띠를 훑는 시간
 
@@ -101,12 +103,14 @@ export const S54Illustration: Illustration = ({ width, height, beats, frames }) 
 
         {/* 실패 312건 */}
         {field.dots.map((d, i) => {
-          const pour = progress(frame, pourAt + (d.sx / width) * 14 + hash(i) * 5, POUR);
+          // 깃발에서 먼 점일수록 늦게 나온다: 쏟아지는 앞머리가 왼쪽에서 오른쪽으로 번진다.
+          const pour = progress(frame, pourAt + (d.sx / width) * POUR_SPREAD + hash(i) * 5, POUR);
           if (pour <= 0) return null;
           const cluster = field.clusters[d.cluster];
           const gather = progress(frame, classifyAt + d.rank * 10 + (cluster.cx / width) * 8, GATHER, ease.inOut);
-          const x = lerp(lerp(flagRight + 6, d.sx, pour), d.tx, gather);
-          const y = lerp(lerp(lerp(cy, d.sy, 0.3), d.sy, pour), d.ty, gather);
+          const from = Math.max(flagRight + 6, d.sx - POUR_REACH);
+          const x = lerp(lerp(from, d.sx, pour), d.tx, gather);
+          const y = lerp(lerp(lerp(cy, d.sy, 0.4), d.sy, pour), d.ty, gather);
           const own = d.cluster === field.suspect;
           const drained = own ? progress(frame, passAt(d.tx), 12) : 0;
           return (

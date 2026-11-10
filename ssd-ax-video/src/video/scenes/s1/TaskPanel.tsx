@@ -39,7 +39,12 @@ export const TaskPanel: React.FC<{
   return (
     <div style={{ position: "absolute", left: x, top: y, width: w, height: h, opacity: 1 - gone }}>
       <div style={{ position: "absolute", inset: 0, backgroundColor: withAlpha(color.panel, sub(lit, 0.2, 1)) }} />
-      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ position: "absolute", inset: 0, overflow: "visible" }}>
+      <svg
+        width={w}
+        height={h}
+        viewBox={`0 0 ${w} ${h}`}
+        style={{ position: "absolute", inset: 0, overflow: "visible" }}
+      >
         {/* 테두리: 왼쪽 위에서 한 바퀴 */}
         <rect
           x={1}
@@ -155,13 +160,22 @@ const Bar: React.FC<{ x0: number; x1: number; y: number; p: number; fill?: strin
 
 // 코드 초안: 들여 쓴 줄이 위에서부터 한 줄씩 써진다. 쓰는 자리에 청록 커서.
 const CODE_LINES: readonly (readonly (readonly [number, number])[])[] = [
-  [[0, 132], [150, 268]],
+  [
+    [0, 132],
+    [150, 268],
+  ],
   [[28, 236]],
-  [[56, 196], [214, 330]],
+  [
+    [56, 196],
+    [214, 330],
+  ],
   [[56, 304]],
   [[84, 250]],
   [[56, 120]],
-  [[28, 210], [228, 300]],
+  [
+    [28, 210],
+    [228, 300],
+  ],
   [[0, 60]],
 ];
 const CODE_PITCH = 25;
@@ -177,7 +191,9 @@ export const CodeFigure: TaskFigure = ({ work }) => {
     line.forEach(([a, b], n) => {
       const p = clamp01((typed - used) / (b - a));
       if (p > 0) {
-        bars.push(<Bar key={`${row}-${n}`} x0={a} x1={b} y={y} p={p} fill={n === 1 ? color.lineStrong : color.inkSoft} />);
+        bars.push(
+          <Bar key={`${row}-${n}`} x0={a} x1={b} y={y} p={p} fill={n === 1 ? color.lineStrong : color.inkSoft} />,
+        );
         cursor = { x: a + (b - a) * p + 6, y };
       }
       used += b - a;
@@ -208,7 +224,15 @@ export const LogFigure: TaskFigure = ({ work }) => {
         return <rect key={i} x={0} y={y - 2} width={len} height={4} fill={read ? color.inkSoft : color.lineStrong} />;
       })}
       {work < 1 ? (
-        <line x1={-8} x2={200} y1={scanY} y2={scanY} stroke={color.agent} strokeWidth={stroke.thin} opacity={0.4 + 0.6 * sub(work, 0, 0.1)} />
+        <line
+          x1={-8}
+          x2={200}
+          y1={scanY}
+          y2={scanY}
+          stroke={color.agent}
+          strokeWidth={stroke.thin}
+          opacity={0.4 + 0.6 * sub(work, 0, 0.1)}
+        />
       ) : null}
       {/* 로그 → 요약 */}
       <path
@@ -259,12 +283,28 @@ export const ScriptFigure: TaskFigure = ({ work }) => {
         const shown = sub(work, 0.2 + i * 0.05, 0.3 + i * 0.05);
         return (
           <g key={i} opacity={shown}>
-            <rect x={1} y={y - 9} width={18} height={18} fill={withAlpha(color.agent, 0.9 * done)} stroke={done > 0 ? color.agent : color.lineStrong} strokeWidth={stroke.hair} />
+            <rect
+              x={1}
+              y={y - 9}
+              width={18}
+              height={18}
+              fill={withAlpha(color.agent, 0.9 * done)}
+              stroke={done > 0 ? color.agent : color.lineStrong}
+              strokeWidth={stroke.hair}
+            />
             <Bar x0={36} x1={36 + len} y={y} p={1} fill={done > 0 ? color.inkSoft : color.lineStrong} />
           </g>
         );
       })}
-      <rect x={1} y={FIGURE.h - 22} width={FIGURE.w - 2} height={14} fill="none" stroke={color.lineStrong} strokeWidth={stroke.hair} />
+      <rect
+        x={1}
+        y={FIGURE.h - 22}
+        width={FIGURE.w - 2}
+        height={14}
+        fill="none"
+        stroke={color.lineStrong}
+        strokeWidth={stroke.hair}
+      />
       <rect x={4} y={FIGURE.h - 19} width={(FIGURE.w - 8) * bar} height={8} fill={color.agent} />
     </>
   );

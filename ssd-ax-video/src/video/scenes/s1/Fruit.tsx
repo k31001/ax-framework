@@ -34,7 +34,15 @@ export const Fruit: React.FC<{
         strokeWidth={stroke.trace}
       />
       {k > 0 ? (
-        <circle cx={x} cy={cy} r={FRUIT_R - stroke.thin / 2} fill="none" stroke={color.lineStrong} strokeWidth={stroke.thin} opacity={k} />
+        <circle
+          cx={x}
+          cy={cy}
+          r={FRUIT_R - stroke.thin / 2}
+          fill="none"
+          stroke={color.lineStrong}
+          strokeWidth={stroke.thin}
+          opacity={k}
+        />
       ) : null}
       {k < 1 ? (
         <circle cx={x} cy={cy + drop} r={FRUIT_R * (0.5 + 0.5 * p)} fill={color.human} opacity={1 - ease.in(k)} />

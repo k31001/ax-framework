@@ -25,35 +25,48 @@ export const CardBuild: React.FC = () => {
   const reach = lerp(REACH, MARK, settle);
 
   const { x, y, w, h } = CARD_BOX;
+  // 보조선은 왼쪽에서 오른쪽으로, 위에서 아래로 그려진다.
+  // 카드가 만들어진 뒤에는 변 위의 부분이 지워지고 모서리 바깥의 짧은 표시만 남는다.
+  const x0 = x - reach;
+  const x1 = x + w + reach;
+  const y0 = y - reach;
+  const y1 = y + h + reach;
+  const headX = lerp(x0, x1, guides);
+  const headY = lerp(y0, y1, guides);
+  const cutX = (w / 2 + 6) * settle; // 가운데에서 양쪽으로 지워지는 길이
+  const cutY = (h / 2 + 6) * settle;
   const cx = x + w / 2;
   const cy = y + h / 2;
-  // 가운데에서 양쪽으로 펴지는 선. 카드가 만들어진 뒤에는 변 위의 부분을 지우고 바깥 표시만 남긴다.
-  const hx = (w / 2 + reach) * guides;
-  const hy = (h / 2 + reach) * guides;
-  const gapX = (w / 2 + 6) * settle;
-  const gapY = (h / 2 + 6) * settle;
-  const guideColor = color.lineStrong;
 
   return (
     <>
       <svg {...fullSvg}>
-        <g stroke={guideColor} strokeWidth={stroke.hair} opacity={lerp(1, 0.8, settle)}>
+        <g stroke={color.lineStrong} strokeWidth={stroke.hair} opacity={lerp(1, 0.8, settle)}>
           {[y, y + h].map((gy) => (
             <React.Fragment key={gy}>
-              <line x1={cx - hx} x2={cx - gapX} y1={gy} y2={gy} />
-              <line x1={cx + gapX} x2={cx + hx} y1={gy} y2={gy} />
+              <line x1={x0} x2={Math.min(headX, cx - cutX)} y1={gy} y2={gy} />
+              {headX > cx + cutX ? <line x1={cx + cutX} x2={headX} y1={gy} y2={gy} /> : null}
             </React.Fragment>
           ))}
           {[x, x + w].map((gx) => (
             <React.Fragment key={gx}>
-              <line x1={gx} x2={gx} y1={cy - hy} y2={cy - gapY} />
-              <line x1={gx} x2={gx} y1={cy + gapY} y2={cy + hy} />
+              <line x1={gx} x2={gx} y1={y0} y2={Math.min(headY, cy - cutY)} />
+              {headY > cy + cutY ? <line x1={gx} x2={gx} y1={cy + cutY} y2={headY} /> : null}
             </React.Fragment>
           ))}
         </g>
       </svg>
 
-      <div style={{ position: "absolute", left: x, top: y - 36, ...mono(size.label, 700), color: color.agent, opacity: appear }}>
+      <div
+        style={{
+          position: "absolute",
+          left: x,
+          top: y - 36,
+          ...mono(size.label, 700),
+          color: color.agent,
+          opacity: appear,
+        }}
+      >
         REQUIREMENT
       </div>
 

@@ -33,9 +33,7 @@ export const UNDER_X0 = 946; // "재설계"가 시작하는 x
 export const GHOST_Y = 128;
 export const GHOST_X0 = 520;
 export const GHOST_X1 = 1500;
-export const GHOST_XS = [0, 1, 2, 3, 4, 5, 6].map(
-  (i) => GHOST_X0 + 70 + ((GHOST_X1 - GHOST_X0 - 140) / 6) * i,
-);
+export const GHOST_XS = [0, 1, 2, 3, 4, 5, 6].map((i) => GHOST_X0 + 70 + ((GHOST_X1 - GHOST_X0 - 140) / 6) * i);
 export const GHOST_ADDONS: readonly { at: number; side: 1 | -1 }[] = [
   { at: 1, side: -1 },
   { at: 3, side: 1 },
