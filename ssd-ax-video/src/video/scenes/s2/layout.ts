@@ -5,7 +5,7 @@
 //   가운데    7단계 흐름. 그 위에 개인 작업의 깜빡임과 쌓이는 작업 조각, 아래에 전체 길이의 치수선
 //   왼쪽 아래 수치 (마지막에)
 
-import { f } from "../../anim";
+import { ease, f, progress } from "../../anim";
 import { S2 as content, STAGES } from "../../content";
 import { safe } from "../../theme";
 
@@ -62,7 +62,6 @@ export const T = {
   emit: c1 + 6,
   emitStep: 1.5,
   stat,
-  end: 360,
 } as const;
 
 // ── 작업 조각 ──────────────────────────────────────────────────────────
@@ -130,10 +129,18 @@ const buildPieces = (): Piece[] => {
 };
 
 export const PIECES: Piece[] = buildPieces();
-/** 조각이 모두 놓이는 프레임 */
-export const PIECES_DONE = PIECES.reduce((m, p) => Math.max(m, p.start + p.duration), 0);
-/** 쌓인 더미의 윗변 y. count 는 놓인 조각 수(소수 가능) */
-export const pileTop = (count: number): number => ROW.y - 26 - (Math.ceil(count / COLS) - 1) * PITCH - PIECE / 2;
+/**
+ * frame 에서 그 더미의 윗변 y. 새 줄의 첫 조각이 놓일 때마다 한 줄씩 부드럽게 올라간다.
+ * 더미 위의 라벨이 이 높이를 따라간다.
+ */
+export const pileTop = (frame: number, jam: number): number => {
+  const own = PIECES.filter((p) => p.jam === jam);
+  let rows = 0;
+  for (let i = COLS; i < own.length; i += COLS) {
+    rows += progress(frame, own[i].start + own[i].duration - 6, 12, ease.inOut);
+  }
+  return ROW.y - 26 - rows * PITCH - PIECE / 2;
+};
 export const pileCenterX = (jam: number): number => stageX(JAMS[jam].stage) - 32 - ((COLS - 1) * PITCH) / 2;
 
 /** frame 까지 그 더미에 놓인 조각 수. 놓이는 중인 조각은 소수로 센다. */

@@ -4,14 +4,14 @@ import { clamp01, ease, progress } from "../../anim";
 import { pointOnTrace } from "../../components/Trace";
 import type { Pt } from "../../components/Trace";
 import { color, fullSvg, mono, pad2, size, stroke, withAlpha } from "../../theme";
-import { JAMS, PIECE, PIECES, ROW, landedCount, pileCenterX, pileTop } from "./layout";
+import { JAMS, PIECE, PIECES, ROW, T, landedCount, pileCenterX, pileTop } from "./layout";
 
 // 앞 단계가 쏟아낸 작업 조각. 흐름을 따라 가다가 검증과 통합 앞에서 위로 쌓인다.
 // 더미 위에는 쌓인 수가 올라간다(장식 라벨).
 
 export const Pieces: React.FC = () => {
   const frame = useCurrentFrame();
-  if (frame < PIECES[0].start) return null;
+  if (frame < T.emit) return null;
   const counts = JAMS.map((_, i) => landedCount(frame, i));
 
   return (
@@ -60,7 +60,7 @@ export const Pieces: React.FC = () => {
               position: "absolute",
               left: pileCenterX(i) - 100,
               width: 200,
-              top: pileTop(count) - 40,
+              top: pileTop(frame, i) - 40,
               textAlign: "center",
               ...mono(size.label, 700),
               color: tone,

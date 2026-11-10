@@ -3,8 +3,8 @@ import { useCurrentFrame } from "remotion";
 import { clamp01, ease, progress } from "../../anim";
 import { DimLine, Trace } from "../../components/Trace";
 import type { Pt } from "../../components/Trace";
-import { color, fullSvg, mono, size, stroke } from "../../theme";
-import { Fruit } from "./Fruit";
+import { color, fullSvg, mono, pad2, size, stroke } from "../../theme";
+import { FRUIT_R, FRUIT_STEM, Fruit } from "./Fruit";
 import { T } from "./layout";
 
 // 나무: 직각 trace 가 가지처럼 뻗은 선화. 가지 끝마다 열매가 달려 있다.
@@ -24,120 +24,33 @@ type Branch = {
   fruit?: boolean;
 };
 
+// prettier-ignore
 const BRANCHES: readonly Branch[] = [
-  /* 0 줄기 */ {
-    from: -1,
-    pts: [
-      [TRUNK_X, GROUND],
-      [TRUNK_X, 262],
-      [1030, 262],
-      [1030, 226],
-      [996, 226],
-    ],
-    fruit: true,
-  },
+  /* 0 줄기 */ { from: -1, pts: [[TRUNK_X, GROUND], [TRUNK_X, 262], [1030, 262], [1030, 226], [996, 226]], fruit: true },
   // 낮은 가지 (손이 닿는다)
-  /* 1 */ {
-    from: 0,
-    pts: [
-      [TRUNK_X, 860],
-      [906, 860],
-      [906, 800],
-      [846, 800],
-    ],
-    fruit: true,
-  },
-  /* 2 */ {
-    from: 0,
-    pts: [
-      [TRUNK_X, 820],
-      [1262, 820],
-      [1262, 760],
-      [1326, 760],
-    ],
-    fruit: true,
-  },
-  /* 3 */ {
-    from: 0,
-    pts: [
-      [TRUNK_X, 764],
-      [990, 764],
-      [990, 716],
-      [950, 716],
-    ],
-    fruit: true,
-  },
+  /* 1 */ { from: 0, pts: [[TRUNK_X, 860], [906, 860], [906, 800], [846, 800]], fruit: true },
+  /* 2 */ { from: 0, pts: [[TRUNK_X, 820], [1262, 820], [1262, 760], [1326, 760]], fruit: true },
+  /* 3 */ { from: 0, pts: [[TRUNK_X, 764], [990, 764], [990, 716], [950, 716]], fruit: true },
   // 높은 가지
-  /* 4 */ {
-    from: 0,
-    pts: [
-      [TRUNK_X, 640],
-      [1396, 640],
-      [1396, 440],
-      [1350, 440],
-    ],
-    fruit: true,
-  },
-  /* 5 */ {
-    from: 4,
-    pts: [
-      [1396, 524],
-      [1466, 524],
-    ],
-    fruit: true,
-  },
-  /* 6 */ {
-    from: 0,
-    pts: [
-      [TRUNK_X, 606],
-      [800, 606],
-      [800, 410],
-      [846, 410],
-    ],
-    fruit: true,
-  },
-  /* 7 */ {
-    from: 6,
-    pts: [
-      [800, 494],
-      [730, 494],
-    ],
-    fruit: true,
-  },
-  /* 8 */ {
-    from: 0,
-    pts: [
-      [TRUNK_X, 462],
-      [1240, 462],
-      [1240, 346],
-      [1296, 346],
-    ],
-    fruit: true,
-  },
-  /* 9 */ {
-    from: 0,
-    pts: [
-      [TRUNK_X, 492],
-      [950, 492],
-      [950, 362],
-      [900, 362],
-    ],
-    fruit: true,
-  },
-  /* 10 */ {
-    from: 0,
-    pts: [
-      [TRUNK_X, 330],
-      [1160, 330],
-      [1160, 250],
-      [1196, 250],
-    ],
-    fruit: true,
-  },
+  /* 4 */ { from: 0, pts: [[TRUNK_X, 640], [1396, 640], [1396, 440], [1350, 440]], fruit: true },
+  /* 5 */ { from: 4, pts: [[1396, 524], [1466, 524]], fruit: true },
+  /* 6 */ { from: 0, pts: [[TRUNK_X, 606], [800, 606], [800, 410], [846, 410]], fruit: true },
+  /* 7 */ { from: 6, pts: [[800, 494], [730, 494]], fruit: true },
+  /* 8 */ { from: 0, pts: [[TRUNK_X, 462], [1240, 462], [1240, 346], [1296, 346]], fruit: true },
+  /* 9 */ { from: 0, pts: [[TRUNK_X, 492], [950, 492], [950, 362], [900, 362]], fruit: true },
+  /* 10 */ { from: 0, pts: [[TRUNK_X, 330], [1160, 330], [1160, 250], [1196, 250]], fruit: true },
 ];
 
-/** 수확되는 가지(BRANCHES 의 순서). 낮은 것부터 */
-const PICKED: readonly number[] = [1, 2, 3];
+/**
+ * 수확되는 가지(BRANCHES 의 순서)와 번호표가 놓이는 쪽. 낮은 것부터.
+ * 번호는 앞에서 끝난 작업 셋(TASK 01~03)과 같다: 그 셋이 낮은 가지의 열매였다.
+ */
+const PICKED: readonly { branch: number; tag: "left" | "right" }[] = [
+  { branch: 1, tag: "left" },
+  { branch: 2, tag: "right" },
+  { branch: 3, tag: "left" },
+];
+const TAG_W = 40;
 
 const lengthOf = (pts: readonly Pt[]): number => {
   let total = 0;
@@ -223,7 +136,7 @@ export const Tree: React.FC = () => {
             const tip = b.pts[b.pts.length - 1];
             // 가지가 끝까지 자란 프레임
             const tipAt = T.grow + T.growDur * tipTime(END[i] / REACHED);
-            const order = PICKED.indexOf(i);
+            const order = PICKED.map((pick) => pick.branch).indexOf(i);
             const picked = order < 0 ? 0 : progress(frame, T.harvest + order * T.harvestStep, 14, ease.linear);
             return <Fruit key={i} x={tip[0]} y={tip[1]} p={progress(frame, tipAt, 10)} picked={picked} />;
           })}
@@ -242,6 +155,30 @@ export const Tree: React.FC = () => {
       >
         REACH
       </div>
+
+      {/* 낮은 가지의 번호표 */}
+      {PICKED.map(({ branch, tag }, order) => {
+        const tip = BRANCHES[branch].pts[BRANCHES[branch].pts.length - 1];
+        const tipAt = T.grow + T.growDur * tipTime(END[branch] / REACHED);
+        const gap = FRUIT_R + 12;
+        return (
+          <div
+            key={branch}
+            style={{
+              position: "absolute",
+              left: tip[0] + SHIFT_X + (tag === "left" ? -gap - TAG_W : gap),
+              width: TAG_W,
+              top: tip[1] + FRUIT_STEM + FRUIT_R - 13,
+              textAlign: tag === "left" ? "right" : "left",
+              ...mono(size.label, 700),
+              color: color.inkDim,
+              opacity: progress(frame, tipAt + 4, 12),
+            }}
+          >
+            {pad2(order + 1)}
+          </div>
+        );
+      })}
     </>
   );
 };

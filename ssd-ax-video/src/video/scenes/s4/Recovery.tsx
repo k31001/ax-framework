@@ -2,7 +2,7 @@ import React from "react";
 import { useCurrentFrame } from "remotion";
 import { ease, enter, lerp, progress, pulse } from "../../anim";
 import { Pad, Trace, Via } from "../../components/Trace";
-import { color, fullSvg, mono, pad2, sans, size, stroke } from "../../theme";
+import { FRAME, color, fullSvg, mono, pad2, sans, size, stroke } from "../../theme";
 import { AXIS, BARS, BAR_H, CARD_BOX, CRITERION_Y, LIMIT_X, T } from "./layout";
 
 // 수용 기준선과 오류 복구 3단계.
@@ -164,7 +164,7 @@ export const Recovery: React.FC<{ steps: readonly string[] }> = ({ steps }) => {
       <div
         style={{
           position: "absolute",
-          right: 1920 - (LIMIT_X - 16),
+          right: FRAME.w - (LIMIT_X - 16),
           top: CARD_BOX.y + CARD_BOX.h + 28,
           ...mono(size.label, 700),
           color: color.inkSoft,
