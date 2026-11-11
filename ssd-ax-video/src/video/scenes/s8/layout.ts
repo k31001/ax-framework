@@ -11,7 +11,7 @@ export const FLOOR = FRAME.h - space.frame;
 
 export const TREAD_Y = [800, 620, 440] as const; // 디딤판 높이
 export const RISER_X = [620, 1200] as const; // 챌판 위치
-export const NODE_X = [176, 664, 1244] as const; // 각 단의 노드
+export const NODE_X = [140, 664, 1244] as const; // 각 단의 노드 (1단은 세부 문구가 챌판에 닿지 않게 왼쪽으로 당겼다)
 export const TEXT_DX = 28; // 노드에서 글자까지
 
 /** 계단 trace 의 세 토막. 단계가 나올 때마다 한 토막씩 그려진다. */
