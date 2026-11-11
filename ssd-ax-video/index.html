@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SSD 컨트롤러 SoC · AX 전략 영상</title>
+<meta name="description" content="SSD 컨트롤러 SoC 팀의 AI 중심 재설계 전략을 소개하는 영상 6편">
+<style>
+  @font-face { font-family: "Pretendard"; src: url("public/fonts/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+  @font-face { font-family: "JetBrains Mono"; src: url("public/fonts/jetbrains-mono-latin-500-normal.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+  :root {
+    --bg: #0B1220; --panel: #0F192B; --line: #273A5A; --line-strong: #4B6590;
+    --ink: #E6EEFB; --ink-soft: #B8C7E0; --ink-dim: #8C9FC3;
+    --agent: #3FD2C7; --human: #F2B44C;
+    --sans: "Pretendard", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0; color: var(--ink); font-family: var(--sans); line-height: 1.6; word-break: keep-all;
+    background:
+      linear-gradient(rgba(126,160,220,.05) 1px, transparent 1px) 0 0 / 40px 40px,
+      linear-gradient(90deg, rgba(126,160,220,.05) 1px, transparent 1px) 0 0 / 40px 40px,
+      var(--bg);
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px 80px; }
+  header { padding: 56px 0 28px; border-bottom: 1px solid var(--line); }
+  .label { font-family: var(--mono); font-size: 13px; letter-spacing: .08em; color: var(--agent); text-transform: uppercase; }
+  h1 { font-size: clamp(34px, 7vw, 68px); line-height: 1.1; letter-spacing: -.03em; margin: 8px 0 12px; font-weight: 800; text-wrap: balance; }
+  header p { margin: 0; color: var(--ink-soft); font-size: 18px; max-width: 46em; }
+  h2 { font-size: 26px; letter-spacing: -.02em; margin: 56px 0 6px; font-weight: 700; }
+  .sub { color: var(--ink-dim); margin: 0 0 20px; }
+  .player { border: 1px solid var(--line); border-left: 4px solid var(--agent); background: var(--panel); }
+  video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #000; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; padding: 14px 18px 16px; }
+  .meta strong { font-size: 20px; font-weight: 700; }
+  .meta .time { font-family: var(--mono); font-size: 13px; color: var(--ink-dim); }
+  .meta p { flex-basis: 100%; margin: 2px 0 0; color: var(--ink-soft); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 20px; }
+  .card { border: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; }
+  .card .no { font-family: var(--mono); font-size: 13px; letter-spacing: .08em; color: var(--agent); }
+  .card h3 { margin: 2px 0 4px; font-size: 24px; letter-spacing: -.02em; }
+  .shift { color: var(--ink-dim); font-size: 15px; }
+  .shift b { color: var(--ink); font-weight: 600; }
+  .shift span { color: var(--agent); padding: 0 4px; }
+  .card .body { padding: 14px 18px 18px; }
+  .card p { margin: 10px 0 0; color: var(--ink-soft); font-size: 15px; }
+  .links { margin-top: 12px; font-size: 14px; display: flex; gap: 16px; flex-wrap: wrap; }
+  a { color: var(--agent); text-decoration: none; border-bottom: 1px solid rgba(63,210,199,.4); }
+  a:hover, a:focus-visible { border-bottom-color: var(--agent); }
+  a:focus-visible, video:focus-visible { outline: 2px solid var(--human); outline-offset: 3px; }
+  ul.docs { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+  ul.docs li { padding: 10px 14px; border: 1px solid var(--line); background: var(--panel); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  ul.docs span { color: var(--ink-dim); }
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--ink-dim); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="label">SSD Controller SoC · AX</div>
+    <h1>AI 중심 재설계</h1>
+    <p>SSD 컨트롤러 SoC를 설계·검증하는 팀의 AI 전환 전략을 소개하는 영상입니다. 본편 한 편과, 본편의 "5대 전환"을 축마다 풀어 쓴 상세 영상 다섯 편이 있습니다.</p>
+  </header>
+
+  <main>
+    <h2>본편</h2>
+    <p class="sub">요구사항 하나가 스펙에서 퀄까지 가는 과정을 따라가며, 단계마다 에이전트가 하는 일과 사람이 하는 일을 보여 줍니다.</p>
+    <div class="player">
+      <video controls preload="metadata" poster="video/posters/main.jpg" src="video/ssd-ax-strategy.mp4"></video>
+      <div class="meta">
+        <strong>SSD 컨트롤러 SoC AX 전략</strong><span class="time">4:50</span>
+        <p>수확한 열매와 남은 나무, 병목 이동, 사례 7단계(요구사항 분석 → 아키텍처 → IP 설계·PPA → 시뮬레이션 검증 → Emulation·FPGA → FW 개발 → 제품 테스트·퀄), 5대 전환, 책임, 3단계 로드맵.</p>
+      </div>
+    </div>
+
+    <h2>5대 전환 상세</h2>
+    <p class="sub">축마다 무엇이 구체적으로 바뀌는지, 실제 예제와 실행 순서, 필요한 기술 요소를 다룹니다.</p>
+    <div class="grid">
+      <article class="card">
+        <video controls preload="metadata" poster="video/posters/shift1.jpg" src="video/shift1-artifacts.mp4"></video>
+        <div class="body">
+          <div class="no">01 / 05 · <span data-time="shift1">—</span></div>
+          <h3>산출물</h3>
+          <div class="shift">사람용 문서 <span>→</span> <b>실행 가능한 스펙</b></div>
+          <p data-desc="shift1"></p>
+          <div class="links"><a href="docs/shifts/01-artifacts.md">분석 문서</a></div>
+        </div>
+      </article>
+      <article class="card">
+        <video controls preload="metadata" poster="video/posters/shift2.jpg" src="video/shift2-process.mp4"></video>
+        <div class="body">
+          <div class="no">02 / 05 · <span data-time="shift2">—</span></div>
+          <h3>프로세스</h3>
+          <div class="shift">순차 handoff <span>→</span> <b>상시 루프</b></div>
+          <p data-desc="shift2"></p>
+          <div class="links"><a href="docs/shifts/02-process.md">분석 문서</a></div>
+        </div>
+      </article>
+      <article class="card">
+        <video controls preload="metadata" poster="video/posters/shift3.jpg" src="video/shift3-way-of-working.mp4"></video>
+        <div class="body">
+          <div class="no">03 / 05 · <span data-time="shift3">—</span></div>
+          <h3>업무 방식</h3>
+          <div class="shift">직접 작성 <span>→</span> <b>의도 정의 · 증거 기반 판단</b></div>
+          <p data-desc="shift3"></p>
+          <div class="links"><a href="docs/shifts/03-way-of-working.md">분석 문서</a></div>
+        </div>
+      </article>
+      <article class="card">
+        <video controls preload="metadata" poster="video/posters/shift4.jpg" src="video/shift4-system.mp4"></video>
+        <div class="body">
+          <div class="no">04 / 05 · <span data-time="shift4">—</span></div>
+          <h3>시스템</h3>
+          <div class="shift">개인별 챗봇 <span>→</span> <b>통합 AI 플랫폼</b></div>
+          <p data-desc="shift4"></p>
+          <div class="links"><a href="docs/shifts/04-system.md">분석 문서</a></div>
+        </div>
+      </article>
+      <article class="card">
+        <video controls preload="metadata" poster="video/posters/shift5.jpg" src="video/shift5-culture.mp4"></video>
+        <div class="body">
+          <div class="no">05 / 05 · <span data-time="shift5">—</span></div>
+          <h3>문화</h3>
+          <div class="shift">개인 요령 <span>→</span> <b>측정 · 공유 · 학습</b></div>
+          <p data-desc="shift5"></p>
+          <div class="links"><a href="docs/shifts/05-culture.md">분석 문서</a></div>
+        </div>
+      </article>
+    </div>
+
+    <h2>문서</h2>
+    <ul class="docs">
+      <li><a href="docs/01-strategy.md">전략 제안서</a><span>성숙도 3단계, 원칙, 5대 전환, 7단계, 로드맵, 지표, 리스크</span></li>
+      <li><a href="docs/03-workflow-case.md">사례로 보는 워크플로</a><span>요구사항 하나가 스펙에서 퀄까지 가는 과정</span></li>
+      <li><a href="docs/02-storyboard.md">본편 스토리보드</a><span>씬 구성과 자막</span></li>
+      <li><a href="docs/04-narration.md">본편 나레이션 대본</a><span>문장별 대본과 만드는 법</span></li>
+    </ul>
+  </main>
+
+  <footer>영상은 Remotion으로 만들었고, 나레이션은 음성 합성, 배경음악은 코드 합성입니다. 사례 속 과제와 수치는 설명을 위한 예시입니다.</footer>
+</div>
+</body>
+</html>

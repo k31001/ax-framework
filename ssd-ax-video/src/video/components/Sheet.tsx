@@ -147,8 +147,13 @@ export const SceneFade: React.FC<{
 };
 
 export const Sheet: React.FC<{
-  /** 씬 id. 오른쪽 위 라벨("SHEET 08 / 15")과 씬 길이를 timeline.ts 에서 찾는다. */
-  id: SceneId;
+  /** 씬 id. 오른쪽 위 라벨("SHEET 08 / 15")과 씬 길이를 timeline.ts 에서 찾는다. 본편의 씬에서 쓴다. */
+  id?: SceneId;
+  /** 본편이 아닌 영상(5대 전환 상세)에서: 씬 길이(프레임)와 오른쪽 위 라벨을 직접 준다. */
+  frames?: number;
+  label?: string;
+  /** 테두리 왼쪽 아래 라벨. 기본은 "SSD CONTROLLER SOC · AX" */
+  footer?: string;
   /** 테두리 왼쪽 아래 장식 라벨을 숨긴다(그 자리를 그림이 쓰는 씬). */
   hideFooter?: boolean;
   /**
@@ -157,10 +162,10 @@ export const Sheet: React.FC<{
    */
   fade?: boolean | SceneFadeOptions;
   children: React.ReactNode;
-}> = ({ id, hideFooter, fade = true, children }) => {
+}> = ({ id, frames, label, footer, hideFooter, fade = true, children }) => {
   const frame = useCurrentFrame();
-  const opacity =
-    fade === false ? 1 : sceneFade(frame, sceneFrames(id), fade === true ? {} : fade);
+  const length = frames ?? (id ? sceneFrames(id) : 0);
+  const opacity = fade === false ? 1 : sceneFade(frame, length, fade === true ? {} : fade);
   // 씬이 바뀌면 도면 번호가 새로 찍힌다.
   const stamp = 0.35 + 0.65 * progress(frame, 0, DUR.sceneIn, ease.out);
 
@@ -171,11 +176,11 @@ export const Sheet: React.FC<{
       <AbsoluteFill style={{ opacity }}>{children}</AbsoluteFill>
 
       <BorderLabel edge="top" align="right">
-        <span style={{ opacity: stamp }}>{sheetLabel(id)}</span>
+        <span style={{ opacity: stamp }}>{label ?? (id ? sheetLabel(id) : "")}</span>
       </BorderLabel>
       {hideFooter ? null : (
         <BorderLabel edge="bottom" align="left">
-          SSD CONTROLLER SOC · AX
+          {footer ?? "SSD CONTROLLER SOC · AX"}
         </BorderLabel>
       )}
     </AbsoluteFill>
