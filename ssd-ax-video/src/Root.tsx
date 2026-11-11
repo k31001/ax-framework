@@ -4,7 +4,7 @@ import { Main } from "./video/Main";
 import { SCENE_COMPONENTS } from "./video/scenes";
 import { FPS, HEIGHT, SCENES, TOTAL_FRAMES, WIDTH } from "./video/timeline";
 
-// Main  영상 전체 (5610프레임)
+// Main  영상 전체 (timeline.ts 의 씬 길이 합)
 // S1, S2, … S5-4, … S9  씬 하나씩. 그 씬만 미리 보거나 렌더할 때 쓴다.
 
 const size = { width: WIDTH, height: HEIGHT, fps: FPS } as const;
