@@ -144,8 +144,7 @@ BUG-2291 (이전 과제, read channel FSM)  score 0.82
 ```json
 {
   "name": "rerun",
-  "description": "실패한 test를 같은 seed로 재실행한다.
-                  파형은 지정한 구간만 저장한다.",
+  "description": "실패한 test를 같은 seed로 재실행. 파형은 지정 구간만 저장.",
   "inputSchema": {
     "type": "object",
     "properties": {

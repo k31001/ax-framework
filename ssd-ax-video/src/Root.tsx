@@ -1,5 +1,6 @@
 import React from "react";
 import { Composition, Folder } from "remotion";
+import { ShiftCompositions } from "./shifts/registry";
 import { Main } from "./video/Main";
 import { SCENE_COMPONENTS } from "./video/scenes";
 import { FPS, HEIGHT, SCENES, TOTAL_FRAMES, WIDTH } from "./video/timeline";
@@ -19,11 +20,12 @@ export const RemotionRoot: React.FC = () => {
             key={scene.id}
             id={scene.id}
             component={SCENE_COMPONENTS[scene.id]}
-            durationInFrames={scene.seconds * FPS}
+            durationInFrames={Math.round(scene.seconds * FPS)}
             {...size}
           />
         ))}
       </Folder>
+      <ShiftCompositions />
     </>
   );
 };
