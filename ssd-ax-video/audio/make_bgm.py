@@ -485,7 +485,7 @@ def bass_voice() -> np.ndarray:
             logf[i1:] = math.log(f)
         if ends:
             end = min(span[1], TOTAL)
-            lev_pts += [(end, lv), (end + 0.6, 0.0)]
+            lev_pts += [(end - 1.0, lv), (end + 1.5, 0.0)]  # 2.5초에 걸쳐 빠진다
         NOTES.append(("bass", bass_of(row), t0, min(nxt, span[1], TOTAL)))
         prev_f = f
     lev_pts.append((TOTAL + 2.0, 0.0))
