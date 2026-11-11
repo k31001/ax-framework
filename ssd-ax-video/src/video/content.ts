@@ -80,7 +80,7 @@ export const S4J = {
     nodes: [
       { key: "REQ-207", type: "요구사항", app: "R4J" },
       { key: "FEAT-341", type: "설계 기능", app: "R4J" },
-      { key: "VER-512", type: "검증 항목", app: "XRAY" },
+      { key: "VER-530", type: "검증 항목", app: "XRAY" },
       { key: "BUG-2291", type: "버그", app: "JIRA" },
     ],
     links: ["is implemented by", "tested by", "defect"],
