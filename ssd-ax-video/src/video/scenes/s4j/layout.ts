@@ -37,7 +37,7 @@ export const AGENT_ZONE = { y: 684, h: 150 } as const;
 export const JQL_H = 76;
 export const COMMENT_H = 140;
 export const NEW_ISSUE = { x: safe.left, y: AGENT_ZONE.y + 16 } as const;
-export const CAPTION_Y = 892;
+export const CAPTION_Y = 878;
 
 // ── 시점 (프레임) ──────────────────────────────────────────────────────
 const card = f(content.cardAt);
