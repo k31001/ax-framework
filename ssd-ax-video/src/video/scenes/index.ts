@@ -4,6 +4,7 @@ import { S1 } from "./S1";
 import { S2 } from "./S2";
 import { S3 } from "./S3";
 import { S4 } from "./S4";
+import { S4J } from "./S4J";
 import { S5_1 } from "./S5_1";
 import { S5_2 } from "./S5_2";
 import { S5_3 } from "./S5_3";
@@ -22,6 +23,7 @@ export const SCENE_COMPONENTS: Record<SceneId, React.FC> = {
   S2,
   S3,
   S4,
+  S4J,
   "S5-1": S5_1,
   "S5-2": S5_2,
   "S5-3": S5_3,

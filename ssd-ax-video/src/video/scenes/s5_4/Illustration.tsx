@@ -95,7 +95,6 @@ export const S54Illustration: Illustration = ({ width, height, beats, frames }) 
   const waveHot = progress(frame, hypothesis.frame + 34, 10);
   const waveCleared = progress(frame, passAt(overlapX), 14);
   const filed = progress(frame, hypothesis.frame + BUG_DELAY, 14);
-  const filedGlow = 1 - progress(frame, hypothesis.frame + BUG_DELAY + 20, 30, ease.linear);
 
   return (
     <div style={{ position: "absolute", inset: 0 }}>
@@ -230,7 +229,7 @@ export const S54Illustration: Illustration = ({ width, height, beats, frames }) 
             }}
           >
             <span style={{ ...mono(size.label, 500), color: color.inkDim }}>JIRA</span>
-            <span style={{ ...mono(size.label, 700), color: filedGlow > 0.5 ? color.ink : color.agent }}>{BUG.key}</span>
+            <span style={{ ...mono(size.label, 700), color: color.agent }}>{BUG.key}</span>
           </div>
           <div
             style={{

@@ -121,7 +121,7 @@ export const S6: React.FC = () => {
         <OldIcon kind="bug" x0={1360} to={[1620, 700]} at={a1 + 10} moveAt={moveAt + 8} goneAt={a5} />
 
         {/* [s6.2] 요구사항: Jira 이슈 + git 의 수용 기준 */}
-        <CodePanel x={REQ.x} y={REQ.y} w={REQ.w} title="JIRA · REQ-207" px={PX} owner="human" at={a2} lines={[REQ_ISSUE[0], REQ_ISSUE[1], { text: REQ_ISSUE[2], tone: "dim" }, { text: REQ_ISSUE[3], mark: gitAt, unmark: k[0] }]} />
+        <CodePanel x={REQ.x} y={REQ.y} w={REQ.w} title="JIRA · REQ-207" px={PX} owner="human" at={a2} lines={[REQ_ISSUE[0], REQ_ISSUE[1], REQ_ISSUE[2], { text: REQ_ISSUE[3], mark: gitAt, unmark: k[0] }]} />
         <Layer>
           <Trace pts={[[REQ.x + 120, REQ.y + 236], [REQ.x + 120, GIT.y]]} stroke={color.inkSoft} at={gitAt} arrow />
         </Layer>
