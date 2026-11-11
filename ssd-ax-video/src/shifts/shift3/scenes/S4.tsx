@@ -1,6 +1,6 @@
 import React from "react";
 import { useCurrentFrame } from "remotion";
-import { ease, enter, progress } from "../../../video/anim";
+import { ease, enter, enterExit, progress } from "../../../video/anim";
 import { AgentIcon } from "../../../video/components/Icons";
 import { Trace } from "../../../video/components/Trace";
 import { CARD as requirement } from "../../../video/content";
@@ -15,6 +15,8 @@ import { CodeRow, HEAD, LockIcon, Pane, Steps, TB_CODE, Tag, paneH, rowH, split 
 
 const PX = 30;
 const PANE = { x: 96, y: 164, w: 1130 };
+
+const BLOCK = "rec_ctrl · 오류 복구 제어";
 
 const YAML = [
   "task: VER-REC-012        # 예시",
@@ -63,10 +65,19 @@ export const S4: React.FC = () => {
         <div style={{ display: "flex", alignItems: "center", padding: "0 16px", borderRight: `${stroke.hair}px solid ${color.line}`, ...mono(size.small, 700), color: color.ink }}>{requirement.id}</div>
         <div style={{ display: "flex", alignItems: "center", padding: "0 16px", ...sans(size.small, 700), whiteSpace: "nowrap" }}>{requirement.title}</div>
       </div>
-      <div style={{ position: "absolute", left: 700, top: 76, height: 56, display: "flex", alignItems: "center", ...sans(size.small, 600), color: color.inkSoft, whiteSpace: "nowrap", ...enter(frame, split(c1, e1, 1, 3)) }}>
-        rec_ctrl · 오류 복구 제어
+      <div style={{ position: "absolute", left: 700, top: 76, height: 56, display: "flex", alignItems: "center", ...sans(size.small, 600), color: color.inkSoft, whiteSpace: "nowrap", ...enter(frame, c2 - 6) }}>
+        {BLOCK}
       </div>
       <Tag text="완료 큐 변경 후 재검증 (예시)" c={color.inkSoft} x={1044} y={80} at={split(c1, e1, 2, 3)} dashed />
+
+      {/* s4.1: 본편의 그 블록 */}
+      <svg {...fullSvg}>
+        <Trace pts={[[330, 134], [330, 420], [660, 420]]} stroke={color.inkSoft} arrow at={c1 + 8} duration={20} opacity={1 - progress(frame, c2 - 12, 8)} />
+      </svg>
+      <div style={{ position: "absolute", left: 664, top: 300, width: 620, height: 240, boxSizing: "border-box", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, border: `${stroke.trace}px solid ${color.inkSoft}`, backgroundColor: withAlpha(color.panel, 0.92), ...enterExit(frame, split(c1, e1, 1, 3), c2 - 12) }}>
+        <div style={{ ...mono(size.title, 700), color: color.ink }}>{BLOCK.split(" · ")[0]}</div>
+        <div style={{ ...sans(size.body, 600), color: color.inkSoft }}>{BLOCK.split(" · ")[1]}</div>
+      </div>
 
       {/* 전에는 이것을 썼다 */}
       <div style={{ position: "absolute", left: 1262, top: 170, ...mono(size.label, 700), color: color.inkDim, ...enter(frame, c2, { distance: 0 }) }}>BEFORE</div>
