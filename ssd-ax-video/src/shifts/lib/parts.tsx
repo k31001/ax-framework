@@ -40,13 +40,15 @@ export const ShiftSheet: React.FC<{
 
 export const CaptionBar: React.FC = () => {
   const frame = useCurrentFrame();
-  const { lines, frames } = useScene();
+  const { lines, frames, scene } = useScene();
+  const lastScene = scene.index === scene.count - 1;
   const withCaption = lines.filter((l) => l.caption);
   return (
     <>
       {withCaption.map((line, i) => {
         const next = withCaption[i + 1];
-        const out = (next ? next.at : frames) - DUR.exit - 2;
+        // 영상의 마지막 자막은 끝까지 남는다
+        const out = next ? next.at - DUR.exit - 2 : lastScene ? frames + 1 : frames - DUR.exit - 2;
         return (
           <div
             key={line.id}
@@ -182,6 +184,7 @@ export const CodePanel: React.FC<{
                   ...mono(px, 500),
                   letterSpacing: "0",
                   whiteSpace: "pre",
+                  fontVariantLigatures: "none", // |-> 나 != 가 합자로 바뀌지 않게
                   color: tone,
                   opacity: p,
                 }}
