@@ -3,7 +3,7 @@ import { DUR, ease, enter, enterExit, lerp, progress } from "../../../video/anim
 import { Trace } from "../../../video/components/Trace";
 import { STAGES } from "../../../video/content";
 import { color, mono, sans, size, stroke, withAlpha } from "../../../video/theme";
-import { CodePanel, ShiftSheet } from "../../lib";
+import { Chip, CodePanel, ShiftSheet } from "../../lib";
 import type { CodeLine } from "../../lib";
 import { CH, codeLineY, DOC_2, Group, Layer, NoLig, Paper, SceneHead, Status, useT, Wave } from "./kit";
 import { RDL_V1 } from "./S2";
@@ -13,6 +13,7 @@ import { RDL_V1 } from "./S2";
 const CRUMBS = ["REQ-QOS-07", "rcv_ctrl", "복구 완료 interrupt"];
 export const CONTRACT_V1 = [
   "id: HSI-RCV-012",
+  "jira: FEAT-341",
   "req: REQ-QOS-07",
   "target: rcv_ctrl.IRQ_STATUS.RCV_DONE",
   "event: 복구 한 건 완료",
@@ -44,6 +45,7 @@ export const S4: React.FC = () => {
   const a5 = t("s4.5");
   const a6 = t("s4.6");
   const a7 = t("s4.7");
+  const a8 = t("s4.8");
 
   const cardLines: CodeLine[] = [
     ...CONTRACT_V1.map((text, i) => ({ text, at: t("s4.3", 0.06 * i) + 6 })),
@@ -141,9 +143,9 @@ export const S4: React.FC = () => {
 
       {/* [s4.4] 양식이 묻는 질문 */}
       <Layer>
-        <Trace pts={[[CARD.x + CARD.w + 2, LAST + LINE_H / 2], [806, LAST + LINE_H / 2]]} stroke={color.problem} at={a4} opacity={1 - progress(frame, a6, DUR.exit)} />
+        <Trace pts={[[CARD.x + CARD.w + 2, LAST + LINE_H / 2], [806, LAST + LINE_H / 2]]} stroke={color.problem} at={a4} opacity={1 - progress(frame, a8, DUR.exit)} />
         {/* [s4.5] 문서로 올라가 보지만 답이 없다 */}
-        <Trace pts={[[1100, LAST - 14], [1100, 324]]} stroke={color.problem} dash="8 7" at={a5} duration={22} opacity={1 - progress(frame, a6, DUR.exit)} />
+        <Trace pts={[[1100, LAST - 14], [1100, 324]]} stroke={color.problem} dash="8 7" at={a5} duration={22} opacity={1 - progress(frame, a8, DUR.exit)} />
       </Layer>
       <div
         style={{
@@ -158,11 +160,36 @@ export const S4: React.FC = () => {
           backgroundColor: withAlpha(color.bg, 0.95),
           ...sans(34, 700),
           whiteSpace: "nowrap",
-          ...enterExit(frame, a4 + 6, a6, { from: "left" }),
+          ...enterExit(frame, a4 + 6, a8, { from: "left" }),
         }}
       >
         처리 전에 완료가 또 오면?
       </div>
+
+      {/* [s4.8] 질문은 Jira 댓글로 HW · FW 담당에게 간다 */}
+      <Layer>
+        <Trace pts={[[CARD.x + CARD.w + 2, LAST + LINE_H / 2], [880, LAST + LINE_H / 2], [880, 500], [RX, 500]]} stroke={color.agent} at={a8} duration={20} arrow opacity={1 - progress(frame, a6 - 6, DUR.exit)} />
+      </Layer>
+      <CodePanel
+        x={RX}
+        y={340}
+        w={824}
+        title="JIRA · FEAT-341"
+        px={26}
+        owner="agent"
+        at={a8 + 6}
+        out={a6 - 6}
+        step={5}
+        lines={[
+          "FEAT-341  설계 기능      상태: 정의 중",
+          { text: "rcv_ctrl 복구 완료 전달", tone: "dim" },
+          { text: "[에이전트 · dv-agent · 질문]", tone: "agent" },
+          "on_overlap 필수 칸이 비어 있습니다.",
+          { text: "처리 전에 완료가 또 오면?", mark: t("s4.8", 0.35), markTone: "problem" },
+          { text: "요청  HW 담당, FW 담당: 값 결정", tone: "human", mark: t("s4.8", 0.6), markTone: "human" },
+        ]}
+      />
+      <Chip text="ai-authored" tone="agent" at={a8 + 12} out={a6 - 6} style={{ position: "absolute", left: 1824 - 196, top: 342, backgroundColor: color.bg }} />
 
       {/* [s4.6] 이 칸에서 assertion 이 생성되고, 곧바로 반례가 나온다 */}
       <Layer>

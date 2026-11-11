@@ -11,7 +11,7 @@ export const TX = {
     regress: "regression DB",
     bug: "과거 bug",
     spec: "스펙",
-    tracker: "issue tracker",
+    jira: "Jira",
   },
   ipLock: "설계 IP · 반출 금지",
   now: "현재",
@@ -29,7 +29,11 @@ export const TX = {
   pending: "승인 대기",
   blocks: ["사내 모델", "도구 연결", "지식", "격리 실행", "평가", "권한 · 감사", "비용 관측"],
   vendorLink: "벤더 도구 연결",
-  inhouseLink: "사내 DB · scheduler · tracker 연결",
+  inhouseLink: "사내 DB · scheduler · Jira 연결",
+  jiraKnow: ["R4J 추적", "Xray 결과"],
+  jiraGate: "Jira 승인 전환",
+  askHead: "JIRA · VER-620 야간 regression · 댓글",
+  askWho: "검증 리드  @triage-agent",
   buy: "구매",
   buyNote: "사서 쓴다",
   build: "구축",
@@ -70,22 +74,24 @@ export const MCP_CONFIG = [
   "    \"url\": \"https://mcp.eda.internal/regress\" },",
   "  \"sim\":  { \"url\": \"https://mcp.eda.internal/sim\" },",
   "  \"wave\": { \"url\": \"https://mcp.eda.internal/wave\" },",
-  "  \"kb\":   { \"url\": \"https://mcp.eda.internal/kb\" }",
+  "  \"kb\":   { \"url\": \"https://mcp.eda.internal/kb\" },",
+  "  \"jira\": { \"url\": \"https://mcp.eda.internal/jira\" }",
   "} }",
 ];
 
 export type Call = { no: string; tool: string; args: string; result?: string; resultTone?: "problem" | "human"; strip: number };
 
-// strip: 도구 띠에서의 자리 (regress, sim, wave, code, kb, tracker)
+// strip: 도구 띠에서의 자리 (regress, sim, wave, code, kb, jira)
 export const CALLS: Call[] = [
+  { no: "00", tool: "jira.search", args: "assignee=currentUser()", result: "-> VER-620", strip: 5 },
   { no: "01", tool: "regress.query", args: "run=nightly-1110 status=FAIL", result: "-> 312건", strip: 0 },
   { no: "02", tool: "regress.cluster", args: "by=signature", result: "-> 4묶음", strip: 0 },
   { no: "03", tool: "regress.query", args: "cluster=C2 tag=recov_retry", result: "-> 97건", strip: 0 },
   { no: "04", tool: "sim.rerun", args: "recov_retry_burst seed=48213", result: "-> FAIL", resultTone: "problem", strip: 1 },
   { no: "05", tool: "wave.query", args: "recov_req,dec_done,state", result: "-> 4행", strip: 2 },
   { no: "06", tool: "code.read", args: "rd_recov_ctrl.sv:212-240", strip: 3 },
-  { no: "07", tool: "kb.search", args: "\"같은 cycle 완료 누락\" hybrid", result: "-> BUG-2291", strip: 4 },
-  { no: "08", tool: "tracker.draft", args: "REQ-QOS-07 연결", result: "-> 승인 대기", resultTone: "human", strip: 5 },
+  { no: "07", tool: "kb.search", args: "\"같은 cycle 완료 누락\" hybrid", result: "-> BUG-1187", strip: 4 },
+  { no: "08", tool: "jira.draft", args: "BUG-2268 (REQ-207)", result: "-> 승인 대기", resultTone: "human", strip: 5 },
 ];
 
 export const WAVE_TABLE = [
@@ -104,7 +110,7 @@ export const RTL = [
 ];
 
 export const BUG_CARD = [
-  "BUG-2291 (이전 과제, read channel FSM)",
+  "BUG-1187 (이전 과제, read channel FSM)",
   "  증상: 같은 cycle에 req와 done이 겹치면 done 유실",
   "  해결: done을 sticky flag로 잡고 천이 때 소거",
 ];
@@ -115,7 +121,7 @@ export const ANSWER = [
   "근거 1 재현  recov_retry_burst seed=48213",
   "근거 2 파형  1,840,000 ns 구간",
   "근거 3 코드  rd_recov_ctrl.sv:214",
-  "근거 4 유사  BUG-2291",
+  "근거 4 유사  BUG-1187",
   "확인 못 한 것: 나머지 96건은 signature만 일치",
   "              표본 5건 재실행 권장",
 ];
@@ -126,12 +132,37 @@ export const POLICY = [
   "tools:",
   "  regress: read",
   "  sim:     run           # queue=agent-short, 20분",
-  "  tracker: draft         # 등록은 사람 승인",
-  "deny: [git.push, waiver.write, signoff]",
+  "  jira:    draft         # 등록은 사람 승인",
+  "deny: [git.push, waiver.write, signoff, jira.approve]",
 ];
 
 export const AUDIT = [
   "{\"user\":\"dv-eng-07\",\"agent\":\"triage-agent\",",
   " \"tool\":\"sim.rerun\",\"args\":{\"seed\":48213},",
   " \"result\":\"FAIL\",\"cpu_min\":6,\"tokens\":18400}",
+];
+
+export const JQL = [
+  "assignee = currentUser()",
+  "  AND status in (지시됨, \"진행 중\")",
+  "",
+  "키       유형            요약",
+  "VER-620  Test Execution  야간 regression",
+  "  댓글  검증 리드  @triage-agent",
+  "        retry 관련 실패의 원인이 뭐야?",
+];
+
+export const JIRA_DRAFT = [
+  "BUG-2268  버그                      상태: 초안",
+  "요청과 완료가 같은 cycle에 오면 완료 유실",
+  "담당: triage-agent   라벨: ai-authored",
+  "링크  defect @ VER-620 · relates to BUG-1187",
+];
+
+export const JIRA_COMMENT = [
+  "[에이전트 · triage-agent · 초안]  BUG-2268",
+  "가설  같은 cycle의 완료 유실 (C2 97건)",
+  "증거  seed=48213 · 1,840,000 ns · rd_recov_ctrl.sv:214",
+  "확인 못 한 것  나머지 96건은 signature만 일치",
+  "요청  설계자: 등록 또는 반려",
 ];

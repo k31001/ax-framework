@@ -2,6 +2,7 @@ import React from "react";
 import { useCurrentFrame } from "remotion";
 import { ease, lerp, progress } from "../../../video/anim";
 import { AgentIcon, HumanIcon, WarnIcon } from "../../../video/components/Icons";
+import { Trace } from "../../../video/components/Trace";
 import { color, mono, size, stroke, withAlpha } from "../../../video/theme";
 import { CodePanel, ShiftSheet, useScene } from "../../lib";
 import { At, Box, Dots, Svg, Txt, WeekHeader, useAt, vis } from "./kit";
@@ -24,6 +25,9 @@ export const S4: React.FC = () => {
   const t4 = cue("s4.4");
   const t5 = cue("s4.5");
   const t6 = cue("s4.6");
+  const t47 = cue("s4.7");
+  const t8 = cue("s4.8");
+  const picO = 1 - progress(frame, t8 - 8, 10, ease.in);
 
   // 에이전트 블록: s4.2 에 살아 있고, 1주에는 꺼졌다가, 2주에 다시 켜진다
   const agentIn = progress(frame, at("s4.2", 0.35), 16);
@@ -82,7 +86,7 @@ export const S4: React.FC = () => {
         owner="human"
         px={26}
         at={t3 + 8}
-        dimAt={t4 - 4}
+        dimAt={t47 - 4}
         out={t5 - 12}
         lines={[
           { text: "speed_metric: triage 소요 (분/일)", mark: at("s4.3", 0.55), markTone: "agent" },
@@ -101,17 +105,23 @@ export const S4: React.FC = () => {
         title="metrics/triage-baseline.md (예시)"
         owner="human"
         px={28}
-        at={t4}
+        at={t47}
         out={t5 - 12}
         lines={[
           { text: "야간 regression 10회 기준", tone: "dim" },
+          { text: "출처  Jira 변경 이력 (사람이 고친 묶음)", mark: at("s4.7", 0.3), unmark: t4 - 4, markTone: "human" },
           { text: "아침 triage 소요    95분/일 (2명 합계)", at: at("s4.4", 0.08), mark: at("s4.4", 0.2) },
           { text: "실패 → 담당 배정     중앙값 3.5시간", at: at("s4.4", 0.3), tone: "dim" },
           { text: "오분류              묶음 41개 중 6개 (15%)", at: at("s4.4", 0.42), mark: at("s4.4", 0.5), markTone: "human" },
         ]}
       />
 
+      {frame >= t47 ? (
+        <div style={{ position: "absolute", left: 1824 - 86, top: 451, ...mono(size.label, 700), color: color.human, opacity: vis(frame, t47 + 4, t5 - 12) }}>JIRA</div>
+      ) : null}
+
       {/* s4.5 원인이 다른 두 무리가 한 묶음으로 */}
+      <div style={{ opacity: picO }}>
       <Svg>
         <Dots cx={MX - gap} cy={MY} r={54} n={46} c={color.problem} p={groups} o={groups} dot={3.5} />
         <Dots cx={MX + gap} cy={MY} r={54} n={46} c={color.inkSoft} p={groups} o={groups} dot={3.5} />
@@ -129,6 +139,7 @@ export const S4: React.FC = () => {
           {k}
         </Txt>
       ))}
+      </div>
       <At x={lerp(MX, 640, warnMove)} y={lerp(MY - 190, 470, warnMove)} o={warnO}>
         <WarnIcon size={64} color={color.problem} />
       </At>
@@ -173,7 +184,26 @@ export const S4: React.FC = () => {
           "eval_case: evals/triage/case-023",
         ]}
       />
+      {/* s4.8 원본은 git, Jira 버그 이슈에는 댓글로 잇는다 */}
+      <CodePanel
+        x={96}
+        y={470}
+        w={480}
+        title="JIRA · BUG-2268"
+        owner="agent"
+        px={26}
+        at={t8}
+        step={4}
+        lines={[
+          { text: "상태  초안 · triage-agent", tone: "agent" },
+          { text: "라벨  ai-authored", tone: "agent" },
+          { text: "댓글 · 설계자", tone: "human" },
+          "  묶음에 원인 2종, B를 분리",
+          { text: "  기록: failures/F-007.yaml", mark: at("s4.8", 0.55), markTone: "human" },
+        ]}
+      />
       <Svg>
+        <Trace pts={[[576, 709], [620, 709]]} at={at("s4.8", 0.6)} stroke={color.human} width={stroke.bold} arrow />
         {frame >= at("s4.6", 0.85) ? (
           <path
             d="M 1520 590 H 1536 V 660 H 1520"

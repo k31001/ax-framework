@@ -5,7 +5,7 @@ import { AgentIcon, HumanIcon } from "../../../video/components/Icons";
 import { Trace } from "../../../video/components/Trace";
 import { color, fullSvg, mono, sans, size, stroke, withAlpha } from "../../../video/theme";
 import { ShiftSheet, useScene } from "../../lib";
-import { CodeRow, HEAD, Pane, Stamp, Steps, Tag, mix, paneH, rowH, split } from "./kit";
+import { CodeRow, HEAD, Pane, Stamp, StatusChip, Steps, Tag, Workflow, mix, paneH, rowH, split } from "./kit";
 
 // s5 예제 ②: 증거 묶음과 반려. 이 편의 중심 장면.
 //   s5.1  청록 창 evidence/VER-REC-012/summary.yaml 의 줄이 위에서부터 켜진다
@@ -15,6 +15,8 @@ import { CodeRow, HEAD, Pane, Stamp, Steps, Tag, mix, paneH, rowH, split } from 
 //   s5.5  붉은 점 하나 → M-031 창과 PUSH/POP 파형
 //   s5.6  test · assertion 없음 → 붉은 도장 '#1 반려'
 //   s5.7  assertion 추가 → 점이 청록으로 → '#2 승인'
+//   s5.9  Jira 워크플로: 검토 대기까지는 에이전트, 승인은 사람
+// s5.1 후반에 Jira 카드(VER-510)에 에이전트의 댓글이 달리고, s5.2 의 완료 선언과 함께 상태가 '검토 대기'가 된다.
 
 const PX = 26;
 const LH = rowH(PX);
@@ -50,6 +52,18 @@ const LEGEND = [
   { text: "검출 109", c: color.agent },
   { text: "동등 4", c: color.inkDim },
   { text: "공백 7", c: color.problem },
+];
+
+// Jira 이슈 카드 (docs/05-jira-traceability.md 5장)
+const CARD = { x: 1040, y: SUM.y, w: 784 };
+const CARD_ROWS = [
+  "rcv_ctrl 완료 큐 재검증",
+  "담당: dv-agent   라벨: ",
+  "실행: VER-620 (ci-import)",
+  "댓글  dv-agent  11-11 07:40",
+  "  [에이전트 · dv-agent · 증거]",
+  "  fail 0, mutation 공백 7, 질문 1",
+  "  evidence/VER-REC-012/ @ a71b04d",
 ];
 
 const MUT = { x: 1000, y: 548, w: 824 };
@@ -91,7 +105,9 @@ export const S5: React.FC = () => {
   const c5 = cue("s5.5");
   const c6 = cue("s5.6");
   const c7 = cue("s5.7");
+  const c9 = cue("s5.9");
   const e1 = end("s5.1");
+  const cardAt = split(c1, e1, 1, 2);
   const e2 = end("s5.2");
   const e3 = end("s5.3");
   const e4 = end("s5.4");
@@ -159,12 +175,21 @@ export const S5: React.FC = () => {
         ) : null}
       </Pane>
 
-      {/* 밤사이 에이전트가 올린다 */}
-      <div style={{ position: "absolute", left: 1350, top: 296, display: "flex", alignItems: "center", gap: 20, ...enterExit(frame, c1, c3 + 6) }}>
-        <AgentIcon size={128} color={color.agent} />
-        <div style={{ ...mono(size.label, 700), color: color.agent }}>AGENT</div>
-      </div>
-      <Tag text={AGENT_SAYS} c={color.agent} x={1350} y={216} at={declare} out={c3 + 6} px={size.body} fill />
+      {/* Jira: 에이전트의 댓글과 상태 */}
+      <Pane x={CARD.x} y={CARD.y} w={CARD.w} h={paneH(7, PX)} title="JIRA · XRAY TEST PLAN" edge={color.agent} border={withAlpha(color.agent, 0.55)} at={cardAt} out={c4 - 12} opacity={1 - 0.45 * progress(frame, c3 + 6, 14)}>
+        {CARD_ROWS.map((r, i) => (
+          <CodeRow key={i} i={i} px={PX} c={i === 4 ? color.agent : i >= 5 ? color.ink : color.inkSoft} o={progress(frame, cardAt + 8 + i * 4, 10)}>
+            {i === 0 ? <span style={{ color: color.ink, fontWeight: 700 }}>{"VER-510  "}</span> : null}
+            {r}
+            {i === 1 ? <span style={{ color: color.agent, fontWeight: 700 }}>ai-authored</span> : null}
+          </CodeRow>
+        ))}
+        <div style={{ position: "absolute", right: 14, top: 54, opacity: progress(frame, cardAt + 8, 10) }}>
+          <StatusChip text={frame >= declare + 6 ? "검토 대기" : "진행 중"} c={color.agent} lit={frame >= declare + 6 ? progress(frame, declare + 6, 10) : 0.4} />
+        </div>
+      </Pane>
+      <div style={{ position: "absolute", left: 96, top: 590, ...mono(size.label, 700), color: color.inkDim, ...enter(frame, reject, { distance: 0 }) }}>JIRA · VER-510 · HISTORY</div>
+      <Workflow x={1000} y={798} label="JIRA · VER-510 · WORKFLOW" start={c9} at={[c9 + 4, c9 + 8, c9 + 12, split(c9, end("s5.9"), 1, 3)]} />
 
       {/* ── 점 120개 ───────────────────────────────────────────────── */}
       <svg {...fullSvg}>
@@ -193,7 +218,7 @@ export const S5: React.FC = () => {
         <Trace pts={[[dotAt(OPENED).x, dotAt(OPENED).y + 20], [dotAt(OPENED).x, MUT.y]]} stroke={frame >= c7 ? color.agent : color.problem} width={stroke.bold} at={c5} />
         {/* 반려: 에이전트에게 되돌아간다 */}
         <Trace pts={[[912, 708], [912, 752]]} stroke={color.problem} width={stroke.bold} dash="8 6" arrow at={reject + 16} />
-        <Trace pts={[[1330, 360], [SUM.x + SUM.w + 6, 360]]} stroke={color.agent} width={stroke.bold} arrow at={c1 + 6} duration={22} opacity={1 - progress(frame, c3 + 6, 10)} />
+        <Trace pts={[[CARD.x, rowY(6)], [SUM.x + SUM.w + 6, rowY(6)]]} stroke={color.agent} width={stroke.bold} arrow at={cardAt + 34} opacity={1 - progress(frame, c4 - 12, 8)} />
         <Trace pts={[[954, 792], [MUT.x - 2, 792]]} stroke={color.agent} width={stroke.bold} arrow at={c7} duration={10} />
       </svg>
       {LEGEND.map((l, i) => {

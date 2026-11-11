@@ -10,7 +10,7 @@ import { color, fullSvg, mono, sans, stroke, withAlpha } from "../../../video/th
 import { CodePanel, ShiftSheet } from "../../lib";
 import { AREA, CallLog } from "./CallLog";
 import { EdgeTag, useCues } from "./kit";
-import { RTL, TX, WAVE_TABLE } from "./text";
+import { JQL, RTL, TX, WAVE_TABLE } from "./text";
 
 // S4 예제 1: 에이전트가 부르는 도구. 왼쪽에 호출 기록이 쌓이고 오른쪽에 호출의 결과가 바뀌어 나타난다.
 
@@ -53,6 +53,7 @@ const BAND = { y: 252, h: 76, wx: 1560, ww: 84 } as const;
 export const S4: React.FC = () => {
   const frame = useCurrentFrame();
   const { cue, within } = useCues();
+  const t0 = cue("s4.7");
   const t1 = cue("s4.1");
   const t2 = cue("s4.2");
   const t3 = within("s4.2", 0.5);
@@ -88,7 +89,10 @@ export const S4: React.FC = () => {
 
   return (
     <ShiftSheet>
-      <CallLog at={[t1, t2, t3, t4, t5, t6]} />
+      <CallLog at={[t0, t1, t2, t3, t4, t5, t6]} />
+
+      {/* ── 0부: JQL 로 지시를 읽는다 ── */}
+      <CodePanel x={AREA.x} y={AREA.y + 6} w={860} title="JIRA · JQL · triage-agent" px={26} at={t0 + 16} out={t1 - 6} owner="agent" lines={JQL.map((text, i) => (i < 2 ? { text, tone: "agent" as const } : i === 3 ? { text, tone: "dim" as const } : i === 4 ? { text, mark: within("s4.7", 0.55) } : i > 4 ? { text, tone: "human" as const, at: within("s4.7", 0.55) + 6 + (i - 5) * 4 } : { text }))} />
 
       {/* ── 1부 ── */}
       {part1 > 0 ? (

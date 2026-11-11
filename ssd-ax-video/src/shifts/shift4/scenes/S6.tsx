@@ -43,6 +43,7 @@ export const S6: React.FC = () => {
   const names = [0, 0.12, 0.26, 0.4, 0.55, 0.67, 0.83].map((t) => within("s6.2", t));
   const buyAt = cue("s6.3");
   const buildAt = cue("s6.4");
+  const jiraAt = cue("s6.8");
   const t5 = cue("s6.5");
   const t6 = cue("s6.6");
   const t7 = cue("s6.7");
@@ -112,6 +113,13 @@ export const S6: React.FC = () => {
           <div key={i} style={{ opacity: alive(i) }}>
             <EdgeTag x={b.x + 18} y={b.y} text={pad2(i + 1)} c={blend(color.inkDim, color.agent, named)} p={num} />
             <div style={{ position: "absolute", left: b.x + 30, top: b.y, height: b.h, display: "flex", alignItems: "center", ...sans(40, 700), whiteSpace: "nowrap", opacity: named * (split ? 1 - buy : 1), translate: `${(1 - named) * 12}px 0px` }}>{TX.blocks[i]}</div>
+            {i === 2 || i === 5 ? (
+              <div style={{ position: "absolute", left: b.x, top: b.y, width: b.w - 18, height: b.h, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10 }}>
+                {(i === 2 ? TX.jiraKnow : [TX.jiraGate]).map((t, k) => (
+                  <div key={t} style={{ height: 46, padding: "0 12px", display: "flex", alignItems: "center", boxSizing: "border-box", border: `${stroke.thin}px solid ${i === 5 ? color.human : color.agent}`, backgroundColor: color.bg, ...sans(30, 600), color: i === 5 ? color.human : color.agent, whiteSpace: "nowrap", ...enter(frame, jiraAt + (i === 5 ? within("s6.8", 0.55) - jiraAt : 6 + k * 14), { from: "left" }) }}>{t}</div>
+                ))}
+              </div>
+            ) : null}
             {split ? (
               <>
                 {[

@@ -74,7 +74,7 @@
     {
       "id": "s3",
       "name": "전환 후: 에이전트가 도구에 닿는다",
-      "visual": "같은 구도에서 챗봇 창이 물러나고, 중앙에 청록 에이전트 노드가 놓인다. 바깥에 '사내망' 경계선(가는 이중선 사각형)이 그려지고 모든 것이 그 안에 있다.\ns3.1: 에이전트 노드에서 오른쪽 도구 아이콘들(regression DB, 시뮬레이터, 파형, 과거 bug, issue tracker)로 청록 trace가 하나씩 연결되고 아이콘이 밝아진다.\ns3.2: 에이전트 노드 아래 '사내 모델' 칩 그림이 붙는다. 경계선 밖으로 나가는 화살표에 붉은 차단 표시 'egress: none'. 자물쇠가 풀려 rd_recov_ctrl.sv와 파형 아이콘이 밝아진다.\ns3.3: trace가 모이는 지점에 커넥터 모양의 'MCP' 라벨. 그 옆에 설정 조각을 표시:\n{ \"mcpServers\": {\n    \"regress\": { \"type\": \"http\",\n      \"url\": \"https://mcp.eda.internal/regress\" },\n    \"sim\":  { \"url\": \"https://mcp.eda.internal/sim\" },\n    \"wave\": { \"url\": \"https://mcp.eda.internal/wave\" },\n    \"kb\":   { \"url\": \"https://mcp.eda.internal/kb\" }\n} }\ns3.4: s1의 질문 카드가 다시 나타나 이번에는 에이전트 노드로 들어간다.",
+      "visual": "같은 구도에서 챗봇 창이 물러나고, 중앙에 청록 에이전트 노드가 놓인다. 바깥에 '사내망' 경계선(가는 이중선 사각형)이 그려지고 모든 것이 그 안에 있다.\ns3.1: 에이전트 노드에서 오른쪽 도구 아이콘들(regression DB, 시뮬레이터, 파형, 과거 bug, Jira)로 청록 trace가 하나씩 연결되고 아이콘이 밝아진다.\ns3.2: 에이전트 노드 아래 '사내 모델' 칩 그림이 붙는다. 경계선 밖으로 나가는 화살표에 붉은 차단 표시 'egress: none'. 자물쇠가 풀려 rd_recov_ctrl.sv와 파형 아이콘이 밝아진다.\ns3.3: trace가 모이는 지점에 커넥터 모양의 'MCP' 라벨. 그 옆에 설정 조각을 표시:\n{ \"mcpServers\": {\n    \"regress\": { \"type\": \"http\",\n      \"url\": \"https://mcp.eda.internal/regress\" },\n    \"sim\":  { \"url\": \"https://mcp.eda.internal/sim\" },\n    \"wave\": { \"url\": \"https://mcp.eda.internal/wave\" },\n    \"kb\":   { \"url\": \"https://mcp.eda.internal/kb\" },\n    \"jira\": { \"url\": \"https://mcp.eda.internal/jira\" }\n} }\ns3.5: 설정의 \"jira\" 줄과 도구 'Jira' 노드가 함께 켜진다. 노드에 작은 라벨 'DC · REST'(Atlassian의 MCP 서버는 Cloud용이라, REST를 감싼 사내 MCP 서버로 닿는다). 노드 오른쪽에 호박색 사람 아이콘이 나타나 사람과 에이전트가 같은 노드에서 만난다.\ns3.4: s1의 질문이 Jira 댓글 카드로 다시 나타난다(호박색). 머리 'JIRA · VER-620 야간 regression · 댓글', 본문 '검증 리드  @triage-agent' 와 질문 문장. 카드에서 호박색 trace가 에이전트 노드로 들어간다.",
       "lines": [
         {
           "id": "s3.1",
@@ -95,21 +95,34 @@
           "caption": "MCP 기반 도구 연결"
         },
         {
+          "id": "s3.5",
+          "text": "Jira도 그중 하나입니다. 사람과 에이전트가 만나는 창구입니다.",
+          "say": "지라도 그중 하나입니다. 사람과 에이전트가 만나는 창구입니다.",
+          "caption": "Jira: 사람 · 에이전트의 창구"
+        },
+        {
           "id": "s3.4",
-          "text": "질문은 같습니다. 달라지는 것은 그 다음입니다.",
-          "say": "질문은 같습니다. 달라지는 것은 그 다음입니다."
+          "text": "같은 질문이 Jira 댓글로 옵니다. 달라지는 것은 그 다음입니다.",
+          "say": "같은 질문이 지라 댓글로 옵니다. 달라지는 것은 그 다음입니다.",
+          "caption": "질문은 Jira 댓글로"
         }
       ]
     },
     {
       "id": "s4",
       "name": "예제 1: 에이전트가 부르는 도구",
-      "visual": "영상에서 가장 긴 구간의 전반. 화면 왼쪽 40%에 '도구 호출 기록' 패널(터미널 모양, 청록 글자), 오른쪽 60%에 각 호출의 결과가 차례로 바뀌어 나타난다. 호출 기록은 문장마다 한두 줄씩 쌓인다. 전체 기록:\n01 regress.query   run=nightly-1110 status=FAIL -> 312건\n02 regress.cluster by=signature               -> 4묶음\n03 regress.query   cluster=C2 tag=recov_retry -> 97건\n04 sim.rerun  recov_retry_burst seed=48213    -> FAIL\n05 wave.query recov_req,dec_done,state        -> 4행\n06 code.read  rd_recov_ctrl.sv:212-240\ns4.1: 01줄 등장. 오른쪽에 본편 S5-4(design/a/s5-4.png)의 붉은 경고 상자 '야간 regression 실패 312건'과 붉은 점 무리.\ns4.2: 02, 03줄 등장. 점 무리가 4개 묶음으로 갈라지고 두 번째 묶음에 'C2 · recov_retry · 97건' 라벨, 나머지는 흐려진다.\ns4.3: 04줄 등장. C2에서 점 하나가 빠져나와 점선 사각형 'sandbox · queue=agent-short' 안으로 들어가고, 결과 'FAIL @ 2.04 ms'.\ns4.4: 05줄 등장. 긴 파형 띠에서 좁은 구간만 붉은 틀로 잘려 확대되고 표로 바뀐다:\ntime(ns)  state      recov_req dec_done cmd_done\n1839990   WAIT_DEC   0         0        0\n1840000   WAIT_DEC   1         1        0\n1840010   RETRY_REQ  0         0        0\n2040000   RETRY_REQ  0         0        0\ns4.5: 표의 1840000 행에 붉은 강조와 '같은 cycle', 1840010 행에 '완료 유실', 마지막 행에 'timeout' 주석. 표 위에 본편과 같은 REQ / DONE 두 줄 파형이 겹침 구간을 붉게 표시.\ns4.6: 06줄 등장. 오른쪽이 코드 조각으로 바뀐다. 첫 분기 줄에 붉은 밑줄:\nWAIT_DEC: begin\n  if (recov_req)     state_d = RETRY_REQ; // 요청 우선\n  else if (dec_done) state_d = DONE;      // 같은 cycle이면 유실\nend",
+      "visual": "영상에서 가장 긴 구간의 전반. 화면 왼쪽 40%에 '도구 호출 기록' 패널(터미널 모양, 청록 글자), 오른쪽 60%에 각 호출의 결과가 차례로 바뀌어 나타난다. 호출 기록은 문장마다 한두 줄씩 쌓인다. 전체 기록:\n00 jira.search    assignee=currentUser()     -> VER-620\n01 regress.query   run=nightly-1110 status=FAIL -> 312건\n02 regress.cluster by=signature               -> 4묶음\n03 regress.query   cluster=C2 tag=recov_retry -> 97건\n04 sim.rerun  recov_retry_burst seed=48213    -> FAIL\n05 wave.query recov_req,dec_done,state        -> 4행\n06 code.read  rd_recov_ctrl.sv:212-240\ns4.7: 00줄 등장. 도구 띠의 'jira'가 켜진다. 오른쪽에 JQL 창(머리 'JIRA · JQL'):\nassignee = currentUser()\n  AND status in (지시됨, \"진행 중\")\n\n키       유형            요약\nVER-620  Test Execution  야간 regression\n  댓글  검증 리드  @triage-agent\n        retry 관련 실패의 원인이 뭐야?\ns4.1: JQL 창이 물러나고 01줄 등장. 오른쪽에 본편 S5-4(design/a/s5-4.png)의 붉은 경고 상자 '야간 regression 실패 312건'과 붉은 점 무리.\ns4.2: 02, 03줄 등장. 점 무리가 4개 묶음으로 갈라지고 두 번째 묶음에 'C2 · recov_retry · 97건' 라벨, 나머지는 흐려진다.\ns4.3: 04줄 등장. C2에서 점 하나가 빠져나와 점선 사각형 'sandbox · queue=agent-short' 안으로 들어가고, 결과 'FAIL @ 2.04 ms'.\ns4.4: 05줄 등장. 긴 파형 띠에서 좁은 구간만 붉은 틀로 잘려 확대되고 표로 바뀐다:\ntime(ns)  state      recov_req dec_done cmd_done\n1839990   WAIT_DEC   0         0        0\n1840000   WAIT_DEC   1         1        0\n1840010   RETRY_REQ  0         0        0\n2040000   RETRY_REQ  0         0        0\ns4.5: 표의 1840000 행에 붉은 강조와 '같은 cycle', 1840010 행에 '완료 유실', 마지막 행에 'timeout' 주석. 표 위에 본편과 같은 REQ / DONE 두 줄 파형이 겹침 구간을 붉게 표시.\ns4.6: 06줄 등장. 오른쪽이 코드 조각으로 바뀐다. 첫 분기 줄에 붉은 밑줄:\nWAIT_DEC: begin\n  if (recov_req)     state_d = RETRY_REQ; // 요청 우선\n  else if (dec_done) state_d = DONE;      // 같은 cycle이면 유실\nend",
       "lines": [
         {
+          "id": "s4.7",
+          "text": "에이전트는 먼저 JQL로, 자기에게 온 지시를 읽습니다.",
+          "say": "에이전트는 먼저 제이큐엘로, 자기에게 온 지시를 읽습니다.",
+          "caption": "JQL로 지시 확인"
+        },
+        {
           "id": "s4.1",
-          "text": "에이전트는 먼저 regression DB를 조회합니다. 실패는 312건.",
-          "say": "에이전트는 먼저 리그레션 디비를 조회합니다. 실패는 삼백십이 건.",
+          "text": "이어서 regression DB를 조회합니다. 실패는 312건.",
+          "say": "이어서 리그레션 디비를 조회합니다. 실패는 삼백십이 건.",
           "caption": "regression DB 조회"
         },
         {
@@ -147,7 +160,7 @@
     {
       "id": "s5",
       "name": "예제 2: 근거가 달린 가설과 기록",
-      "visual": "s4의 구도를 유지한다. 왼쪽 호출 기록에 두 줄이 더 쌓인다:\n07 kb.search  \"같은 cycle 완료 누락\" hybrid   -> BUG-2291\n08 tracker.draft REQ-QOS-07 연결             -> 승인 대기\ns5.1: 07줄 등장. 오른쪽에 검색창 그림. 검색어 아래 두 갈래: '키워드: dec_done, SCB_TIMEOUT'과 '의미: pulse가 겹쳐 사라짐'. 두 갈래가 하나의 결과 목록으로 합쳐진다.\ns5.2: 결과 카드 등장:\nBUG-2291 (이전 과제, read channel FSM)\n  증상: 같은 cycle에 req와 done이 겹치면 done 유실\n  해결: done을 sticky flag로 잡고 천이 때 소거\ns5.3: 오른쪽이 에이전트의 답 카드(청록 테두리)로 바뀐다. 근거 네 줄이 하나씩 켜진다:\n가설: WAIT_DEC에서 recov_req와 dec_done이 같은 cycle에\n      오면 완료를 놓치고 command가 멈춘다 (C2 97건)\n근거 1 재현  recov_retry_burst seed=48213\n근거 2 파형  1,840,000 ns 구간\n근거 3 코드  rd_recov_ctrl.sv:214\n근거 4 유사  BUG-2291\n(마지막 줄은 아직 숨김)\ns5.4: 답 카드의 마지막 줄이 호박색 점선 밑줄과 함께 나타난다:\n확인 못 한 것: 나머지 96건은 signature만 일치\n              표본 5건 재실행 권장\ns5.5: 08줄 등장. 답 카드에서 티켓 초안이 나와 호박색 사람 노드 앞 '승인 대기' 마름모에서 멈춘다. 옆에 권한 정책 조각:\nagent: triage-agent\nmodel_route: onprem      # 설계 IP 등급\ntools:\n  regress: read\n  sim:     run           # queue=agent-short, 20분\n  tracker: draft         # 등록은 사람 승인\ndeny: [git.push, waiver.write, signoff]\ns5.6: 화면 하단에 감사 기록 한 줄이 가로로 흐른다(호출 기록의 각 줄에서 가는 선이 내려와 이 줄로 모인다):\n{\"user\":\"dv-eng-07\",\"agent\":\"triage-agent\",\n \"tool\":\"sim.rerun\",\"args\":{\"seed\":48213},\n \"result\":\"FAIL\",\"cpu_min\":6,\"tokens\":18400}\n'user', 'tool', 'cpu_min · tokens' 세 곳에 차례로 강조.",
+      "visual": "s4의 구도를 유지한다. 왼쪽 호출 기록에 두 줄이 더 쌓인다:\n07 kb.search  \"같은 cycle 완료 누락\" hybrid   -> BUG-1187\n08 jira.draft BUG-2268 (REQ-207)             -> 승인 대기\ns5.1: 07줄 등장. 오른쪽에 검색창 그림. 검색어 아래 두 갈래: '키워드: dec_done, SCB_TIMEOUT'과 '의미: pulse가 겹쳐 사라짐'. 두 갈래가 하나의 결과 목록으로 합쳐진다.\ns5.2: 결과 카드 등장:\nBUG-1187 (이전 과제, read channel FSM)\n  증상: 같은 cycle에 req와 done이 겹치면 done 유실\n  해결: done을 sticky flag로 잡고 천이 때 소거\ns5.3: 오른쪽이 에이전트의 답 카드(청록 테두리)로 바뀐다. 근거 네 줄이 하나씩 켜진다:\n가설: WAIT_DEC에서 recov_req와 dec_done이 같은 cycle에\n      오면 완료를 놓치고 command가 멈춘다 (C2 97건)\n근거 1 재현  recov_retry_burst seed=48213\n근거 2 파형  1,840,000 ns 구간\n근거 3 코드  rd_recov_ctrl.sv:214\n근거 4 유사  BUG-1187\n(마지막 줄은 아직 숨김)\ns5.4: 답 카드의 마지막 줄이 호박색 점선 밑줄과 함께 나타난다:\n확인 못 한 것: 나머지 96건은 signature만 일치\n              표본 5건 재실행 권장\ns5.5: 08줄 등장. 도구 띠의 'jira'가 켜진다. 오른쪽에 Jira 버그 이슈 카드(청록, 머리 'JIRA · 버그 · ai-authored'):\nBUG-2268  버그                      상태: 초안\n요청과 완료가 같은 cycle에 오면 완료 유실\n담당: triage-agent   라벨: ai-authored\n링크  defect @ VER-620 · relates to BUG-1187\n카드에서 나온 trace가 호박색 사람 노드 앞 '승인 대기' 마름모에서 멈춘다(초안 → 등록은 사람). 아래에 권한 정책 조각:\nagent: triage-agent\nmodel_route: onprem      # 설계 IP 등급\ntools:\n  regress: read\n  sim:     run           # queue=agent-short, 20분\n  jira:    draft         # 등록은 사람 승인\ndeny: [git.push, waiver.write, signoff, jira.approve]\ns5.7: 정책 조각이 물러나고 에이전트의 Jira 댓글이 나타난다(머리 'JIRA · VER-620 · 댓글 · ai-authored'):\n[에이전트 · triage-agent · 초안]  BUG-2268\n가설  같은 cycle의 완료 유실 (C2 97건)\n증거  seed=48213 · 1,840,000 ns · rd_recov_ctrl.sv:214\n확인 못 한 것  나머지 96건은 signature만 일치\n요청  설계자: 등록 또는 반려\ns5.6: 댓글이 물러나고 화면 하단에 감사 기록 한 줄이 가로로 흐른다(호출 기록의 각 줄에서 가는 선이 내려와 이 줄로 모인다):\n{\"user\":\"dv-eng-07\",\"agent\":\"triage-agent\",\n \"tool\":\"sim.rerun\",\"args\":{\"seed\":48213},\n \"result\":\"FAIL\",\"cpu_min\":6,\"tokens\":18400}\n'user', 'tool', 'cpu_min · tokens' 세 곳에 차례로 강조.",
       "lines": [
         {
           "id": "s5.1",
@@ -180,6 +193,12 @@
           "caption": "초안 작성, 등록은 승인 후"
         },
         {
+          "id": "s5.7",
+          "text": "Jira에는 댓글 한 건으로, 증거와 함께 답합니다.",
+          "say": "지라에는 댓글 한 건으로, 증거와 함께 답합니다.",
+          "caption": "댓글 한 건: 결과 · 증거"
+        },
+        {
           "id": "s5.6",
           "text": "누가 무엇을 불렀고 얼마가 들었는지, 한 줄씩 남습니다.",
           "say": "누가 무엇을 불렀고 얼마가 들었는지, 한 줄씩 남습니다.",
@@ -190,7 +209,7 @@
     {
       "id": "s6",
       "name": "구성 요소와 시작 순서",
-      "visual": "화면이 뒤로 물러나 플랫폼 전체 구조도가 된다. 가운데 에이전트 노드, 그 둘레에 번호가 붙은 블록 7개가 회로 블록처럼 배치된다.\ns6.1: 블록 7개의 윤곽선만 나타난다(이름 없음, 번호만).\ns6.2: 나레이션이 부르는 순서대로 블록에 이름이 채워지며 켜진다: 01 사내 모델 / 02 도구 연결 / 03 지식 / 04 격리 실행 / 05 평가 / 06 권한 · 감사 / 07 비용 관측.\ns6.3: 블록들이 두 색 테두리로 나뉜다. 회색 테두리 '구매': 01 사내 모델, 02 중 '벤더 도구 연결', 04 격리 실행. 라벨 \"사서 쓴다\".\ns6.4: 호박색 테두리 '구축': 02 중 '사내 DB · scheduler · tracker 연결', 03 지식 색인, 05 평가 세트, 06 권한 정책. 라벨 \"직접 만든다 · 우리 데이터와 판정 기준\".\ns6.5: 구조도가 흐려지고 에이전트에서 'regression DB · 로그'로 가는 trace 하나만 밝게 남는다. 아래에 5단계 순서 띠가 나타나고 1번만 켜진다: 1 읽는 통로 / 2 평가 세트 / 3 실행하는 통로 / 4 지식 계층 / 5 도구 확장 · 비용 관측.\ns6.6: 순서 띠의 1(읽는 통로, '읽기 전용' 표시), 2(평가 세트), 3(실행하는 통로, sandbox 점선 사각형)이 차례로 켜진다. 2번 옆에 작은 문제집 그림: '닫힌 bug: 로그 → 확정 원인', 'hold-back', '심어 둔 bug'.\ns6.7: 4, 5번이 켜지고 trace가 과거 bug · 스펙 색인으로, 이어서 formal, lint/CDC, 합성, emulator 큐로 뻗어 구조도 전체가 다시 밝아진다.",
+      "visual": "화면이 뒤로 물러나 플랫폼 전체 구조도가 된다. 가운데 에이전트 노드, 그 둘레에 번호가 붙은 블록 7개가 회로 블록처럼 배치된다.\ns6.1: 블록 7개의 윤곽선만 나타난다(이름 없음, 번호만).\ns6.2: 나레이션이 부르는 순서대로 블록에 이름이 채워지며 켜진다: 01 사내 모델 / 02 도구 연결 / 03 지식 / 04 격리 실행 / 05 평가 / 06 권한 · 감사 / 07 비용 관측.\ns6.3: 블록들이 두 색 테두리로 나뉜다. 회색 테두리 '구매': 01 사내 모델, 02 중 '벤더 도구 연결', 04 격리 실행. 라벨 \"사서 쓴다\".\ns6.4: 호박색 테두리 '구축': 02 중 '사내 DB · scheduler · Jira 연결', 03 지식 색인, 05 평가 세트, 06 권한 정책. 라벨 \"직접 만든다 · 우리 데이터와 판정 기준\".\ns6.8: 03 지식 블록에 작은 칩 'R4J 추적', 'Xray 결과'가, 06 권한 · 감사 블록에 호박색 칩 'Jira 승인 전환'이 붙는다.\ns6.5: 구조도가 흐려지고 에이전트에서 'regression DB · 로그'로 가는 trace 하나만 밝게 남는다. 아래에 5단계 순서 띠가 나타나고 1번만 켜진다: 1 읽는 통로 / 2 평가 세트 / 3 실행하는 통로 / 4 지식 계층 / 5 도구 확장 · 비용 관측.\ns6.6: 순서 띠의 1(읽는 통로, '읽기 전용' 표시), 2(평가 세트), 3(실행하는 통로, sandbox 점선 사각형)이 차례로 켜진다. 2번 옆에 작은 문제집 그림: '닫힌 bug: 로그 → 확정 원인', 'hold-back', '심어 둔 bug'.\ns6.7: 4, 5번이 켜지고 trace가 과거 bug · 스펙 색인으로, 이어서 formal, lint/CDC, 합성, emulator 큐로 뻗어 구조도 전체가 다시 밝아진다.",
       "lines": [
         {
           "id": "s6.1",
@@ -216,6 +235,12 @@
           "caption": "구축: 사내 연결 · 평가 세트"
         },
         {
+          "id": "s6.8",
+          "text": "지식에는 Jira의 추적과 시험 결과가, 권한에는 승인 전환이 걸립니다.",
+          "say": "지식에는 지라의 추적과 시험 결과가, 권한에는 승인 전환이 걸립니다.",
+          "caption": "Jira: 추적 · 결과 · 승인 전환"
+        },
+        {
           "id": "s6.5",
           "text": "시작은 통로 하나입니다. 에이전트가 로그에 닿는 것.",
           "say": "시작은 통로 하나입니다. 에이전트가 로그에 닿는 것.",
@@ -238,7 +263,7 @@
     {
       "id": "s7",
       "name": "지키는 선과 마무리",
-      "visual": "s7.1: 구조도 둘레의 '사내망' 경계선이 굵어지고 제목 '지키는 선'.\ns7.2: 데이터 등급 표가 나타난다. 세 행: 'C1 공개 자료 → 외부 모델 가능' / 'C2 사내 일반 → 계약된 전용 경로' / 'C3 설계 IP · 고객 자료 → 사내 모델만'. C3 행이 강조되고 경계선 밖으로 향하는 화살표에 붉은 차단 표시. (표 아래 작은 글씨: '등급 구분은 예시, 보안 · 법무 확정')\ns7.3: 권한 정책의 deny 줄이 크게: deny: [git.push, waiver.write, signoff]. 세 항목에 차례로 붉은 자물쇠. 옆에 호박색 사람 노드와 'sign-off는 사람'.\ns7.4: 계기판 두 개: 'emulator · sim 시간'과 'token'. 각각 한도선이 그어져 있고 바늘이 한도선 아래에서 멈춘다.\ns7.5: 하단 띠에 본편 S5-4와 같은 막대: '동일 모델 디버깅 통과율 44% → 94%', 출처 'NVIDIA 자체 평가, 2026'. 44 쪽에 '단독', 94 쪽에 '도구를 쓰는 에이전트 루프' 라벨.\ns7.6: 화면이 정리되고 중앙에 한 줄: '차이는 모델이 아니라 시스템'. 아래 작게 '개인별 챗봇 → 통합 AI 플랫폼', 좌하단 'SSD CONTROLLER SOC · AX'.",
+      "visual": "s7.1: 구조도 둘레의 '사내망' 경계선이 굵어지고 제목 '지키는 선'.\ns7.2: 데이터 등급 표가 나타난다. 세 행: 'C1 공개 자료 → 외부 모델 가능' / 'C2 사내 일반 → 계약된 전용 경로' / 'C3 설계 IP · 고객 자료 → 사내 모델만'. C3 행이 강조되고 경계선 밖으로 향하는 화살표에 붉은 차단 표시. (표 아래 작은 글씨: '등급 구분은 예시, 보안 · 법무 확정')\ns7.3: 권한 정책의 deny 줄이 크게: deny: [git.push, waiver.write, signoff, jira.approve]. 네 항목에 차례로 붉은 자물쇠. 옆에 호박색 사람 노드와 'sign-off는 사람'.\ns7.4: 계기판 두 개: 'emulator · sim 시간'과 'token'. 각각 한도선이 그어져 있고 바늘이 한도선 아래에서 멈춘다.\ns7.5: 하단 띠에 본편 S5-4와 같은 막대: '동일 모델 디버깅 통과율 44% → 94%', 출처 'NVIDIA 자체 평가, 2026'. 44 쪽에 '단독', 94 쪽에 '도구를 쓰는 에이전트 루프' 라벨.\ns7.6: 화면이 정리되고 중앙에 한 줄: '차이는 모델이 아니라 시스템'. 아래 작게 '개인별 챗봇 → 통합 AI 플랫폼', 좌하단 'SSD CONTROLLER SOC · AX'.",
       "lines": [
         {
           "id": "s7.1",
@@ -254,8 +279,8 @@
         },
         {
           "id": "s7.3",
-          "text": "에이전트 권한은 최소로. push와 sign-off는 막아 둡니다.",
-          "say": "에이전트 권한은 최소로. 푸시와 사인오프는 막아 둡니다.",
+          "text": "에이전트 권한은 최소로. push와 sign-off, Jira 승인은 막아 둡니다.",
+          "say": "에이전트 권한은 최소로. 푸시와 사인오프, 지라 승인은 막아 둡니다.",
           "caption": "에이전트 권한 최소화"
         },
         {

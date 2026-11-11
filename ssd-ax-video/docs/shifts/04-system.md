@@ -6,7 +6,7 @@
 
 ## 1. 한 줄 요약
 
-**모델을 바꾸는 것이 아니라, 모델이 닿는 곳을 바꾼다.** 같은 질문이라도 챗봇은 붙여 넣은 로그 몇십 줄만 보고 답하고, 플랫폼의 에이전트는 regression DB를 조회하고 seed를 다시 돌리고 파형과 과거 bug를 찾아본 뒤에 답한다. 그 차이를 만드는 것은 도구 연결, 지식, 격리 실행, 평가, 권한·감사, 비용 관측이다.
+**모델을 바꾸는 것이 아니라, 모델이 닿는 곳을 바꾼다.** 같은 질문이라도 챗봇은 붙여 넣은 로그 몇십 줄만 보고 답하고, 플랫폼의 에이전트는 regression DB를 조회하고 seed를 다시 돌리고 파형과 과거 bug를 찾아본 뒤에 답한다. 그 차이를 만드는 것은 도구 연결, 지식, 격리 실행, 평가, 권한·감사, 비용 관측이다. 사람과 에이전트가 만나는 창구는 팀이 이미 쓰는 Jira(Data Center, R4J와 Xray)다. 지시와 질문이 Jira로 들어오고, 에이전트의 답과 버그 초안도 Jira에 남는다(모델은 `docs/05-jira-traceability.md`).
 
 ## 2. 지금 무엇이 문제인가
 
@@ -27,11 +27,11 @@
 | # | 요소 | 하는 일 | 이 장면에서 |
 |---|---|---|---|
 | 1 | 사내·격리 배포 모델 | 설계 데이터가 밖으로 나가지 않는 추론 | RTL과 파형을 그대로 읽는다 |
-| 2 | 도구 연결 계층 | 시뮬레이터, formal, lint/CDC, 합성, emulator 큐, issue tracker를 에이전트가 호출 | regression DB 조회, seed 재실행 |
-| 3 | 지식 계층 | 스펙, 요구사항 그래프, 과거 bug와 해결, waiver 이력 검색 | 유사 bug 검색 |
+| 2 | 도구 연결 계층 | 시뮬레이터, formal, lint/CDC, 합성, emulator 큐, Jira를 에이전트가 호출 | Jira에서 지시를 읽고(JQL), regression DB 조회, seed 재실행 |
+| 3 | 지식 계층 | 스펙, Jira의 추적 링크(R4J)와 시험 결과(Xray), 과거 bug와 해결, waiver 이력 검색 | 유사 bug 검색 |
 | 4 | 격리 실행 환경 | 에이전트가 만든 명령을 제한된 범위에서 실행 | 재실행은 sandbox와 전용 큐에서 |
 | 5 | 평가 체계 | 사내 과제 기반 평가 세트, hold-back, 심어 둔 bug | 원인 지목이 맞는 비율을 상시 측정 |
-| 6 | 권한·감사 | 역할별 권한, 호출 단위 기록, 사람 승인 지점 | 티켓은 초안까지, 등록은 사람 |
+| 6 | 권한·감사 | 역할별 권한, 호출 단위 기록, 사람 승인 지점(Jira의 승인 계열 전환은 사람 역할에만) | 버그 이슈는 초안까지, 등록은 사람 |
 | 7 | 비용 관측 | token, 시뮬레이션 시간, license 사용량 | 질문 한 건의 비용이 남는다 |
 
 에이전트는 답을 하기 전에 일을 한다. 엔지니어가 받는 것은 일반론이 아니라 **근거가 달린 가설**(대표 seed, 파형 구간, 코드 위치, 과거 유사 bug)이고, 엔지니어가 하는 일은 복사·붙여넣기가 아니라 그 가설을 확인하고 승인하는 것이다.
@@ -39,6 +39,8 @@
 ## 4. 실제 예제: 같은 질문, 다른 시스템
 
 질문: **"어젯밤 regression에서 retry 관련 실패의 원인이 뭐야?"**
+
+전환 후에는 이 질문이 챗봇 창이 아니라 Jira로 들어온다. 검증 리드가 야간 regression의 Test Execution `VER-620` 을 `triage-agent` 계정에 맡기고 댓글로 묻는다.
 
 ### 4.1 지금: 챗봇 창
 
@@ -67,15 +69,18 @@ completion timeout은 보통 다음 원인으로 발생합니다.
 같은 질문에 에이전트가 남기는 호출 기록이다.
 
 ```text
+00 jira.search     assignee=currentUser()         -> VER-620
 01 regress.query   run=nightly-1110 status=FAIL   -> 312건
 02 regress.cluster by=signature                   -> 4묶음
 03 regress.query   cluster=C2 tag=recov_retry     -> 97건
 04 sim.rerun       recov_retry_burst seed=48213   -> FAIL
 05 wave.query      recov_req,dec_done,state       -> 4행
 06 code.read       rd_recov_ctrl.sv:212-240
-07 kb.search       "같은 cycle 완료 누락" hybrid   -> BUG-2291
-08 tracker.draft   REQ-QOS-07 연결                -> 승인 대기
+07 kb.search       "같은 cycle 완료 누락" hybrid   -> BUG-1187
+08 jira.draft      BUG-2268 (REQ-207)             -> 승인 대기
 ```
+
+**00.** 에이전트는 자기 계정에 온 지시를 JQL로 읽는다(`assignee = currentUser() AND status in (지시됨, "진행 중")`). 사람이 보드에서 보는 것과 같은 내용이다.
 
 **05의 결과.** 파형 전체가 아니라 멈추기 직전 구간만 표로 받는다(파형 database 전체를 모델에 넣지 않는다).
 
@@ -99,7 +104,7 @@ end
 **07의 결과.** 검색은 두 방식을 함께 쓴다. `dec_done`, `SCB_TIMEOUT` 같은 정확한 이름은 키워드 검색이 잡고, "pulse가 겹쳐서 사라진다"는 뜻은 의미 검색이 잡는다. 식별자와 오류 코드는 의미 검색만으로는 놓치기 쉽다는 것이 검색 실무의 일반적인 권고다[S].
 
 ```text
-BUG-2291 (이전 과제, read channel FSM)  score 0.82
+BUG-1187 (이전 과제, read channel FSM)  score 0.82
   증상: 같은 cycle에 req와 done이 겹치면 done 유실
   해결: done을 sticky flag로 잡고 state 천이 때 소거
   추가된 검사: assert property (dec_done |-> ##[1:4] cmd_done)
@@ -113,12 +118,14 @@ BUG-2291 (이전 과제, read channel FSM)  score 0.82
 근거 1 재현  recov_retry_burst seed=48213, 1.84 ms
 근거 2 파형  1,840,000 ns 구간 (첨부)
 근거 3 코드  rd_recov_ctrl.sv:214
-근거 4 유사  BUG-2291 (이전 과제, 같은 유형)
+근거 4 유사  BUG-1187 (이전 과제, 같은 유형)
 확인 못 한 것: C2의 나머지 96건은 signature만 일치.
               표본 5건 재실행 권장.
 ```
 
 마지막 두 줄이 중요하다. 에이전트는 확인한 것과 확인하지 못한 것을 구분해 적는다. 본편 사례와 같이, 설계자가 가설을 확인하고 수정을 승인한다.
+
+**08의 결과.** 에이전트는 Jira에 버그 이슈 `BUG-2268` 을 "초안" 상태로 만들고(`ai-authored` 라벨, `VER-620` 의 defect, `BUG-1187` 과 `relates to`), 댓글 한 건(`[에이전트 · triage-agent · 초안]`)에 가설, 증거, 확인 못 한 것, 요청을 적는다. "초안 → 등록" 전환은 사람만 할 수 있다.
 
 ### 4.3 이 장면을 가능하게 하는 설정
 
@@ -134,10 +141,14 @@ BUG-2291 (이전 과제, read channel FSM)  score 0.82
     "wave":    { "type": "http",
                  "url": "https://mcp.eda.internal/wave" },
     "kb":      { "type": "http",
-                 "url": "https://mcp.eda.internal/kb" }
+                 "url": "https://mcp.eda.internal/kb" },
+    "jira":    { "type": "http",
+                 "url": "https://mcp.eda.internal/jira" }
   }
 }
 ```
+
+`jira` 는 Jira REST API(v2)와 Xray·R4J REST API를 감싼 사내 MCP 서버다. Atlassian이 운영하는 MCP 서버는 Cloud용이라 Data Center에서는 쓰지 않는다. 에이전트에게 주는 동작은 `jira.search`(JQL), `jira.comment`, `jira.link`, `jira.draft` 넷이고, 인증은 에이전트 계정의 personal access token이다.
 
 **도구 하나의 정의(MCP tool 예).** `sim.rerun` 서버가 에이전트에게 내보내는 설명이다. 에이전트는 임의의 shell 명령을 받지 않고, 정해진 인자만 넘긴다. 실제 실행은 서버가 사내 job scheduler에 제출한다.
 
@@ -167,8 +178,8 @@ tools:
   wave:    read
   code:    read            # rtl/, dv/ 만
   sim:     run             # queue=agent-short, 20분, 동시 8
-  tracker: draft           # 등록은 사람 승인
-deny: [git.push, waiver.write, signoff]
+  jira:    draft           # 등록은 사람 승인
+deny: [git.push, waiver.write, signoff, jira.approve]
 network: { egress: none }
 ```
 
@@ -196,8 +207,8 @@ network: { egress: none }
 
 | 사서 쓴다 | 직접 만든다 |
 |---|---|
-| 모델(사내 서빙하는 open-weight 모델 또는 벤더의 고객 관리형 배포) | 사내 regression DB, job scheduler, issue tracker의 연결 서버 |
-| 벤더 도구의 연결 계층(벤더가 내놓는 MCP 인터페이스) | 과거 bug, 스펙, waiver의 색인 |
+| 모델(사내 서빙하는 open-weight 모델 또는 벤더의 고객 관리형 배포) | 사내 regression DB, job scheduler, Jira(REST)의 연결 서버 |
+| 벤더 도구의 연결 계층(벤더가 내놓는 MCP 인터페이스) | 과거 bug, 스펙, waiver의 색인. Jira의 링크(R4J)와 결과(Xray)는 복사하지 않고 조회로 닿는다 |
 | Sandbox runtime, 검색 엔진 | 평가 세트(사내 과제, hold-back, 심어 둔 bug) |
 | 워크플로 에이전트 제품(평가 후 선택) | 데이터 등급 규칙, 권한 정책, 예산 |
 
@@ -223,7 +234,7 @@ network: { egress: none }
 | 도구 연결 표준 | MCP | 표준은 성숙. Samsung Code Mate와 Siemens Fuse가 사용[W/S] |
 | 벤더 도구용 MCP | Siemens Questa One Agentic Toolkit(Sim, formal, Verification IQ를 MCP로 노출, early access)[W], AMIQ DVT MCP Server(컴파일된 설계·검증 database 조회, lint 결과)[S], Synopsys Autopilot(MCP·A2A 지원 주장, 정식 출시는 2026년 말 예정)[S] | Early access~상용 초기. Synopsys Verdi, Cadence Xcelium·Jasper의 **벤더 공식** MCP 서버는 이번 조사에서 확인하지 못함 |
 | 오픈소스 MCP | Icarus Verilog·Yosys·GTKWave를 묶은 서버(MCP4EDA), Xcelium을 Tcl로 잇는 커뮤니티 서버[S] | 오픈소스. 참고용. 사내 flow에 그대로 쓰기는 어렵고 형태를 참고해 직접 구축 |
-| 사내 시스템 연결 서버 | regression DB, job scheduler, issue tracker의 얇은 wrapper | 직접 구축 필요 |
+| 사내 시스템 연결 서버 | regression DB, job scheduler의 얇은 wrapper. Jira Data Center는 REST API(Jira v2, Xray, R4J)를 감싼 사내 MCP 서버 | 직접 구축 필요. Atlassian의 MCP 서버는 Cloud용[원문, DC 미지원은 S] |
 | 지식 계층 | 키워드(BM25)와 의미(embedding) 검색을 함께 쓰는 hybrid 검색 | 검색 엔진은 상용·오픈소스[K]. 색인 설계와 권한 연동은 직접 구축. 요구사항 그래프는 전환 1(산출물)의 결과에 의존 |
 | 격리 실행 | 컨테이너 기반 sandbox, 정책으로 파일·네트워크 범위 제한 | 오픈소스 있음(NVIDIA OpenShell, 2026-03 공개, 기본 차단 네트워크 정책)[S]. Cadence·Siemens도 sandbox 실행을 내세움[S] |
 | 평가 체계 | 사내 과제 세트, hold-back, 심어 둔 bug | 직접 구축 필요. 공개 benchmark(CVDP 등)는 참고용이고 사내 설계를 대신하지 못함. Samsung도 실제 개발 과제 기반 평가 환경은 "계획" 단계라고 밝힘[W] |
@@ -235,7 +246,7 @@ network: { egress: none }
 | 리스크 | 지키는 선 |
 |---|---|
 | 설계 IP·고객 자료 반출 | **데이터 등급별 모델 경로.** 설계 IP, 고객 자료, foundry 자료는 사내·격리 모델로만 간다. 에이전트 실행 환경의 외부 네트워크는 기본 차단이다. 등급 표는 보안·법무가 확정한다 |
-| 에이전트가 권한을 넘는 행동 | **권한 최소화.** 읽기에서 시작하고, 실행은 sandbox와 전용 큐 안에서만. Push, waiver 등록, sign-off는 에이전트 권한에 없다. 에이전트는 임의 명령이 아니라 정의된 도구만 부른다 |
+| 에이전트가 권한을 넘는 행동 | **권한 최소화.** 읽기에서 시작하고, 실행은 sandbox와 전용 큐 안에서만. Push, waiver 등록, sign-off, Jira의 승인 계열 전환은 에이전트 권한에 없다(Jira에서는 "검토 대기"와 "초안"까지). 에이전트는 임의 명령이 아니라 정의된 도구만 부른다 |
 | 로그·문서에 섞인 지시문을 에이전트가 따름 | 도구 결과는 데이터로만 취급하고, 쓰기 권한이 있는 행동은 사람 승인 뒤에 둔다 |
 | 장비와 token 비용 증가 | **예산.** 큐별 동시 실행 수와 시간 한도, 작업당 token 한도. Emulator처럼 비싼 장비는 사람이 우선순위를 정한다. 참고: Samsung Code Mate는 월 약 1.45조 token 사용을 밝혔다[W] |
 | 그럴듯하지만 틀린 가설 | 판정은 시뮬레이터가 한다(재현되지 않는 가설은 가설로 올리지 않는다). 정확도는 hold-back과 심어 둔 bug로 잰다. 본편이 인용한 실험에서 에이전트는 검증 완료를 선언하고도 심어 둔 bug의 20.8%를 놓쳤다[W] |

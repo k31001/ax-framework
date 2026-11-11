@@ -6,13 +6,14 @@ import { Trace, pointOnTrace, traceLength } from "../../../video/components/Trac
 import type { Pt } from "../../../video/components/Trace";
 import { color, fullSvg, mono, sans, size, stroke, withAlpha } from "../../../video/theme";
 import { ShiftSheet, useScene } from "../../lib";
-import { BundleIcon, DocIcon, STEP_WORDS, Tag, mix, split } from "./kit";
+import { BundleIcon, DocIcon, STEP_WORDS, Tag, Workflow, mix, split } from "./kit";
 
 // s3 전환 후: 정의 → 실행 → 판단.
 //   s3.1  '현재' 표지가 '전환 후'로 바뀌고 빈 칸 셋이 trace 로 이어진다
 //   s3.2  정의(사람): 작업 지시서 — 의도 / 통과 기준 / 금지 사항
 //   s3.3  실행(에이전트) 루프 → 증거 묶음이 판단(사람)으로 → 승인 / 반려
 //   s3.4  '완료했습니다' 말풍선은 판단 칸 입구에서 막힌다
+//   s3.5  Jira 의 상태 띠: 지시됨 → 진행 중 → 검토 대기 → (자물쇠) → 승인
 
 const W = 480;
 const H = 440;
@@ -199,6 +200,7 @@ export const S3: React.FC = () => {
           </div>
         </div>
       ) : null}
+      <Workflow x={96} y={Y + H + 96} label="JIRA · WORKFLOW" start={cue("s3.5")} at={[0, 1, 2, 3].map((i) => split(cue("s3.5"), end("s3.5"), i, 4) + 6)} />
       <Tag text="증거 아님" c={color.problem} x={X[2]} y={Y - 90} at={c4 + 30} fill />
     </ShiftSheet>
   );

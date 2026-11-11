@@ -53,7 +53,7 @@ export const S3: React.FC = () => {
         <line x1={C.x + 28} x2={C.x + 28 + (C.w - 56) * verify} y1={C.y + 262} y2={C.y + 262} stroke={color.line} strokeWidth={stroke.hair} />
       </Layer>
       <div style={{ position: "absolute", left: C.x + 28, top: C.y + 12, ...mono(40, 700), color: color.human, opacity: stamp, scale: `${1.25 - 0.25 * stamp}`, transformOrigin: "left center" }}>{CONTRACT_ID}</div>
-      <div style={{ position: "absolute", right: 1920 - (C.x + C.w) + 24, top: C.y + 24, ...mono(size.label, 700), color: color.human, opacity: card }}>CONTRACT</div>
+      <div style={{ position: "absolute", right: 1920 - (C.x + C.w) + 24, top: C.y + 20, ...mono(26, 700), letterSpacing: "0", color: color.inkSoft, opacity: card }}>jira: FEAT-341</div>
 
       {/* 문장: 종이에서 카드로 그대로 남는다 */}
       {DOC_2.map((s, i) => (

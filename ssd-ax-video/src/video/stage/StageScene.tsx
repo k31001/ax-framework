@@ -13,7 +13,7 @@ import { RequirementCard } from "../components/RequirementCard";
 import { SceneFade, Sheet } from "../components/Sheet";
 import { StageTrack } from "../components/StageTrack";
 import type { FlowKind } from "../theme";
-import { color, mono, pad2, sans, size } from "../theme";
+import { color, mono, pad2, sans, size, stroke, withAlpha } from "../theme";
 import type { SceneId } from "../timeline";
 import { sceneFrames } from "../timeline";
 import { STAGE_COUNT, TITLE_POS, TRACK_Y, cardAnchor, cardRect, recordSlotAt, stageLayout } from "./layout";
@@ -79,6 +79,7 @@ export type Illustration = React.FC<IllustrationProps>;
 
 // ── 씬 ─────────────────────────────────────────────────────────────────
 const RECORDS = S5.map((s) => s.record);
+const RECORD_KEYS = S5.map((s) => s.jira);
 const MOVE = DUR.move;
 const ATTACH = 18;
 
@@ -173,6 +174,7 @@ export const StageScene: React.FC<{
           width={card.w}
           anchor={anchor}
           records={RECORDS}
+          recordKeys={RECORD_KEYS}
           attached={attached}
           pending={stage.index}
           pendingStrength={first ? cardAppear : move}
@@ -275,12 +277,44 @@ export const StageScene: React.FC<{
           >
             <ReturnIcon size={40} color={color.agent} width={3} />
             <div style={{ ...sans(size.body, 600), whiteSpace: "nowrap" }}>{stage.closing.text}</div>
+            {stage.closing.jira ? <NewIssueTag jira={stage.closing.jira} p={progress(frame, closingAt + 38, 16)} /> : null}
           </div>
         ) : null}
       </SceneFade>
     </Sheet>
   );
 };
+
+/** 마무리 문구 옆의 새 Jira 이슈: 아직 제안이라 점선 테두리다. */
+const NewIssueTag: React.FC<{ jira: string; p: number }> = ({ jira, p }) => (
+  <div
+    style={{
+      position: "relative",
+      flex: "none",
+      marginLeft: 6,
+      padding: "8px 14px",
+      border: `${stroke.thin}px dashed ${color.agent}`,
+      backgroundColor: withAlpha(color.agent, 0.08),
+      opacity: p,
+      translate: `${(1 - p) * 14}px 0px`,
+    }}
+  >
+    <div
+      style={{
+        position: "absolute",
+        left: 10,
+        top: -15,
+        padding: "0 6px",
+        backgroundColor: color.bg,
+        ...mono(size.label, 700),
+        color: color.agent,
+      }}
+    >
+      JIRA
+    </div>
+    <div style={{ ...mono(size.small, 700), color: color.ink }}>{jira}</div>
+  </div>
+);
 
 /** 흐름도 항목이 자리 잡는 데 걸리는 프레임. 그림이 항목과 박자를 맞출 때 쓴다. */
 export const STAGE_ITEM_ENTER = ITEM_ENTER;

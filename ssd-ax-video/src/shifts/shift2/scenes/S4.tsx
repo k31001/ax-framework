@@ -15,7 +15,7 @@ const PX = 310;
 const RIGHT = 1300;
 
 const GRAPH = {
-  req: { x: 1557, y: 306, w: 204, text: "REQ-QOS-07" },
+  req: { x: 1557, y: 306, w: 204, text: "REQ-207" },
   rtl: [
     { x: 1440, y: 426, w: 172, text: "rcv_ctrl/" },
     { x: 1674, y: 426, w: 158, text: "ecc_top/" },
@@ -70,9 +70,10 @@ export const S4: React.FC = () => {
   const rndAt = c4 + 104;
   const graphOut = c4 - 8;
   const rows: KVRow[] = [
-    { v: "impact !2291  rcv_ctrl.rdl  (rcv_done → RCV_CPL_POP)", tone: "agent", at: c2 + 12 },
-    { k: "요구사항", v: "REQ-QOS-07", at: rowAt(0), mark: rowAt(0), unmark: rowAt(1) },
-    { k: "계약", v: "C-RCV-02 (변경)  C-RCV-03 (신규)", at: rowAt(1), mark: rowAt(1), unmark: rowAt(2) },
+    { v: "[에이전트 · req-agent · 영향 분석]", right: "ai-authored", tone: "agent", at: c2 + 12 },
+    { k: "변경", v: "MR !2291  rcv_done → RCV_CPL_POP", at: c2 + 24 },
+    { k: "요구사항", v: "REQ-207 (REQ-QOS-07)", at: rowAt(0), mark: rowAt(0), unmark: rowAt(1) },
+    { k: "계약", v: "HSI-RCV-012 (변경)  HSI-RCV-013 (신규)", at: rowAt(1), mark: rowAt(1), unmark: rowAt(2) },
     { k: "재생성", v: "rcv_ctrl_regs.sv  rcv_ctrl_regs.h", at: rowAt(2), mark: rowAt(2), unmark: rowAt(3) },
     { k: "RTL", v: "rcv_ctrl/  ecc_top/", at: rowAt(3), mark: rowAt(3), unmark: rowAt(4) },
     { k: "FW", v: "rcv_isr.cpp  rcv_driver.cpp", at: rowAt(4), mark: rowAt(4), unmark: c4 },
@@ -136,7 +137,7 @@ export const S4: React.FC = () => {
         x={PX}
         y={205}
         w={1010}
-        title="rcv_ctrl.rdl · MR !2291"
+        title="MR !2291 · FEAT-341 BUG-2291 · rcv_ctrl.rdl"
         owner="human"
         at={c1 + 6}
         out={c2 - 10}
@@ -151,10 +152,10 @@ export const S4: React.FC = () => {
         step={5}
       />
       <T x={PX + 24} y={215} at={c2 - 6} px={size.label} weight={700} color={color.inkSoft} code>
-        <span style={{ letterSpacing: "0.08em" }}>rcv_ctrl.rdl · MR !2291</span>
+        <span style={{ letterSpacing: "0.08em" }}>MR !2291 · FEAT-341 BUG-2291 · rcv_ctrl.rdl</span>
       </T>
 
-      <KVPanel x={PX} y={262} w={950} title="impact !2291 · MR comment" owner="agent" at={c2 + 4} rows={rows} keyW={160} />
+      <KVPanel x={PX} y={262} w={950} title="JIRA · FEAT-341 · COMMENT" owner="agent" at={c2 + 4} rows={rows} keyW={160} />
 
       <Node n={GRAPH.req} at={c3 + 2} lit={rowAt(0)} out={graphOut} />
       {GRAPH.rtl.map((n, i) => (

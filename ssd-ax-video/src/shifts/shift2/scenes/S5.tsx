@@ -77,6 +77,7 @@ export const S5: React.FC = () => {
   const c3 = cue("s5.3");
   const c4 = cue("s5.4");
   const c5 = cue("s5.5");
+  const c6 = cue("s5.6");
 
   const outA = c5 - 8;
   const gone = 1 - progress(frame, outA, DUR.exit, ease.in);
@@ -117,14 +118,15 @@ export const S5: React.FC = () => {
   });
 
   const ticket: KVRow[] = [
-    { v: "[RCV-1432] rcv_cpl_fifo: full 직후 push 1건 유실", bold: true },
-    { k: "묶음", v: "B, 2건 / 실패 9건", right: "작성: 에이전트" },
-    { k: "위반", v: "a_cpl_no_drop (계약 C-RCV-03)" },
+    { v: "BUG-2304  버그   상태: 초안", right: "ai-authored", tone: "agent" },
+    { v: "rcv_cpl_fifo: full 직후 push 1건 유실", bold: true },
+    { k: "묶음", v: "B, 2건 / 실패 9건", right: "작성: triage-agent" },
+    { k: "위반", v: "a_cpl_no_drop (계약 HSI-RCV-013)" },
     { k: "가설", v: "full이 한 cycle 늦어 9번째 완료가 덮어쓴다", mark: c5 + 12 },
     { k: "재현", v: "rcv_cpl_burst_test  seed 0x5A17C3", mark: c5 + 40 },
     { k: "파형", v: "48,210~48,260 ns  cpl_push, cpl_full" },
     { k: "수정안", v: "rcv_cpl_fifo.sv:88  미적용, 승인 대기", mark: c5 + 68, markTone: "human" },
-    { k: "연결", v: "REQ-QOS-07, MR !2291" },
+    { k: "연결", v: "VER-514 FAIL @ VER-604 · FEAT-341" },
   ];
   const FRAG_Y = 770;
   const FRAG_TICKS = [
@@ -233,7 +235,25 @@ export const S5: React.FC = () => {
         ))}
       </div>
 
-      {/* s5.5 티켓 */}
+      {/* s5.6 결과는 파이프라인이 Xray 에 올린다 */}
+      <KVPanel
+        x={PX}
+        y={330}
+        w={1010}
+        title="XRAY · TEST EXECUTION"
+        at={c6}
+        out={c2 - 8}
+        step={5}
+        rows={[
+          { v: "VER-604  Test Execution   MR !2291 선택 실행", bold: true },
+          { v: "revision 9b1d7a4 · 환경 sim · 올린 계정 ci-import", tone: "dim", mark: c6 + 50, markTone: "plain" },
+          { v: "run 61건을 Test 14건으로 집계" },
+          { v: "PASS 12   FAIL 1   TODO 1" },
+          { v: "VER-514  rcv_cpl_burst_test    FAIL", tone: "problem" },
+        ]}
+      />
+
+      {/* s5.5 Jira 버그 초안 */}
       <Layer>
         <Trace pts={[[AXIS_X + 14, TICK["11:45"]], [PX, TICK["11:45"]]]} stroke={color.agent} at={c5 + 2} />
         {frag > 0 ? (
@@ -246,7 +266,7 @@ export const S5: React.FC = () => {
         ) : null}
         <Trace pts={[[1740, FRAG_Y - 30], [1740, TICK["11:45"]], [1334, TICK["11:45"]]]} stroke={color.problem} dash="10 9" arrow at={fragAt + 22} duration={34} easing={ease.inOut} />
       </Layer>
-      <KVPanel x={PX} y={205} w={1010} title="RCV-1432 · ticket draft" owner="agent" at={c5 + 2} rows={ticket} keyW={130} step={2} />
+      <KVPanel x={PX} y={205} w={1010} title="JIRA · BUG-2304" owner="agent" at={c5 + 2} rows={ticket} keyW={130} step={2} />
 
       <T x={PX} y={FRAG_Y - 22} at={fragAt} color={color.inkDim}>
         <span style={{ display: "inline-block", padding: "2px 14px", border: `${stroke.hair}px dashed ${color.lineStrong}` }}>현재</span>

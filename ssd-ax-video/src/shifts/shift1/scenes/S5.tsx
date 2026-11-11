@@ -101,6 +101,7 @@ export const S5: React.FC = () => {
   const mk = (frac: number) => ({ mark: t("s5.2", frac), markTone: "agent" as const });
   const v2: CodeLine[] = [
     "id: HSI-RCV-012   # v2",
+    "jira: FEAT-341",
     { text: "deliver: queue(depth=16)", ...mk(0.3) },
     "irq: level, CNT != 0 인 동안 유지",
     "order: [read CPL_STATUS,",

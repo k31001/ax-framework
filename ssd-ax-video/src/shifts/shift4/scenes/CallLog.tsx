@@ -11,7 +11,7 @@ import { CALLS } from "./text";
 // 도구 호출 기록(왼쪽)과 도구 띠(오른쪽 위). S4·S5 가 같이 쓴다.
 // 호출이 한 건씩 쌓이고, 호출마다 그 도구로 가는 trace 가 그려지며 도구가 켜진다.
 
-export const LOG = { x: 96, y: 96, w: 620, head: 44, top: 154, pitch: 82 } as const;
+export const LOG = { x: 96, y: 96, w: 620, head: 44, top: 150, pitch: 76 } as const;
 export const LOG_H = LOG.top - LOG.y + CALLS.length * LOG.pitch + 14;
 export const STRIP = { x: 776, y: 96, w: 152, h: 84, pitch: 176, bus: 208 } as const;
 /** 오른쪽 결과 자리 */
@@ -26,7 +26,7 @@ const STRIP_TOOLS: { name: string; Icon: IconType }[] = [
   { name: "wave", Icon: WaveIcon },
   { name: "code", Icon: CodeIcon },
   { name: "kb", Icon: SearchIcon },
-  { name: "tracker", Icon: TicketIcon },
+  { name: "jira", Icon: TicketIcon },
 ];
 
 export const CallLog: React.FC<{
@@ -50,7 +50,7 @@ export const CallLog: React.FC<{
         {/* 호출 → 도구 */}
         {CALLS.map((c, i) => {
           if (at[i] === undefined) return null;
-          const y = rowY(i) + 18;
+          const y = rowY(i) + 17;
           const pts: Pt[] = [
             [LOG.x + LOG.w, y],
             [746, y],
@@ -97,14 +97,14 @@ export const CallLog: React.FC<{
         const res = progress(frame, a + 20, 10);
         const resColor = c.resultTone === "problem" ? color.problem : c.resultTone === "human" ? color.human : color.ink;
         return (
-          <div key={c.no} style={{ position: "absolute", left: LOG.x + 5, top: rowY(i) - 4, width: LOG.w - 7, height: LOG.pitch - 4, opacity: p, translate: `0px ${(1 - p) * 10}px` }}>
+          <div key={c.no} style={{ position: "absolute", left: LOG.x + 5, top: rowY(i) - 3, width: LOG.w - 7, height: LOG.pitch - 4, opacity: p, translate: `0px ${(1 - p) * 10}px` }}>
             <div style={{ position: "absolute", inset: 0, backgroundColor: withAlpha(color.agent, 0.13 * band), borderLeft: `3px solid ${withAlpha(color.agent, band)}` }} />
-            <div style={{ position: "absolute", left: 18, top: 4, ...mono(26, 700), lineHeight: "36px", color: on || fl > 0 ? color.agent : blend(color.agent, color.inkDim, 0.35), whiteSpace: "pre" }}>
+            <div style={{ position: "absolute", left: 18, top: 3, ...mono(26, 700), lineHeight: "34px", color: on || fl > 0 ? color.agent : blend(color.agent, color.inkDim, 0.35), whiteSpace: "pre" }}>
               <span style={{ color: color.inkDim, fontWeight: 500 }}>{c.no} </span>
               {c.tool}
             </div>
-            {c.result ? <div style={{ position: "absolute", right: 16, top: 4, ...mono(26, 700), lineHeight: "36px", color: resColor, opacity: res, whiteSpace: "pre" }}>{c.result}</div> : null}
-            <div style={{ position: "absolute", left: 18 + 47, top: 39, ...mono(26, 500), lineHeight: "34px", color: on ? color.inkSoft : color.inkDim, whiteSpace: "pre" }}>{c.args}</div>
+            {c.result ? <div style={{ position: "absolute", right: 16, top: 3, ...mono(26, 700), lineHeight: "34px", color: resColor, opacity: res, whiteSpace: "pre" }}>{c.result}</div> : null}
+            <div style={{ position: "absolute", left: 18 + 47, top: 36, ...mono(26, 500), lineHeight: "32px", color: on ? color.inkSoft : color.inkDim, whiteSpace: "pre" }}>{c.args}</div>
           </div>
         );
       })}

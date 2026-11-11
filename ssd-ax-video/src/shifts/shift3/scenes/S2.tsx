@@ -150,6 +150,17 @@ export const S2: React.FC = () => {
         </CodeRow>
       </Pane>
 
+      {/* 어디에도 이어지지 않은 티켓 */}
+      <Pane x={1200} y={TOP} w={624} h={250} title="JIRA · TICKET" edge={color.lineStrong} at={split(c3, e3, 1, 3)} out={c4 - 10} opacity={0.75}>
+        <CodeRow i={0} px={PX} c={color.inkSoft}>
+          cmd timeout (no done)
+        </CodeRow>
+        {[0, 1].map((k) => (
+          <div key={k} style={{ position: "absolute", left: 24 + k * 150, top: 122, width: 130, height: 44, border: `${stroke.thin}px dashed ${color.lineStrong}` }} />
+        ))}
+        <Tag text="링크 없음" c={color.problem} x={24} y={184} at={split(c3, e3, 1, 3) + 10} />
+      </Pane>
+
       {/* 오후: 줄 단위 리뷰와 쌓이는 더미 */}
       <svg {...fullSvg}>
         {pile.map((k) => {

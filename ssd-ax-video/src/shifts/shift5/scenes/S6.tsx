@@ -11,7 +11,7 @@ import type { TreeRow } from "./kit";
 
 const DB = { x: 96, y: 150, w: 300, h: 80 };
 const TK = { x: 96, y: 330, w: 300, h: 80 };
-const MC = { x: 500, y: 200, w: 320, h: 160 };
+const MC = { x: 500, y: 190, w: 320, h: 190 };
 const REPO = { x: 870, y: 104, w: 560, h: 362 };
 const FORM = { x: 1470, y: 104, w: 354, h: 170 };
 const AGENDA = { x: 1470, y: 296, w: 354, h: 170 };
@@ -38,9 +38,9 @@ export const S6: React.FC = () => {
   const topDim = lerp(1, 0.4, progress(frame, t5 - 4, 16, ease.inOut));
   const outline = (i: number): number => progress(frame, t1 + 6 + i * 8, 18);
   const dbOn = progress(frame, t2, 14);
-  const tkOn = progress(frame, at("s6.2", 0.22), 14);
-  const join = at("s6.2", 0.5);
-  const mcOn = progress(frame, at("s6.2", 0.62), 14);
+  const tkOn = progress(frame, at("s6.2", 0.3), 14);
+  const join = at("s6.2", 0.6);
+  const mcOn = progress(frame, at("s6.2", 0.72), 14);
   const repoOn = progress(frame, t3, 16);
   const formAt = at("s6.4", 0.12);
   const agendaAt = at("s6.4", 0.55);
@@ -93,23 +93,27 @@ export const S6: React.FC = () => {
           {/* s6.2 두 원천에서 지표 카드로 */}
           <Trace pts={[[DB.x + DB.w, DB.y + 40], [448, DB.y + 40], [448, 280], [MC.x, 280]]} at={join} duration={22} stroke={color.agent} arrow />
           <Trace pts={[[TK.x + TK.w, TK.y + 40], [448, TK.y + 40], [448, 280]]} at={join} duration={18} stroke={color.agent} />
+          <line x1={REPO.x + 300} y1={REPO.y + REPO.h} x2={REPO.x + 300} y2={490} stroke={color.inkSoft} strokeWidth={stroke.thin} strokeDasharray="4 5" opacity={progress(frame, at("s6.3", 0.62), 12)} />
           {/* s6.4 실패 기록 양식, 30분 안건 */}
           {mini(FORM, formAt, 3, color.human)}
           {mini(AGENDA, agendaAt, 4, color.human)}
         </Svg>
         <Txt x={DB.x + DB.w / 2} y={DB.y + 20} at={t2} px={size.small} weight={700} align="center">
-          regression DB
+          Jira 변경 이력
         </Txt>
-        <Txt x={TK.x + TK.w / 2} y={TK.y + 20} at={at("s6.2", 0.22)} px={size.small} weight={700} align="center">
-          티켓 이력
+        <Txt x={TK.x + TK.w / 2} y={TK.y + 20} at={at("s6.2", 0.3)} px={size.small} weight={700} align="center">
+          Xray 실행 결과
         </Txt>
-        <Txt x={96} y={260} at={join + 6} px={size.small} c={color.agent}>
+        <div style={{ position: "absolute", left: DB.x, top: DB.y - 30, ...mono(size.label, 700), color: color.inkDim, opacity: dbOn }}>JIRA</div>
+        <div style={{ position: "absolute", left: TK.x, top: TK.y - 30, ...mono(size.label, 700), color: color.inkDim, opacity: tkOn }}>XRAY</div>
+        <div style={{ position: "absolute", left: MC.x + 30, top: MC.y + 146, ...mono(size.label, 700), color: color.agent, opacity: progress(frame, at("s6.2", 0.72) + 10, 14) }}>FILTER ai-authored</div>
+        <Txt x={96} y={254} at={join + 6} px={size.small} c={color.agent}>
           스크립트로 자동 추출
         </Txt>
-        <Txt x={MC.x + 30} y={MC.y + 22} at={at("s6.2", 0.62)} px={size.body} weight={800}>
+        <Txt x={MC.x + 30} y={MC.y + 22} at={at("s6.2", 0.72)} px={size.body} weight={800}>
           지표 카드
         </Txt>
-        <Txt x={MC.x + 30} y={MC.y + 92} at={at("s6.2", 0.62) + 6} px={size.small} c={color.inkSoft}>
+        <Txt x={MC.x + 30} y={MC.y + 92} at={at("s6.2", 0.72) + 6} px={size.small} c={color.inkSoft}>
           팀 · 워크플로 단위
         </Txt>
         <Tree x={REPO.x + 30} y={REPO.y + 12} rows={rows} rowH={56} px={28} descX={290} />
@@ -122,6 +126,7 @@ export const S6: React.FC = () => {
         {/* 성숙도 꼬리표 */}
         <Tag x={MC.x} y={MC.y + MC.h + 24} text="직접 구축" c={color.human} at={at("s6.2", 0.85)} />
         <Tag x={REPO.x} y={490} text="기존 형상관리" c={color.inkSoft} at={at("s6.3", 0.8)} />
+        <Tag x={REPO.x + 250} y={490} text="Jira: 링크와 논의" c={color.ink} at={at("s6.3", 0.62)} />
         <Tag x={FORM.x} y={490} text="도구 불필요" c={color.inkSoft} at={at("s6.4", 0.85)} />
       </div>
 

@@ -163,6 +163,7 @@ export const S7: React.FC = () => {
           <div key={i} style={{ position: "absolute", left: 140, top: ROW_Y[i] + 14, ...mono(size.label, 700), color: color.problem, opacity: progress(frame, rowAt[i], 14) }}>{`LINE 0${i + 1}`}</div>
         ))}
 
+        <div style={{ position: "absolute", left: 800, top: y1 - 66, ...mono(size.label, 700), color: color.inkDim, opacity: progress(frame, t2 + 4, 14) }}>JIRA</div>
         {PEOPLE_X.map((x, i) => (
           <At key={i} x={x} y={y1} o={progress(frame, t2 + 6 + i * 3, 14)}>
             <HumanIcon size={52} color={color.human} />

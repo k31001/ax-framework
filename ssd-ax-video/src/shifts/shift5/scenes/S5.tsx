@@ -1,7 +1,8 @@
 import React from "react";
 import { useCurrentFrame } from "remotion";
 import { ease, lerp, progress } from "../../../video/anim";
-import { CheckIcon, HumanIcon } from "../../../video/components/Icons";
+import { AgentIcon, CheckIcon, HumanIcon } from "../../../video/components/Icons";
+import { Trace } from "../../../video/components/Trace";
 import { color, mono, sans, size, stroke, withAlpha } from "../../../video/theme";
 import { CodePanel, ShiftSheet, useScene } from "../../lib";
 import { Box, PairFrame, Svg, Tag, Team, Txt, WeekHeader, teamDeskY, useAt, vis } from "./kit";
@@ -104,6 +105,8 @@ export const S5: React.FC = () => {
   const t5 = cue("s5.5");
   const t6 = cue("s5.6");
   const t7 = cue("s5.7");
+  const t8 = cue("s5.8");
+  const cardDim = lerp(1, 0.1, progress(frame, t8 - 6, 16, ease.inOut));
   const out3 = t4 - 12; // 3주차 화면이 물러나는 프레임
 
   const leftDim = lerp(1, 0.4, progress(frame, t2 - 4, 16, ease.inOut)) * (1 - progress(frame, out3, 8));
@@ -140,6 +143,7 @@ export const S5: React.FC = () => {
           at={t1}
           lines={[
             "1. 지표 쌍             5분",
+            { text: "   R4J 연결 공백 · Xray coverage", tone: "dim" },
             { text: "2. 이번 주 실패 기록     10분  F-007", mark: at("s5.1", 0.45), markTone: "human" },
             "3. playbook 변경 리뷰  10분",
             "4. 다음 주 실험 한 가지   5분",
@@ -227,6 +231,7 @@ export const S5: React.FC = () => {
       })}
 
       {/* s5.4 ~ s5.7 지표 쌍 카드 */}
+      <div style={{ opacity: cardDim }}>
       <PairFrame {...CARD} at={t4 + 4} tilt={tilt}>
         <Big cx={LX} from="95분" to="40분" c={color.agent} at={t5} />
         <Big cx={RX} from="6/41" to="4/38" c={color.human} at={at("s5.5", 0.5)} />
@@ -254,6 +259,38 @@ export const S5: React.FC = () => {
         <HumanIcon size={44} color={color.human} />
         <CheckIcon size={36} color={color.human} width={stroke.bold} />
         <div style={{ ...mono(size.label, 700), color: color.human }}>SIGN</div>
+      </div>
+      </div>
+
+      {/* s5.8 결정은 Jira 이슈에 남고, 사람도 에이전트도 같이 읽는다 */}
+      <CodePanel
+        x={460}
+        y={330}
+        w={1000}
+        title="JIRA · 실험 이슈 (예시)"
+        owner="human"
+        px={28}
+        at={t8}
+        step={4}
+        lines={[
+          "요약  regression triage 에이전트 실험",
+          "상태  4주차 · 확대 결정",
+          { text: "댓글 · 검증 리드", tone: "human" },
+          { text: "  결정: 인접 블록 하나로 확대. 중단 조건 유지.", mark: at("s5.8", 0.2), markTone: "human" },
+          "  근거: metrics/triage-week4.md",
+        ]}
+      />
+      <Svg>
+        <Trace pts={[[760, 690], [760, 624]]} at={at("s5.8", 0.5)} stroke={color.human} arrow />
+        <Trace pts={[[1160, 690], [1160, 624]]} at={at("s5.8", 0.68)} stroke={color.agent} arrow />
+      </Svg>
+      <div style={{ position: "absolute", left: 734, top: 698, display: "flex", alignItems: "center", gap: 14, opacity: progress(frame, at("s5.8", 0.5), 14) }}>
+        <HumanIcon size={52} color={color.human} />
+        <div style={{ ...sans(size.body, 700), color: color.human }}>보드</div>
+      </div>
+      <div style={{ position: "absolute", left: 1134, top: 698, display: "flex", alignItems: "center", gap: 14, opacity: progress(frame, at("s5.8", 0.68), 14) }}>
+        <AgentIcon size={52} color={color.agent} />
+        <div style={{ ...mono(size.body, 700), color: color.agent }}>JQL</div>
       </div>
     </ShiftSheet>
   );

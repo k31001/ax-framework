@@ -466,7 +466,7 @@ export const KVPanel: React.FC<{
           const p = progress(frame, start, 10);
           const on = row.mark === undefined ? 0 : progress(frame, row.mark, 10) * (row.unmark === undefined ? 1 : 1 - progress(frame, row.unmark, 10, ease.in));
           const markColor = toneColor[row.markTone ?? "agent"];
-          const text: React.CSSProperties = { ...mono(px, row.bold ? 700 : 500), letterSpacing: "0", lineHeight: `${lineH}px`, whiteSpace: "pre" };
+          const text: React.CSSProperties = { ...mono(px, row.bold ? 700 : 500), letterSpacing: "0", lineHeight: `${lineH}px`, whiteSpace: "pre", fontVariantLigatures: "none" };
           return (
             <div key={i} style={{ position: "relative", height: lineH }}>
               {on > 0 ? (

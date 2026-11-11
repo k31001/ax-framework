@@ -19,8 +19,10 @@ const BLOCKS = [
 ];
 const RING = { x: 960, y: 432, r: 34 };
 const CHAIN = [
-  ["요구사항", "계약", "SystemRDL"],
-  ["RTL", "FW", "테스트"],
+  { key: "REQ-207", link: "" },
+  { key: "FEAT-341", link: "is implemented by" },
+  { key: "VER-514", link: "tested by" },
+  { key: "BUG-2304", link: "defect" },
 ];
 const TIERS = ["User", "Block", "Central"];
 
@@ -104,19 +106,17 @@ export const S7: React.FC = () => {
       </At>
 
       <Block i={1} at={c2} dim={dim}>
-        {CHAIN.map((row, r) => (
-          <div key={r} style={{ display: "flex", alignItems: "center", height: 56 }}>
-            {row.map((name, k) => {
-              const p = progress(frame, c2 + 16 + (r * 3 + k) * 8, 10);
-              return (
-                <React.Fragment key={k}>
-                  {k > 0 || r > 0 ? <div style={{ width: 26, height: 0, borderTop: `${stroke.trace}px solid ${color.agent}`, margin: "0 8px", opacity: p }} /> : null}
-                  <div style={{ ...sans(size.small, 600), whiteSpace: "nowrap", opacity: p }}>{name}</div>
-                </React.Fragment>
-              );
-            })}
-          </div>
-        ))}
+        <div style={{ marginTop: -10 }}>
+          {CHAIN.map((n, k) => {
+            const p = progress(frame, c2 + 30 + k * 16, 10);
+            return (
+              <div key={k} style={{ display: "flex", alignItems: "center", height: 37, opacity: p }}>
+                {n.link ? <div style={{ ...mono(size.label, 500), letterSpacing: "0", color: color.agent, width: 262, flex: "none" }}>{`└ ${n.link}`}</div> : null}
+                <div style={{ ...mono(26, 700), letterSpacing: "0", color: k === 3 ? color.problem : color.ink }}>{n.key}</div>
+              </div>
+            );
+          })}
+        </div>
       </Block>
 
       <Block i={2} at={c3} dim={dim}>
@@ -145,6 +145,10 @@ export const S7: React.FC = () => {
           })}
         </div>
       </Block>
+
+      <T x={BLOCKS[1].x + BLOCKS[1].w - 22} y={BY + 20} at={c2 + 8} px={size.label} weight={700} align="right" color={color.inkSoft} code opacity={1 - 0.5 * dim}>
+        <span style={{ letterSpacing: "0.08em" }}>JIRA · R4J · XRAY</span>
+      </T>
 
       <Block i={3} at={b4At} dim={dim}>
         <div style={{ ...sans(size.small, 600), whiteSpace: "nowrap", lineHeight: "56px" }}>FW + SoC·NAND 모델</div>

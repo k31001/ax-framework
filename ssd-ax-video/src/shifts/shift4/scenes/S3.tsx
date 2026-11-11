@@ -1,12 +1,12 @@
 import React from "react";
 import { useCurrentFrame } from "remotion";
 import { DUR, draw, ease, enter, lerp, progress, sub } from "../../../video/anim";
-import { AgentIcon } from "../../../video/components/Icons";
+import { AgentIcon, HumanIcon } from "../../../video/components/Icons";
 import { Trace, Via, pointOnTrace, traceLength } from "../../../video/components/Trace";
 import type { Pt } from "../../../video/components/Trace";
 import { color, fullSvg, mono, sans, stroke, withAlpha } from "../../../video/theme";
 import { CodePanel, ShiftSheet } from "../../lib";
-import { AgentNode, Badge, BugIcon, CodeIcon, DbIcon, EdgeTag, LockIcon, QuestionCard, SimIcon, TOOL, TicketIcon, ToolNode, WaveIcon, toolCy, toolY, useCues } from "./kit";
+import { AgentNode, Badge, BugIcon, CodeIcon, DbIcon, EdgeTag, LockIcon, SimIcon, TOOL, TicketIcon, ToolNode, WaveIcon, toolCy, toolY, useCues } from "./kit";
 import type { IconType } from "./kit";
 import { ChatFrame } from "./S2";
 import { MCP_CONFIG, TX } from "./text";
@@ -19,8 +19,8 @@ const AY = AGENT.y + AGENT.h / 2;
 const MODEL = { x: 480, y: 372, w: 240, h: 80 } as const;
 const MCP = { x: 1110, y: AY - 30, w: 120, h: 60 } as const;
 const BUS = 1280;
-const CFG = { x: 230, y: 500, w: 860 } as const;
-const ASK: Pt[] = [[330, 596], [330, AY], [AGENT.x - 6, AY]];
+const CFG = { x: 230, y: 470, w: 860 } as const;
+const ASK: Pt[] = [[228, 596], [228, AY], [AGENT.x - 6, AY]];
 
 const TOOLS: { label: string; Icon: IconType; code?: boolean }[] = [
   { label: TX.tool.rtl, Icon: CodeIcon, code: true },
@@ -28,7 +28,7 @@ const TOOLS: { label: string; Icon: IconType; code?: boolean }[] = [
   { label: TX.tool.sim, Icon: SimIcon },
   { label: TX.tool.regress, Icon: DbIcon },
   { label: TX.tool.bug, Icon: BugIcon },
-  { label: TX.tool.tracker, Icon: TicketIcon },
+  { label: TX.tool.jira, Icon: TicketIcon },
 ];
 
 export const S3: React.FC = () => {
@@ -53,6 +53,9 @@ export const S3: React.FC = () => {
     { line: 4, tool: 1, at: within("s3.3", 0.64) },
     { line: 5, tool: 4, at: within("s3.3", 0.86) },
   ];
+  const c5 = cue("s3.5");
+  pair.push({ line: 6, tool: 5, at: c5 + 4 });
+  const meet = progress(frame, within("s3.5", 0.45), DUR.enter);
   const mcpP = progress(frame, c3, DUR.enter);
   const modelP = progress(frame, c2, DUR.enter);
   const egress = progress(frame, c2 + 12, DUR.draw + 6, ease.inOut);
@@ -113,6 +116,12 @@ export const S3: React.FC = () => {
                   <LockIcon size={40} color={open > 0.5 ? color.agent : color.problem} open={open > 0.5} />
                 </Badge>
               ) : null}
+              {i === 5 ? <div style={{ ...mono(22, 700), color: color.inkDim, marginLeft: 4 }}>DC · REST</div> : null}
+              {i === 5 ? (
+                <Badge p={meet}>
+                  <HumanIcon size={40} color={color.human} />
+                </Badge>
+              ) : null}
             </ToolNode>
             {pingP > 0 ? <div style={{ position: "absolute", left: TOOL.x - 6, top: toolY(i) - 6, width: TOOL.w + 12, height: TOOL.h + 12, boxSizing: "border-box", border: `${stroke.bold}px solid ${color.agent}`, backgroundColor: withAlpha(color.agent, 0.12), opacity: pingP }} /> : null}
           </React.Fragment>
@@ -149,13 +158,18 @@ export const S3: React.FC = () => {
         out={c4 - 4}
         lines={MCP_CONFIG.map((text, i) => {
           const p = pair.find((q) => q.line === i);
-          return p ? { text, mark: p.at, unmark: p.line === 5 ? undefined : p.at + 20 } : { text, tone: i === 2 ? ("plain" as const) : ("dim" as const) };
+          return p ? { text, mark: p.at, unmark: p.line === 6 ? undefined : p.at + 20 } : { text, tone: i === 2 ? ("plain" as const) : ("dim" as const) };
         })}
       />
 
       {/* 같은 질문이 이번에는 에이전트로 */}
-      <div style={{ position: "absolute", left: CFG.x + 10, top: 600, ...enter(frame, c4, { distance: 16 }) }}>
-        <QuestionCard text={TX.question} px={32} h={86} />
+      <div style={{ position: "absolute", left: 218, top: 600, boxSizing: "border-box", border: `${stroke.thin}px solid ${color.human}`, backgroundColor: withAlpha(color.panel, 0.96), padding: "10px 22px 16px", ...enter(frame, c4, { distance: 16 }) }}>
+        <div style={{ ...mono(22, 700), color: color.human }}>{TX.askHead}</div>
+        <div style={{ ...sans(30, 600), color: color.inkSoft, marginTop: 8, whiteSpace: "nowrap" }}>{TX.askWho}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 4 }}>
+          <HumanIcon size={34} color={color.human} />
+          <div style={{ ...sans(32, 600), whiteSpace: "nowrap" }}>{TX.question}</div>
+        </div>
       </div>
       <svg {...fullSvg}>
         <Trace pts={ASK} stroke={color.human} width={stroke.bold} arrow at={goAt} duration={DUR.move} easing={ease.inOut} />

@@ -7,12 +7,12 @@ import type { Pt } from "./Trace";
 
 // 요구사항 카드: 도면의 spec sheet처럼 칸으로 나뉜 표제란.
 //   1행  ID · 수용 기준
-//   2행  제목
-//   3행  기록 슬롯 7칸 + 방금 붙은 기록의 이름
+//   2행  제목 · Jira 이슈 키 (이 요구사항은 Jira 의 이슈다. ID 는 요구사항 ID, 키는 Jira 키)
+//   3행  기록 슬롯 7칸 + 방금 붙은 기록의 이름. 기록이 Jira 의 링크된 이슈이면 번호 자리에 그 키를 쓴다
 // 슬롯은 단계마다 하나씩 채워진다. 이름은 가장 최근에 붙은 기록 하나만 글자로 보여 준다
 // (일곱 개를 다 글자로 쓰면 읽을 수 없다).
 
-export type RequirementCardData = { id: string; title: string; criterion: string };
+export type RequirementCardData = { id: string; title: string; criterion: string; jira?: string };
 
 const ROW_ID = 52;
 const ROW_TITLE = 62;
@@ -21,6 +21,8 @@ export const CARD_HEIGHT = ROW_ID + ROW_TITLE + ROW_RECORDS + 3;
 export const CARD_WIDTH = 630;
 
 const PAD_X = 20;
+/** 제목 줄 오른쪽의 Jira 키 칸의 폭 */
+export const JIRA_CELL_WIDTH = 230;
 const SLOT = 26;
 const SLOT_GAP = 7;
 
@@ -74,13 +76,15 @@ const Slot: React.FC<{ fill: number; pending: number; flash: number }> = ({ fill
   );
 };
 
-const RecordName: React.FC<{ index: number; name: string; p: number; flash: number; leaving?: boolean }> = ({
-  index,
-  name,
-  p,
-  flash,
-  leaving,
-}) => (
+const RecordName: React.FC<{
+  index: number;
+  name: string;
+  /** 이 기록의 Jira 키. 있으면 번호 대신 쓴다. */
+  jira?: string;
+  p: number;
+  flash: number;
+  leaving?: boolean;
+}> = ({ index, name, jira, p, flash, leaving }) => (
   <div
     style={{
       position: "absolute",
@@ -95,7 +99,7 @@ const RecordName: React.FC<{ index: number; name: string; p: number; flash: numb
     }}
   >
     <div style={{ ...mono(size.label, 700), color: interpolateColors(flash, [0, 1], [color.inkDim, color.agent]) }}>
-      {pad2(index + 1)}
+      {jira ?? pad2(index + 1)}
     </div>
     <div
       style={{
@@ -118,6 +122,10 @@ export const RequirementCard: React.FC<{
   anchor?: { x: number; y: number };
   /** 단계별 기록 이름. 슬롯 수는 이 배열의 길이다. */
   records: readonly string[];
+  /** 기록마다의 Jira 키(없는 기록은 undefined). records 와 같은 순서 */
+  recordKeys?: readonly (string | undefined)[];
+  /** Jira 키 칸의 강조 0~1 */
+  jiraGlow?: number;
   /** 붙은 기록의 수. 소수부는 지금 붙고 있는 기록의 진행이다. 예: 3.4 는 네 번째 기록이 40% 붙었다. */
   attached: number;
   /** 다음 기록이 붙을 칸(0부터)을 청록 점선으로 표시한다. */
@@ -135,6 +143,8 @@ export const RequirementCard: React.FC<{
   width = CARD_WIDTH,
   anchor,
   records,
+  recordKeys,
+  jiraGlow = 0,
   attached,
   pending,
   pendingStrength = 1,
@@ -243,15 +253,49 @@ export const RequirementCard: React.FC<{
           style={{
             height: ROW_TITLE,
             display: "flex",
-            alignItems: "center",
-            padding: `0 ${PAD_X}px`,
+            alignItems: "stretch",
             borderBottom: rule,
-            ...sans(size.body, 700),
-            whiteSpace: "nowrap",
             opacity: sub(appear, 0.35, 0.75),
           }}
         >
-          {card.title}
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              padding: `0 ${PAD_X}px`,
+              ...sans(size.body, 700),
+              whiteSpace: "nowrap",
+            }}
+          >
+            {card.title}
+          </div>
+          {card.jira ? (
+            <div
+              style={{
+                flex: "none",
+                width: JIRA_CELL_WIDTH,
+                boxSizing: "border-box",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                borderLeft: rule,
+                backgroundColor: withAlpha(color.agent, 0.16 * jiraGlow),
+                boxShadow: `inset 0 0 0 ${stroke.thin}px ${withAlpha(color.agent, jiraGlow)}`,
+              }}
+            >
+              <div
+                style={{
+                  ...mono(size.label, 700),
+                  color: interpolateColors(jiraGlow, [0, 1], [color.inkDim, color.agent]),
+                }}
+              >
+                JIRA
+              </div>
+              <div style={{ ...mono(size.small, 700), color: color.ink }}>{card.jira}</div>
+            </div>
+          ) : null}
         </div>
 
         {/* 기록 */}
@@ -278,12 +322,20 @@ export const RequirementCard: React.FC<{
           </div>
           <div style={{ position: "relative", flex: 1, alignSelf: "stretch", marginLeft: 22 }}>
             {attaching && whole >= 1 ? (
-              <RecordName index={whole - 1} name={records[whole - 1]} p={1 - sub(frac, 0, 0.4)} flash={0} leaving />
+              <RecordName
+                index={whole - 1}
+                name={records[whole - 1]}
+                jira={recordKeys?.[whole - 1]}
+                p={1 - sub(frac, 0, 0.4)}
+                flash={0}
+                leaving
+              />
             ) : null}
             {latest >= 0 && latest < records.length ? (
               <RecordName
                 index={latest}
                 name={records[latest]}
+                jira={recordKeys?.[latest]}
                 p={attaching ? sub(frac, 0.35, 1) : 1}
                 flash={attaching ? 1 : flash}
               />

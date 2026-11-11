@@ -3,7 +3,7 @@ import { useCurrentFrame } from "remotion";
 import { draw, ease, lerp, progress } from "../../anim";
 import { FIG } from "../../content";
 import type { Illustration } from "../../stage/StageScene";
-import { color, stroke, withAlpha } from "../../theme";
+import { color, mono, size, stroke, withAlpha } from "../../theme";
 import { Wave } from "./Wave";
 import { buildField, hash, mix } from "./field";
 
@@ -13,6 +13,7 @@ import { buildField, hash, mix } from "./field";
 //   원인 분류     흩어진 점이 네 묶음으로 모인다 (148 · 87 · 52 · 25)
 //   원인 가설     가장 큰 묶음에 고리가 쳐지고, 거기서 선이 오른쪽 파형으로 이어진다.
 //                 retry_req 와 dec_done 이 같은 cycle 에 겹치는 자리가 붉은 띠로 켜진다
+//                 가설 항목의 테두리에 Jira 버그 초안의 키와 ai-authored 표시가 붙는다 (나레이션 "지라 버그로 올립니다")
 //   사람의 승인   고리가 사람의 색으로 다시 그려진다
 //   해결          전체 regression 을 다시 도는 선이 띠를 훑고 지나가면, 고리 안의 점에서 붉은색이 빠지고
 //                 파형의 붉은 띠가 풀린다. 나머지 세 묶음은 흐리게 남는다(원인 넷 중 하나를 따라갔다).
@@ -35,6 +36,19 @@ const POUR_SPREAD = 22; // 쏟아지는 앞머리가 띠의 오른쪽 끝에 닿
 const POUR_REACH = 150; // 점 하나가 미끄러지는 거리 (깃발 가까이의 점은 깃발에서 나온다)
 const GATHER = 26; // 점 하나가 묶음으로 모이는 시간
 const SWEEP = 30; // 재확인 선이 띠를 훑는 시간
+const BUG = FIG["S5-4"].bug;
+const BUG_DELAY = 58; // 가설 항목이 나온 뒤 버그 키가 붙기까지 ("…가설을, 지라 버그로" 의 뒷부분에 맞춘다)
+
+// 가설 항목의 테두리 위에 얹히는 작은 표시 (흐름도 번호와 같은 모양)
+const tab = {
+  position: "absolute",
+  height: 28,
+  padding: "0 8px",
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  backgroundColor: color.bg,
+} as const;
 
 export const S54Illustration: Illustration = ({ width, height, beats, frames }) => {
   const frame = useCurrentFrame();
@@ -80,6 +94,8 @@ export const S54Illustration: Illustration = ({ width, height, beats, frames }) 
   const waveDrawn = progress(frame, hypothesis.frame + 18, 24, ease.inOut);
   const waveHot = progress(frame, hypothesis.frame + 34, 10);
   const waveCleared = progress(frame, passAt(overlapX), 14);
+  const filed = progress(frame, hypothesis.frame + BUG_DELAY, 14);
+  const filedGlow = 1 - progress(frame, hypothesis.frame + BUG_DELAY + 20, 30, ease.linear);
 
   return (
     <div style={{ position: "absolute", inset: 0 }}>
@@ -199,6 +215,35 @@ export const S54Illustration: Illustration = ({ width, height, beats, frames }) 
         hot={waveHot}
         cleared={waveCleared}
       />
+
+      {/* 원인 가설 = Jira 버그 초안. 키는 항목의 오른쪽 위, 에이전트가 썼다는 표시는 왼쪽 아래 */}
+      {filed > 0 && hypothesis.rect ? (
+        <>
+          <div
+            style={{
+              ...tab,
+              left: hypothesis.rect.x + hypothesis.rect.w - 14,
+              top: hypothesis.rect.y - 15,
+              transform: "translateX(-100%)",
+              opacity: filed,
+              translate: `0px ${(1 - filed) * 8}px`,
+            }}
+          >
+            <span style={{ ...mono(size.label, 500), color: color.inkDim }}>JIRA</span>
+            <span style={{ ...mono(size.label, 700), color: filedGlow > 0.5 ? color.ink : color.agent }}>{BUG.key}</span>
+          </div>
+          <div
+            style={{
+              ...tab,
+              left: hypothesis.rect.x + 16,
+              top: hypothesis.rect.y + hypothesis.rect.h - 14,
+              opacity: progress(frame, hypothesis.frame + BUG_DELAY + 6, 14),
+            }}
+          >
+            <span style={{ ...mono(size.label, 500), letterSpacing: "0.02em", color: color.agent }}>{BUG.label}</span>
+          </div>
+        </>
+      ) : null}
     </div>
   );
 };

@@ -1,11 +1,11 @@
 import React from "react";
 import { useCurrentFrame } from "remotion";
 import { DUR, ease, progress } from "../../../video/anim";
-import { CheckIcon, HumanIcon } from "../../../video/components/Icons";
+import { AgentIcon, CheckIcon, HumanIcon } from "../../../video/components/Icons";
 import { DimLine, Trace } from "../../../video/components/Trace";
 import { color, mono, stroke, withAlpha } from "../../../video/theme";
 import { CodePanel, ShiftSheet, useScene } from "../../lib";
-import { AXIS_X, At, DayAxis, Gate, Glyph, Header, Layer, MiniLoop, T, TICK, fade } from "./kit";
+import { AXIS_X, At, Boxed, DayAxis, Gate, Glyph, Header, KVPanel, Layer, MiniLoop, T, TICK, fade } from "./kit";
 import { GATES, LOOP_STAGES } from "./S3";
 
 // s6 예제 3: 13:30 FW build 실패 → FW 변경안과 가상 플랫폼 → 16:10 block gate → 밤 전체 regression → 매일 통합.
@@ -24,10 +24,12 @@ export const S6: React.FC = () => {
   const c3 = cue("s6.3");
   const c4 = cue("s6.4");
   const c5 = cue("s6.5");
+  const c6 = cue("s6.6");
 
   const outA = c3 - 8;
   const goneA = 1 - progress(frame, outA, DUR.exit, ease.in);
-  const outB = c5 - 2;
+  const outB = c6 - 8;
+  const goneQ = 1 - progress(frame, c5 - 6, DUR.exit, ease.in);
   const goneB = 1 - progress(frame, outB, DUR.exit, ease.in);
   const scroll = SCROLL * progress(frame, c5, 34, ease.inOut);
   const vpAt = c2 + 112;
@@ -130,8 +132,13 @@ export const S6: React.FC = () => {
         <T x={PX + 56} y={212} at={c3 + 2} px={34} weight={700} color={color.human}>
           설계자: 가설 확인 · 수정 승인
         </T>
-        <T x={PX + 56} y={262} at={c3 + 26} px={34} weight={700} color={color.human}>
+        <T x={PX + 56} y={262} at={c3 + 40} px={34} weight={700} color={color.human}>
           FW 담당: 변경안 검토
+        </T>
+        <T x={900} y={210} at={c3 + 20} weight={700} code>
+          <Boxed tone="human" fill>
+            BUG-2304  초안 → 등록
+          </Boxed>
         </T>
         <T x={G.x} y={G.y + 58} at={gateAt + 4} align="center" weight={700} color={color.human}>
           {GATES[0]}
@@ -149,7 +156,7 @@ export const S6: React.FC = () => {
             "policy_version: v2.1",
             { text: "min_pass_rate: 0.95", mark: stampAt - 20 },
             { text: "contract_assertions: must_pass", mark: stampAt - 14 },
-            { text: "allow_known_issues: true   # 티켓 연결분만" },
+            { text: "allow_known_issues: true   # 등록된 BUG만" },
             { text: "agent_may_edit: false" },
           ]}
         />
@@ -175,12 +182,41 @@ export const S6: React.FC = () => {
             }}
           >
             <div style={{ ...mono(56, 700), color: color.agent, letterSpacing: "0.04em" }}>PROMOTE</div>
-            <div style={{ ...mono(30, 500), color: color.agent, letterSpacing: "0" }}>policy v2.1</div>
+            <div style={{ ...mono(26, 500), color: color.agent, letterSpacing: "0" }}>policy v2.1 · FEAT-341</div>
           </div>
         ) : null}
         <T x={1630} y={678} at={c4 + 14} align="center" weight={700} code>
           <span style={{ display: "inline-block", padding: "4px 22px", border: `${stroke.thin}px solid ${color.inkSoft}`, backgroundColor: color.bg }}>central</span>
         </T>
+      </div>
+
+      {/* s6.6 사람도 에이전트도 Jira 에서 같은 현황을 읽는다 */}
+      <div style={{ opacity: goneQ }}>
+        <Layer>
+          <Trace pts={[[480, 372], [560, 372]]} stroke={color.human} arrow at={c6 + 30} duration={10} />
+          <Trace pts={[[480, 452], [560, 452]]} stroke={color.agent} arrow at={c6 + 44} duration={10} />
+        </Layer>
+        <At x={440} y={372} opacity={fade(frame, c6 + 24)}>
+          <HumanIcon size={56} color={color.human} />
+        </At>
+        <At x={440} y={452} opacity={fade(frame, c6 + 38)}>
+          <AgentIcon size={56} color={color.agent} />
+        </At>
+        <KVPanel
+          x={560}
+          y={290}
+          w={1150}
+          title="JIRA · JQL"
+          at={c6 + 2}
+          keyW={170}
+          step={5}
+          rows={[
+            { v: 'issue in defectsCreatedForRequirement("REQ-207-trace")', tone: "agent" },
+            { v: "  AND statusCategory != Done", tone: "agent" },
+            { k: "BUG-2291", kTone: "plain", v: "완료 2건이 한 비트에 겹침", right: "수정 중 · 설계자", rightTone: "human", at: c6 + 60 },
+            { k: "BUG-2304", kTone: "plain", v: "full 직후 push 유실", right: "검토 대기 · 설계자", rightTone: "human", at: c6 + 72 },
+          ]}
+        />
       </div>
 
       {/* 밤: 전체 regression (지금과 같은 자리). 이후 시간축이 다음 날들로 넘어간다 */}

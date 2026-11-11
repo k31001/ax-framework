@@ -9,13 +9,13 @@ import { Group, Layer, NoLig, SceneHead, useT } from "./kit";
 
 const HAVE = [
   { text: "SystemRDL → RTL · header · register model · 문서", sub: "PeakRDL 등 오픈소스, 상용 툴", id: "s7.1" },
-  { text: "요구사항 관리 as code", sub: "sphinx-needs, StrictDoc 등", id: "s7.2" },
+  { text: "Jira + R4J + Xray", sub: "요구사항 · 설계 기능 · 검증 항목 · 버그", id: "s7.2" },
 ];
 const STEPS = [
   { text: "① 규약 목록", sub: "블록 하나, 과거 통합 bug가 난 규약부터" },
   { text: "② 계약 양식 · 검사기" },
   { text: "③ assertion · 테스트 생성" },
-  { text: "④ 요구사항 카드 · bug 기록으로 확장" },
+  { text: "④ Jira 이슈 · 링크로 확장" },
 ];
 const LX = 96;
 const LW = 844;

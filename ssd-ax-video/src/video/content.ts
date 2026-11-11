@@ -50,8 +50,10 @@ export const S3 = {
 } as const;
 
 // ── S4 사례 소개 ───────────────────────────────────────────────────────
+// id 는 요구사항 ID(git 산출물의 ID), jira 는 그 요구사항의 Jira 이슈 키다 (docs/05-jira-traceability.md 1장).
 export const CARD = {
   id: "REQ-QOS-07",
+  jira: "REQ-207",
   title: "수명 말기 read 지연 보장",
   criterion: "P99.99 ≤ 2 ms (예시)",
 } as const;
@@ -65,6 +67,30 @@ export const S4 = {
     // 오류 복구 단계. 뒤로 갈수록 지연 막대가 길어진다.
     steps: ["read retry", "soft decoding", "parity 복구"],
   },
+} as const;
+
+// ── S4J Jira 추적 ──────────────────────────────────────────────────────
+// 이슈 키, 링크 이름, 계정과 라벨은 docs/05-jira-traceability.md 의 것을 그대로 쓴다.
+export const S4J = {
+  title: { at: 0.3, text: "추적과 소통의 창구, Jira" },
+  cardAt: 0.6, // 요구사항 카드의 Jira 키가 켜지는 시점
+  // 추적 사슬. 유형마다 1초 간격으로 놓인다. app 은 그 유형을 맡는 곳(카드의 mono 라벨)
+  chain: {
+    at: 3.72,
+    nodes: [
+      { key: "REQ-207", type: "요구사항", app: "R4J" },
+      { key: "FEAT-341", type: "설계 기능", app: "R4J" },
+      { key: "VER-512", type: "검증 항목", app: "XRAY" },
+      { key: "BUG-2291", type: "버그", app: "JIRA" },
+    ],
+    links: ["is implemented by", "tested by", "defect"],
+  },
+  actorsAt: 10.34, // 사람(보드)과 에이전트(JQL)가 사슬을 읽기 시작하는 시점
+  read: { at: 11.74, text: "현황 파악" },
+  write: { at: 13.85, text: "업무 지시 · 신규 요구사항" },
+  agentAccount: "dv-agent", // 댓글로 지시받고 답하는 에이전트 계정
+  agentLabel: "ai-authored", // 에이전트가 쓴 것에 붙는 표시
+  newIssue: { key: "REQ-231", app: "JIRA" }, // 마지막에 들어오는 새 요구사항(제안)
 } as const;
 
 // ── S5 사례 7단계 ──────────────────────────────────────────────────────
@@ -87,10 +113,11 @@ export type Stage = {
   id: string; // timeline.ts 의 씬 id
   index: number; // 0~6, STAGES 의 순서
   record: string; // 이 단계가 끝날 때 요구사항 카드에 붙는 기록
+  jira?: string; // 그 기록에 해당하는 Jira 이슈 키(링크된 이슈 또는 Test Execution). 기준 문서에 없으면 비운다
   recordAt: number;
   beats: Beat[];
   principle?: Principle;
-  closing?: { at: number; text: string };
+  closing?: { at: number; text: string; jira?: string }; // jira: 마무리 문구 옆에 놓이는 새 이슈의 키
 };
 
 export const S5: Stage[] = [
@@ -122,6 +149,7 @@ export const S5: Stage[] = [
     id: "S5-3",
     index: 2,
     record: "interface 계약",
+    jira: "FEAT-341",
     recordAt: 18.07,
     beats: [
       { kind: "before", at: 0.8, text: "register는 SystemRDL, 동작 규약은 API 문서" },
@@ -136,19 +164,20 @@ export const S5: Stage[] = [
     id: "S5-4",
     index: 3,
     record: "검증 기록",
-    recordAt: 22.84,
+    jira: "VER-620",
+    recordAt: 23.47,
     beats: [
       { kind: "before", at: 0.8, text: "실패 수백 건, 원인 분석은 수작업" },
       { kind: "human", at: 2.8, text: "통과 기준 정의 · reference model 소유" },
       { kind: "agent", at: 4.6, text: "testplan · testbench 생성" },
-      { kind: "problem", at: 7.51, text: "야간 regression 실패 312건" },
-      { kind: "agent", at: 10.37, text: "원인 4개로 분류" },
-      { kind: "agent", at: 13.36, text: "원인 가설: FSM의 완료 신호 누락" },
-      { kind: "human", at: 16.76, text: "가설 확인 · 수정 승인" },
-      { kind: "resolved", at: 18.56, text: "assertion 추가 · 전체 regression 재확인" },
+      { kind: "problem", at: 7.36, text: "야간 regression 실패 312건" },
+      { kind: "agent", at: 10.53, text: "원인 4개로 분류" },
+      { kind: "agent", at: 13.39, text: "원인 가설: FSM의 완료 신호 누락" },
+      { kind: "human", at: 17.5, text: "가설 확인 · 수정 승인" },
+      { kind: "resolved", at: 19.3, text: "assertion 추가 · 전체 regression 재확인" },
     ],
     principle: {
-      at: 21.24,
+      at: 21.87,
       name: "폐루프 자동화",
       stat: {
         label: "동일 모델 디버깅 통과율",
@@ -162,6 +191,7 @@ export const S5: Stage[] = [
     id: "S5-5",
     index: 4,
     record: "구동 기록",
+    jira: "VER-588",
     recordAt: 22.56,
     beats: [
       { kind: "before", at: 0.8, text: "RTL과 FW의 첫 통합은 FPGA · emulator 준비 이후" },
@@ -189,18 +219,18 @@ export const S5: Stage[] = [
     id: "S5-7",
     index: 6,
     record: "퀄 증빙",
-    recordAt: 27.14,
+    recordAt: 27.42,
     beats: [
       { kind: "before", at: 0.8, text: "로그 수동 분석, 막바지 증빙 취합" },
       { kind: "problem", at: 2.8, text: "고온 방치 후 특정 NAND lot, 지연 기준 초과" },
-      { kind: "agent", at: 7.64, text: "신규 불량 후보 제시 · 수정안 비교" },
-      { kind: "human", at: 11.57, text: "처분 결정 · 재시험 범위 승인" },
-      { kind: "note", at: 15.34, text: "시험 시간은 그대로, 단축은 원인 분석과 취합" },
-      { kind: "agent", at: 22.09, text: "퀄 패키지 조립" },
-      { kind: "human", at: 25.14, text: "판정 · 서명" },
+      { kind: "agent", at: 7.59, text: "신규 불량 후보 제시 · 수정안 비교" },
+      { kind: "human", at: 11.31, text: "처분 결정 · 재시험 범위 승인" },
+      { kind: "note", at: 14.95, text: "시험 시간은 그대로, 단축은 원인 분석과 취합" },
+      { kind: "agent", at: 22.25, text: "퀄 패키지 조립" },
+      { kind: "human", at: 25.42, text: "판정 · 서명" },
     ],
-    principle: { at: 26.54, name: "전 과정 추적성" },
-    closing: { at: 28.54, text: "필드 데이터는 다음 요구사항에 반영" },
+    principle: { at: 26.82, name: "전 과정 추적성" },
+    closing: { at: 28.82, text: "필드 데이터는 다음 요구사항에 반영", jira: "REQ-231" },
   },
 ];
 
@@ -240,7 +270,7 @@ export const S8 = {
   stepsAt: 2.56,
   stepGap: 2.17,
   steps: [
-    { name: "기반 구축", detail: "플랫폼 · 데이터 · 기준선" },
+    { name: "기반 구축", detail: "Jira 추적 체계 · 플랫폼 · 기준선" },
     { name: "병목 우선 에이전트화", detail: "워크플로 단위 폐루프" },
     { name: "프로세스 재설계", detail: "스펙 중심 흐름 · 역할 전환" },
   ],
@@ -290,6 +320,8 @@ export const FIG = {
   "S5-4": {
     clusters: [148, 87, 52, 25], // 합 312
     signals: ["retry_req", "dec_done"],
+    // 원인 가설은 에이전트가 Jira 버그 초안으로 올린다
+    bug: { key: "BUG-2268", label: "ai-authored" },
   },
   "S5-5": {
     rows: { hw: "HW 파형", fw: "FW trace" },

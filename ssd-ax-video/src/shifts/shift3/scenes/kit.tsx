@@ -259,3 +259,65 @@ export const BundleIcon: React.FC<IconProps> = (p) => (
     <path d="M3 12h18M12 7.5v13M8 7.5 12 3.5l4 4" />
   </Svg>
 );
+
+// ── Jira ───────────────────────────────────────────────────────────────
+// Test Plan 의 워크플로 (docs/05-jira-traceability.md 2장). 사람의 전환은 호박색, 에이전트의 전환은 청록.
+export const WORKFLOW = [
+  { text: "지시됨", human: true },
+  { text: "진행 중", human: false },
+  { text: "검토 대기", human: false },
+  { text: "승인", human: true },
+] as const;
+
+/** 상태 칩 하나 */
+export const StatusChip: React.FC<{ text: string; c: string; lit?: number; style?: React.CSSProperties }> = ({ text, c, lit = 1, style }) => (
+  <div
+    style={{
+      height: 50,
+      padding: "0 14px",
+      display: "inline-flex",
+      alignItems: "center",
+      border: `${stroke.thin}px solid ${mix(lit, color.lineStrong, c)}`,
+      backgroundColor: withAlpha(c, 0.16 * lit),
+      ...sans(size.small, 700),
+      color: mix(lit, color.inkDim, c),
+      whiteSpace: "nowrap",
+      ...style,
+    }}
+  >
+    {text}
+  </div>
+);
+
+/** 상태 띠: 지시됨 → 진행 중 → 검토 대기 → (자물쇠) → 승인. at[i] 는 i 번째 칩이 켜지는 프레임. */
+export const Workflow: React.FC<{ x: number; y: number; label: string; at: number[]; start: number }> = ({ x, y, label, at, start }) => {
+  const frame = useCurrentFrame();
+  if (frame < start) return null;
+  return (
+    <div style={{ position: "absolute", left: x, top: y, ...enter(frame, start) }}>
+      <div style={{ ...mono(size.label, 700), color: color.inkDim, marginBottom: 8 }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {WORKFLOW.map((w, i) => {
+          const lit = progress(frame, at[i], 12, ease.out);
+          const c = w.human ? color.human : color.agent;
+          return (
+            <React.Fragment key={w.text}>
+              {i > 0 ? (
+                i === 3 ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ width: 14, height: 2, backgroundColor: color.lineStrong }} />
+                    <LockIcon size={34} color={mix(lit, color.inkDim, color.human)} />
+                    <div style={{ width: 14, height: 2, backgroundColor: color.lineStrong }} />
+                  </div>
+                ) : (
+                  <div style={{ width: 30, height: 2, backgroundColor: color.lineStrong }} />
+                )
+              ) : null}
+              <StatusChip text={w.text} c={c} lit={lit} />
+            </React.Fragment>
+          );
+        })}
+      </div>
+    </div>
+  );
+};

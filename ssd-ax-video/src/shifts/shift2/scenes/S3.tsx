@@ -3,7 +3,7 @@ import { useCurrentFrame } from "remotion";
 import { DUR, ease, lerp, progress } from "../../../video/anim";
 import { AgentIcon, HumanIcon } from "../../../video/components/Icons";
 import { Trace } from "../../../video/components/Trace";
-import { color, stroke, withAlpha } from "../../../video/theme";
+import { color, size, stroke, withAlpha } from "../../../video/theme";
 import { ShiftSheet, useScene } from "../../lib";
 import { At, Boxed, Gate, Header, Layer, LoopRing, T, fade, ringPoint } from "./kit";
 
@@ -41,10 +41,10 @@ export const S3: React.FC = () => {
   const bright = progress(frame, c2, 16);
   const waitIn = progress(frame, c2 + 8, 24, ease.inOut);
   const waitOut = progress(frame, c2 + 62, 22, ease.inOut);
-  const eventAt = c3 + 34;
-  const mr = progress(frame, c3, 30, ease.inOut);
+  const eventAt = c3 + 56;
+  const mr = progress(frame, c3 + 20, 30, ease.inOut);
   const flash = progress(frame, eventAt, 26);
-  const ringAt = c3 + 52;
+  const ringAt = c3 + 74;
   const ring = progress(frame, ringAt, 60, ease.inOut) * 0.875 + progress(frame, c4 + 100, 16, ease.inOut) * 0.125;
   const inner = 1 - progress(frame, ringAt, 30);
   const nodeAt = [c4 + 2, c4 + 34, c4 + 62, c4 + 86];
@@ -108,8 +108,14 @@ export const S3: React.FC = () => {
         </React.Fragment>
       ))}
 
-      {/* MR 표식이 왼쪽에서 들어온다 */}
-      <T x={lerp(40, 104, mr)} y={Y - 74} at={c3} weight={700} code>
+      {/* Jira 이슈가 먼저 나타나고, MR 표식이 왼쪽에서 들어온다 */}
+      <T x={104} y={Y - 162} at={c3} px={size.label} weight={700} color={color.inkSoft} code>
+        <span style={{ letterSpacing: "0.08em" }}>JIRA</span>
+      </T>
+      <T x={104} y={Y - 132} at={c3 + 2} weight={700} code>
+        <Boxed tone="human">FEAT-341</Boxed>
+      </T>
+      <T x={lerp(40, 104, mr)} y={Y - 74} at={c3 + 20} weight={700} code>
         <Boxed tone="human" fill>
           MR !2291
         </Boxed>

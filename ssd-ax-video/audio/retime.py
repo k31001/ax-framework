@@ -63,6 +63,14 @@ BASE = {
         ("card", 3.0, 2, field("cardAt")),
         ("recovery", 6.0, 3, obj_at("recovery")),
     ]),
+    "S4J": (14, [
+        ("title", 0.3, None, obj_at("title")),
+        ("card", 0.6, 1, field("cardAt")),      # 1. 카드의 Jira 키가 켜진다
+        ("chain", 3.2, 2, obj_at("chain")),     # 2. 추적 사슬이 뻗는다 (유형마다 1초 간격)
+        ("actors", 8.0, 3, field("actorsAt")),  # 3. 사람(보드)과 에이전트(JQL)
+        ("read", 9.4, None, obj_at("read")),    #    "현황 파악" 자막은 문장 중간에 뜬다
+        ("write", 11.5, 4, obj_at("write")),    # 4. 댓글과 새 이슈
+    ]),
     "S7": (9, [
         ("headline", 0.4, 1, obj_at("headline")),
         ("stat", 3.6, 2, obj_at("stat")),
@@ -126,7 +134,7 @@ STAGES = {
     ]),
 }
 
-ORDER = ["S1", "S2", "S3", "S4", "S5-1", "S5-2", "S5-3", "S5-4", "S5-5", "S5-6", "S5-7", "S6", "S7", "S8", "S9"]
+ORDER = ["S1", "S2", "S3", "S4", "S4J", "S5-1", "S5-2", "S5-3", "S5-4", "S5-5", "S5-6", "S5-7", "S6", "S7", "S8", "S9"]
 
 
 def r2(x):

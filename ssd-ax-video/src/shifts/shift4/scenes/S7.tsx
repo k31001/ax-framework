@@ -14,8 +14,8 @@ import { TX } from "./text";
 const BOUND = { x: 96, y: 216, w: 1560, h: 664 } as const;
 const G = { x: 190, y: 244, rowH: 60 } as const; // 등급 표
 const DENY = { x: 190, y: 530 } as const;
-const DENY_TEXT = ["deny: [", "git.push", ", ", "waiver.write", ", ", "signoff", "]"];
-const CH = 24; // 40px mono 한 글자 폭
+const DENY_TEXT = ["deny: [", "git.push", ", ", "waiver.write", ", ", "signoff", ", ", "jira.approve", "]"];
+const CH = 20.4; // 34px mono 한 글자 폭
 const METER = { y: 730, w: 600, xs: [190, 880] } as const;
 const AX = { x0: 300, x1: 1620, y: 590 } as const;
 const px = (v: number): number => AX.x0 + ((AX.x1 - AX.x0) * v) / 100;
@@ -37,7 +37,7 @@ export const S7: React.FC = () => {
   const c3 = within("s7.2", 0.12);
   const block = within("s7.2", 0.62);
   const blockP = progress(frame, block, DUR.draw);
-  const locks = [within("s7.3", 0.52), within("s7.3", 0.66), within("s7.3", 0.78)];
+  const locks = [within("s7.3", 0.45), within("s7.3", 0.52), within("s7.3", 0.62), within("s7.3", 0.76)];
   const fills = [0.62, 0.48];
 
   const m44 = within("s7.5", 0.5);
@@ -51,7 +51,7 @@ export const S7: React.FC = () => {
     col += w.length;
     return { w, x };
   });
-  const items = [words[1], words[3], words[5]];
+  const items = [words[1], words[3], words[5], words[7]];
   const c3y = G.y + 2 * G.rowH + G.rowH / 2;
 
   return (
@@ -119,9 +119,9 @@ export const S7: React.FC = () => {
           </div>
 
           {/* 02 권한 최소화 */}
-          <div style={{ position: "absolute", left: DENY.x, top: DENY.y, display: "flex", ...mono(40, 700), whiteSpace: "pre", ...enter(frame, t3 + 4) }}>
+          <div style={{ position: "absolute", left: DENY.x, top: DENY.y, display: "flex", ...mono(34, 700), whiteSpace: "pre", ...enter(frame, t3 + 4) }}>
             {words.map(({ w }, i) => {
-              const k = [1, 3, 5].indexOf(i);
+              const k = [1, 3, 5, 7].indexOf(i);
               const on = k < 0 ? 0 : progress(frame, locks[k], 10);
               return (
                 <span key={i} style={{ color: k < 0 ? color.inkSoft : blend(color.ink, color.problem, on) }}>
@@ -138,9 +138,9 @@ export const S7: React.FC = () => {
               </div>
             );
           })}
-          <div style={{ position: "absolute", left: 1200, top: DENY.y - 10, display: "flex", alignItems: "center", gap: 18, ...enter(frame, locks[2] + 6, { from: "left" }) }}>
+          <div style={{ position: "absolute", left: 1300, top: DENY.y - 10, display: "flex", alignItems: "center", gap: 18, ...enter(frame, locks[3] + 6, { from: "left" }) }}>
             <HumanIcon size={56} color={color.human} />
-            <div style={{ ...sans(36, 700), color: color.human, whiteSpace: "nowrap" }}>{TX.signoff}</div>
+            <div style={{ ...sans(32, 700), color: color.human, whiteSpace: "nowrap" }}>{TX.signoff}</div>
           </div>
 
           {/* 03 예산 */}

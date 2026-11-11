@@ -175,7 +175,7 @@ export const S8: React.FC = () => {
             <Trace pts={[[300, 460], [916, 460]]} stroke={color.inkSoft} at={c4 - 2} />
             <Trace pts={[[1004, 460], [1620, 460]]} stroke={sign >= 1 ? color.human : color.lineStrong} at={c4 + 2} arrow />
             <Gate x={960} y={460} r={44} p={progress(frame, c4, 18)} lit={progress(frame, signAt + 30, 14)} />
-            {/* 에이전트의 '완료'는 gate 앞에서 멈춘다 */}
+            {/* 에이전트의 '검토 대기'는 gate 앞에서 멈춘다 */}
             <line x1={888} y1={420} x2={888} y2={500} stroke={color.human} strokeWidth={stroke.bold} opacity={progress(frame, c4 + 36)} />
             {/* 서명란 */}
             <line x1={1130} y1={640} x2={1130 + 420 * progress(frame, c4 + 30, DUR.draw)} y2={640} stroke={color.human} strokeWidth={stroke.thin} />
@@ -211,11 +211,14 @@ export const S8: React.FC = () => {
             }}
           >
             <AgentIcon size={40} color={color.agent} />
-            <div style={{ ...sans(size.body, 700), color: color.agent, whiteSpace: "nowrap" }}>완료</div>
+            <div style={{ ...sans(size.body, 700), color: color.agent, whiteSpace: "nowrap" }}>검토 대기</div>
           </div>
           <At x={1590} y={606} opacity={fade(frame, c4 + 34)}>
             <HumanIcon size={56} color={color.human} />
           </At>
+          <T x={1130} y={688} at={signAt + 30} weight={700} color={color.human}>
+            검토 대기 → 승인
+          </T>
           <div style={{ position: "absolute", left: 1130, top: 652, ...mono(size.label, 700), color: color.human, opacity: fade(frame, c4 + 32) }}>SIGN-OFF</div>
         </div>
       ) : null}
