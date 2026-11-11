@@ -28,7 +28,7 @@ export const S1: React.FC = () => (
         y={PANEL.y}
         on={T.on(i)}
         done={T.done(i)}
-        out={T.panelsOut + i * 2}
+        out={T.panelsOut + i * 3}
         Figure={FIGURES[i]}
       />
     ))}

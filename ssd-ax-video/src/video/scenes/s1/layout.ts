@@ -24,12 +24,12 @@ export const T = {
   /** i번째 조각이 켜진다 */
   on: (i: number) => c[0] + 11 + i * 14,
   /** i번째 작업이 끝난다: 완료 표시와 이름 */
-  done: (i: number) => c[1] + 6 + i * 13,
+  done: (i: number) => c[1] + i * 9,
   /** 조각들이 물러난다 */
-  panelsOut: c[2] - 30,
+  panelsOut: c[2] - 28,
   /** 나무가 자란다 */
-  grow: c[2] - 24,
-  growDur: 32,
+  grow: c[2] - 22,
+  growDur: 30,
   /** 손이 닿는 높이의 선 */
   reach: c[2] + 6,
   /** 낮은 가지의 열매를 딴다 */

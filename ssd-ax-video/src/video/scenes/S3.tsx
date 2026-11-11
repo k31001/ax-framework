@@ -16,7 +16,7 @@ import { HEAD, LEAD, LEFT, RIGHT, T } from "./s3/layout";
 //   2.2s  핵심 문구 (영상에서 가장 큰 순간. 음악도 여기서 열린다)
 //   5.2s  "재설계" 밑에서 청록 trace 가 내려가고, 3단 계단이 왼쪽부터 올라온다. 첫 단에 "현재"
 
-const WORD_STEP = 2; // 핵심 문구의 낱말 사이 시차
+const WORD_STEP = 3; // 핵심 문구의 낱말 사이 시차
 
 export const S3: React.FC = () => {
   const frame = useCurrentFrame();
