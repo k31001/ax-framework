@@ -29,7 +29,7 @@ export const ShiftSheet: React.FC<{
     <Sheet
       frames={scene.frames}
       label={`SHEET ${pad2(scene.index + 1)} / ${pad2(scene.count)}`}
-      footer={`5 SHIFTS · ${pad2(shiftNo)} · ${script.key.toUpperCase()}`}
+      footer={script.series ? `${script.series} · ${script.key.toUpperCase()}` : `5 SHIFTS · ${pad2(shiftNo)} · ${script.key.toUpperCase()}`}
       fade={hold ? { out: false } : true}
     >
       {children}
@@ -79,7 +79,7 @@ export const ShiftTitle: React.FC<{ at?: number }> = ({ at = 6 }) => {
   return (
     <div style={{ position: "absolute", left: safe.left, top: 150 }}>
       <div style={{ ...mono(size.label, 700), color: color.agent, ...enter(frame, at) }}>
-        {`5 SHIFTS  ${pad2(shiftNo)} / ${pad2(SHIFT_COUNT)}`}
+        {script.series ? `${script.series}  ·  ${script.seriesNo ?? ""}` : `5 SHIFTS  ${pad2(shiftNo)} / ${pad2(SHIFT_COUNT)}`}
       </div>
       <div style={{ ...sans(200, 800), lineHeight: 1.1, marginTop: 8, letterSpacing: "-0.04em", ...enter(frame, at + 6, { distance: 28 }) }}>
         {script.axis}

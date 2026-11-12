@@ -6,7 +6,16 @@ export const FPS = 30;
 
 export type ScriptLine = { id: string; text: string; say: string; caption?: string };
 export type ScriptScene = { id: string; name: string; visual?: string; lines: ScriptLine[] };
-export type Script = { key: string; axis: string; from: string; to: string; scenes: ScriptScene[] };
+export type Script = {
+  key: string;
+  axis: string;
+  from: string;
+  to: string;
+  /** 5대 전환 편이 아닌 영상의 제목 라벨. 예: "DEEP DIVE" / "구조 설계 편" */
+  series?: string;
+  seriesNo?: string;
+  scenes: ScriptScene[];
+};
 export type Durations = Record<string, number>;
 
 const LEAD = 0.6; // 씬이 시작되고 첫 문장까지 (초)
