@@ -60,7 +60,7 @@ export const CARD = {
 
 export const S4 = {
   title: { at: 0.3, text: "요구사항 하나의 여정" },
-  setting: { at: 1.2, text: "차세대 데이터센터 SSD 컨트롤러 · 신세대 QLC NAND" },
+  setting: { at: 1.2, text: "차세대 데이터센터 SSD 컨트롤러 · 차세대 QLC NAND" },
   cardAt: 3.39, // 요구사항 카드가 만들어지는 시점
   recovery: {
     at: 7.45,
