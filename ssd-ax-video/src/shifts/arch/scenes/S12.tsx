@@ -14,8 +14,8 @@ import type { DocRow, PlotRect } from "./kitB";
 const LANE = { y: 672, boxY: 704, boxH: 76, x0: 290, w: 380, pitch: 420 } as const;
 const PEOPLE = ["아키텍트 · 선택", "RTL 리드 · 승인", "FW 리드 · 승인"];
 const R: PlotRect = { x: 560, y: 124, w: 800, h: 470 };
-const ADR = { x: 96, y: 96, w: 1066, px: 26 } as const;
-const JIRA = { x: 1192, y: 96, w: 632, px: 26 } as const;
+const ADR = { x: 96, y: 96, w: 1074, px: 26 } as const;
+const JIRA = { x: 1198, y: 96, w: 626, px: 26 } as const;
 const LINE_H = Math.round(26 * 1.5);
 
 export const S12: React.FC = () => {

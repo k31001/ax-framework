@@ -28,7 +28,7 @@ const q = progress(frame, 30, DUR.move, ease.inOut);  // 자리에서 자리로 
 rows.map((row, i) => enter(frame, stagger(f(at), i)))                   // 시차 등장
 ```
 그 밖: `sub`(진행값의 일부 구간), `lerp`, `countUp`, `pulse`, `drawDashed`, `enterSvg`(`<g>`용), `pointOnTrace`(노드가 trace를 따라 이동).
-공통 부품(`components/`): `Sheet`, `Trace`·`Via`·`Pad`·`DimLine`, `Caption`, `Title`, `Stat`, `Source`, `Appear`, `StageTrack`, `RequirementCard`, 아이콘.
+공통 부품(`components/`): `Sheet`, `Trace`·`Via`·`Pad`·`DimLine`, `Caption`, `Title`, `Stat`, `Source`, `Appear`, `StageTrack`, `RequirementCard`, `ContextLine`, 아이콘.
 ## StageScene의 그림 (S5-1 ~ S5-7)
 ```tsx
 export const S5_4: React.FC = () => <StageScene stage={S5[3]} Illustration={MyIllustration} />;
@@ -36,10 +36,12 @@ const MyIllustration: Illustration = ({ width, height, beats, frames, card }) =>
 ```
 그림은 (0,0)~(width,height) 안에 그린다. 프레임은 씬 시작 기준이다. `IllustrationProps`(`stage/StageScene.tsx`):
 - `width`, `height`, `origin`(그림 자리의 화면 좌표), `stage`, `card`(요구사항 카드의 `rect`와 기록 슬롯 7칸의 중심)
-- `beats[]`: `kind`, `text`, `frame`(등장), `index`(흐름도 번호), `rect`(항목의 사각형. 문제는 마름모이고 깃발은 `flag`)
-- `frames`: `before`, `flowStart`, `problem`, `resolved`, `record`, `principle`, `note`, `closing`, `end`
+- `beats[]`: `kind`, `text`, `frame`(등장), `index`(흐름도 번호), `rect`(항목의 사각형. 문제는 마름모이고 깃발은 `flag`. 흐름도에 놓이지 않는 `context`·`before`·`note`는 `null`)
+- `frames`: `before`, `context`, `contextOut`, `flowStart`, `problem`, `resolved`, `record`, `principle`, `note`, `closing`, `end`
 - `rect`·`flag`·`card`는 그림 자리의 왼쪽 위를 (0,0)으로 한 좌표다. 흐름도 항목이나 카드로 선을 이을 수 있다.
 - 항목은 `frame`부터 16프레임 동안 자리 잡는다. "현재" 한 줄은 `frames.flowStart`까지 흐름도 자리(그림 자리 밖)에 크게 떠 있다.
+- 배경 문구(`kind: "context"`, S5-2와 S5-3): StageScene이 본문 위쪽(`BODY`의 위 `CONTEXT_HEIGHT` px)에 문구를 그린다. `frames.context`부터 `frames.contextOut`까지는 흐름도가 없으므로 그림이 본문 전체(`stage/layout.ts`의 `BODY`)를 쓸 수 있다. 그 구간이 끝나기 전에 그림 자리 밖의 것은 모두 치운다.
+- 강조 문구(`note`)는 배치 설정에 `note` 자리가 있을 때만 StageScene이 그린다. S5-3은 자리를 두지 않고 그림이 원칙 띠 자리에 직접 그린다(`s5_3/DesignerChoice`).
 - 배치는 `stage/layout.ts`에 있다. 진행 표시의 닫히는 고리(S5-7)와 폐루프 점선(S5-4)은 StageScene이 그린다.
 
 | 단계 | 그림 자리 (x, y, 폭×높이) | 위치 |

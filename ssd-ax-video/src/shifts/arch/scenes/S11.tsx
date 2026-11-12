@@ -156,7 +156,7 @@ export const S11: React.FC = () => {
         ) : null}
         {dots}
         {/* formal 모델의 테두리 */}
-        <rect x={Q.x - 16} y={Q.y - 34} width={ARB.x + ARB.w + 16 - (Q.x - 16)} height={Q.h + 46} fill="none" stroke={color.human} strokeWidth={stroke.thin} strokeDasharray="10 8" opacity={formal} />
+        <rect x={Q.x - 16} y={Q.y - 54} width={ARB.x + ARB.w + 16 - (Q.x - 16)} height={Q.h + 64} fill="none" stroke={color.human} strokeWidth={stroke.thin} strokeDasharray="10 8" opacity={formal} />
         {/* 에이전트의 수정안 → 큐 */}
         <Trace pts={[[FIXBOX.x + 100, FIXBOX.y], [FIXBOX.x + 100, Q.y + Q.h + 4]]} stroke={color.agent} width={stroke.trace} arrow at={t4 + 10} />
         {/* 타임라인 */}
@@ -176,7 +176,7 @@ export const S11: React.FC = () => {
           <div style={{ ...sans(30, 600), whiteSpace: "nowrap", color: color.inkSoft }}>GC read 복구 요청</div>
         </div>
         <T x={RC.x + RC.w / 2} y={RC.y - 44} text="rcv_ctrl" px={30} code weight={700} align="center" />
-        <EdgeTag x={Q.x + 16} y={Q.y} text="복구 요청 큐" c={color.ink} px={30} />
+        <T x={Q.x + Q.w / 2} y={Q.y - 44} text="복구 요청 큐" px={30} weight={700} align="center" />
         <T x={SD.x + SD.w / 2} y={SD.y + 22} text="soft LDPC ×3" px={30} weight={700} align="center" />
         <T x={RET.x + RET.w / 2} y={RET.y + 21} text="host로 반환" px={30} weight={700} align="center" />
       </div>
@@ -185,7 +185,7 @@ export const S11: React.FC = () => {
       <T x={Q.x + 14} y={Q.y + 3} text="host 우선" px={30} weight={700} c={color.agent} at={tF + 10} />
       <T x={Q.x + 14} y={MID_Y + 3} text="GC" px={30} weight={700} c={color.inkSoft} at={tF + 10} />
       <T x={1040} y={Q.y + Q.h + 14} text="host 4 : GC 1 · GC 최소 처리량 보장" px={30} weight={700} c={color.agent} at={within("s11.4", 0.6)} />
-      <EdgeTag x={ARB.x + ARB.w - 190} y={Q.y - 34} text="formal 모델" c={color.human} px={30} p={formal} />
+      <EdgeTag x={ARB.x + ARB.w - 180} y={Q.y - 54} text="formal 모델" c={color.human} px={30} p={formal} />
 
       {/* ── 표 ── */}
       <Table

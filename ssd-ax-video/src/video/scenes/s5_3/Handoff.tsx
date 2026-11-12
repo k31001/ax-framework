@@ -66,12 +66,12 @@ export const Handoff: React.FC<{ at: number; out: number }> = ({ at, out }) => {
   if (gone >= 1) return null;
 
   const sheet = progress(frame, at + 2, 16);
-  const faded = progress(frame, at + 38, 18); // 블록도는 물러난다
+  const faded = progress(frame, at + 58, 18); // "대신": 블록도는 물러난다
   const sheetTint = faded > 0.5 ? color.lineStrong : color.inkSoft;
-  const whoAt = at + 40;
-  const barAt = at + 60;
+  const whoAt = at + 60;
+  const barAt = at + 74;
   const lineAt = barAt + L.budget.parts.length * 6 + 8;
-  const cardAt = at + 108;
+  const cardAt = at + 122;
   const card = progress(frame, cardAt, 16);
   const right = SHEET.x + SHEET.w;
 

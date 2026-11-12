@@ -91,7 +91,7 @@ export const S8: React.FC = () => {
       />
       <EdgeTag x={PANEL.x + 640} y={PANEL.y} text="구조 기술 · 원본 하나" c={color.human} px={30} p={progress(frame, t4 + 6, DUR.enter)} />
       {/* 패널의 n: 3 */}
-      <div style={{ position: "absolute", left: PANEL.x + 24 + 14 * cw(PANEL.px) - 6, top: PANEL.y + 64 + SOFT_LINE * LINE_H + 3, width: 4 * cw(PANEL.px) + 12, height: LINE_H - 6, boxSizing: "border-box", border: `${stroke.thin}px solid ${color.human}`, backgroundColor: withAlpha(color.human, 0.35 * blink), opacity: progress(frame, blinkAt - 4, 8) }} />
+      <div style={{ position: "absolute", left: PANEL.x + 24 + 14 * cw(PANEL.px) - 3, top: PANEL.y + 64 + SOFT_LINE * LINE_H + 3, width: 4 * cw(PANEL.px) + 12, height: LINE_H - 6, boxSizing: "border-box", border: `${stroke.thin}px solid ${color.human}`, backgroundColor: withAlpha(color.human, 0.35 * blink), opacity: progress(frame, blinkAt - 4, 8) }} />
 
       <svg {...fullSvg}>
         {/* 여섯째: RTL parameter */}
