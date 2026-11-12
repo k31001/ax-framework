@@ -6,9 +6,10 @@ import { FIG } from "../../content";
 import { color, stroke } from "../../theme";
 import { Label } from "./Label";
 
-// S5-2 위쪽: 구성 탐색.
+// S5-2 가운데: 구성 탐색.
 // 면적(가로)·지연(세로) 좌표에 후보 수백 개가 찍히고 Pareto 경계가 그려진다. 사람이 그중 하나를 고른다.
-// 고른 점에서 아래 상세도(QueueDetail)로 지시선이 내려간다.
+// 처음에는 목적별 모델(ModelViews) 아래에 내려와 있다가, 상세도가 나오기 전에 위로 올라가 자리를 내준다.
+// 그 뒤 고른 점에서 아래 상세도(QueueDetail)로 지시선이 내려간다.
 
 const L = FIG["S5-2"];
 
@@ -64,30 +65,31 @@ const FRONT_SPAN = FRONT[FRONT.length - 1].area - FRONT[0].area;
 
 export const CHOSEN = CANDIDATES.filter((c) => c.area === CHOSEN_AREA)[0];
 
-// 전환 전: 손으로 만든 두세 안
-const FEW = [candidate(0.3, 0.78, 0), candidate(0.52, 0.64, 0), candidate(0.74, 0.56, 0)];
-
 const LABEL_Y = CHOSEN.y + 34;
 const RING = 12;
 
 export const ParetoPlot: React.FC<{
-  before: number;
-  agentAt: number;
+  /** 축이 그려지는 프레임. 후보는 그 뒤에 찍힌다. */
+  axesAt: number;
   humanAt: number;
+  /** 처음에 내려와 있는 거리(px)와, 제자리로 올라가기 시작하는 프레임 */
+  drop: number;
+  riseAt: number;
   /** 지시선이 상세도로 내려가기 시작하는 프레임 */
   detailAt: number;
   /** 지시선이 닿는 상세도 위쪽 변의 y */
   detailY: number;
-}> = ({ before, agentAt, humanAt, detailAt, detailY }) => {
+}> = ({ axesAt, humanAt, drop, riseAt, detailAt, detailY }) => {
   const frame = useCurrentFrame();
 
-  const axes = progress(frame, before, 18);
-  const front = progress(frame, agentAt + 56, 24, ease.inOut);
+  const cloudAt = axesAt + 12;
+  const axes = progress(frame, axesAt, 18);
+  const front = progress(frame, cloudAt + 56, 24, ease.inOut);
+  const rise = progress(frame, riseAt, 18, ease.inOut);
   const chosen = progress(frame, humanAt + 6, 14);
   const focus = progress(frame, humanAt + 6, 20); // 고른 뒤에는 나머지 후보가 물러난다
   const recede = progress(frame, detailAt, 20); // 아래 상세도가 나오면 한 번 더 물러난다
   const cloud = lerp(lerp(0.62, 0.36, focus), 0.26, recede);
-  const fewOut = progress(frame, agentAt + 30, 20);
 
   // 지시선: 고른 점 → (이름표 높이) → 상세도
   const leaderTop = CHOSEN.y + RING + 2;
@@ -98,7 +100,7 @@ export const ParetoPlot: React.FC<{
 
   if (axes <= 0) return null;
   return (
-    <g>
+    <g transform={`translate(0 ${drop * (1 - rise)})`}>
       {/* 축 */}
       <g opacity={lerp(1, 0.7, recede)}>
         <Trace
@@ -145,33 +147,16 @@ export const ParetoPlot: React.FC<{
             opacity={sub(axes, 0.5, 1)}
           />
         ))}
-        <g {...enterSvg(frame, before + 6, { distance: 8 })}>
+        <g {...enterSvg(frame, axesAt + 6, { distance: 8 })}>
           <Label x={PLOT.x0} y={20} text={L.axes.y} anchor="middle" />
           <Label x={PLOT.x1 + 16} y={PLOT.y0} text={L.axes.x} />
         </g>
       </g>
 
-      {/* 전환 전의 소수 후보 */}
-      {FEW.map((c, i) => {
-        const p = progress(frame, before + 14 + i * 6, 10) * (1 - fewOut);
-        return p <= 0 ? null : (
-          <circle
-            key={i}
-            cx={c.x}
-            cy={c.y}
-            r={7 * (0.5 + 0.5 * p)}
-            fill="none"
-            stroke={color.inkDim}
-            strokeWidth={stroke.trace}
-            opacity={p}
-          />
-        );
-      })}
-
       {/* 후보 수백 개 */}
       <g opacity={cloud}>
         {CANDIDATES.map((c, i) => {
-          const p = progress(frame, agentAt + 4 + c.order * 50, 8);
+          const p = progress(frame, cloudAt + c.order * 50, 8);
           return p <= 0 ? null : <circle key={i} cx={c.x} cy={c.y} r={2.6} fill={color.inkSoft} opacity={p} />;
         })}
       </g>

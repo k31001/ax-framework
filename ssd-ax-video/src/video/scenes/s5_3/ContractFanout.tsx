@@ -32,14 +32,18 @@ const JOIN_X = 352;
 const OUT_X = 392;
 const OUT_YS = [80, 130, 180] as const;
 
-export const ContractFanout: React.FC<{ before: number; humanAt: number; agentAt: number }> = ({
-  before,
-  humanAt,
-  agentAt,
-}) => {
+export const ContractFanout: React.FC<{
+  before: number;
+  humanAt: number;
+  agentAt: number;
+  /** 배경 그림이 본문 전체를 쓰는 동안(시작, 끝 프레임)은 비켜 준다. */
+  away?: readonly [number, number];
+}> = ({ before, humanAt, agentAt, away }) => {
   const frame = useCurrentFrame();
   const appear = progress(frame, before, 18);
   if (appear <= 0) return null;
+  const shown = away ? 1 - progress(frame, away[0], 8, ease.in) + progress(frame, away[1], 12) : 1;
+  if (shown <= 0) return null;
 
   const faded = progress(frame, humanAt + 14, 22); // 문서가 물러난다
   const docTint = interpolateColors(faded, [0, 1], [color.inkSoft, color.lineStrong]);
@@ -47,7 +51,7 @@ export const ContractFanout: React.FC<{ before: number; humanAt: number; agentAt
   const right = DOC.x + DOC.w;
 
   return (
-    <g>
+    <g opacity={shown}>
       {/* API 문서 */}
       <g {...enterSvg(frame, before + 4)}>
         <Label

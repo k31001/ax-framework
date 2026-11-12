@@ -26,7 +26,7 @@
 2. **AI로 작성이 빨라지면 리뷰가 막힌다.** 소프트웨어 조직의 텔레메트리에서 AI 활용이 높은 구간은 첫 리뷰까지의 대기 시간이 156.6% 늘고, 리뷰 없이 반영된 변경이 31.3% 늘었다(Faros AI 자사 발표). 그럴듯해 보이는 코드를 풀어 읽는 일이 시니어에게 몰린다. 보고서는 이를 "senior engineer tax"라고 부른다.
 3. **줄 단위 리뷰는 "무엇을 확인하지 않았는가"를 보지 못한다.** 리뷰어는 쓰인 코드를 본다. 빠진 checker, 너무 느슨한 assertion은 코드에 없으므로 눈에 띄지 않는다.
 
-RTL 설계자와 FW 엔지니어도 같다. 설계자는 RTL을 쓰고 lint 경고를 손으로 지우고, FW 엔지니어는 API 문서를 읽고 driver를 쓴 뒤 보드 로그를 눈으로 확인한다. 리뷰는 모두 diff를 줄 단위로 읽는 방식이다.
+RTL 설계자와 FW 엔지니어도 같다. 설계자는 블록도 한 장을 해석해 RTL을 쓰고 lint 경고를 손으로 지우고, 면적과 timing은 후반에 한꺼번에 받는다. FW 엔지니어는 API 문서를 읽고 driver를 쓴 뒤 보드 로그를 눈으로 확인한다. 리뷰는 모두 diff를 줄 단위로 읽는 방식이다.
 
 ## 3. 전환 후의 모습
 
@@ -34,7 +34,7 @@ RTL 설계자와 FW 엔지니어도 같다. 설계자는 RTL을 쓰고 lint 경�
 
 | 순서 | 주체 | 하는 일 | 산출물 |
 |---|---|---|---|
-| 1 | 사람 | 의도, 통과 기준, 불변식, 금지 사항, 쓸 수 있는 tool을 적는다. Jira의 Test Plan을 에이전트 계정에 할당하고 "지시됨"으로 옮긴다 | 작업 지시서(git), Test Plan 이슈(Jira) |
+| 1 | 사람 | 의도, 통과 기준, 불변식, 금지 사항, 쓸 수 있는 tool을 적는다. Jira의 Test Plan을 에이전트 계정에 할당하고 "지시됨"으로 옮긴다. 설계 지시는 설계 기능 이슈를 할당하고 "구현 중"으로 옮긴다(4.4) | 작업 지시서(git), Test Plan·설계 기능 이슈(Jira) |
 | 2 | 에이전트 | "진행 중"으로 옮기고 testbench·RTL·driver를 만들고 tool을 돌리고 스스로 고친다. 모호하면 멈추고 Jira 댓글로 질문한다 | 코드, 질문 댓글 |
 | 3 | 파이프라인 | Tool 출력에서 결과를 모은다. 에이전트의 요약문이 아니라 simulator, formal, coverage, mutation tool의 원본 출력이다. Test 단위 결과는 파이프라인 계정 `ci-import` 가 Xray Test Execution으로 올린다. 에이전트는 댓글 한 건에 요약과 증거 경로를 적고 "검토 대기"로 옮긴다 | 증거 묶음(git), Test Execution과 댓글(Jira) |
 | 4 | 사람 | 증거 묶음을 통과 기준과 대조해 승인하거나 반려한다. 위험 등급이 높은 부분은 코드를 직접 읽는다. 승인과 반려는 사람만 할 수 있는 워크플로 전환이다 | 승인 기록(Jira의 전환 이력) |
@@ -176,9 +176,79 @@ a_done_conserve: assert property (
   push_cnt == pop_cnt + q_level);
 ```
 
-### 4.4 RTL 설계자의 경우
+### 4.4 RTL 설계자의 경우: 작업 지시와 증거
 
-Host read 우선 큐를 고칠 때 설계자가 적는 것은 불변식 두 줄이다. "host 요청은 대기 중인 GC 요청보다 먼저 나간다", "GC 요청은 정해진 횟수 안에 반드시 한 번 나간다(기아 없음)". 에이전트가 RTL을 고치고, 증거 묶음에는 두 property의 formal 결과, 면적·timing의 예산 대비 값, 신규 CDC 경고와 waiver 수, 변경이 닿은 모듈 목록이 붙는다. 설계자는 줄마다 읽는 대신 microarchitecture와 interface가 의도대로인지, timing·CDC 예외가 타당한지를 본다.
+같은 틀을 RTL 설계자의 눈으로 본다. 예제는 구조 설계 편의 soft 경로다. 구조가 어떻게 정해졌는지, 예산과 계약이 어디서 나오는지는 [`docs/06-architecture-exploration.md`](../06-architecture-exploration.md) 5.7절과 6장에 있다. 여기서는 그 뒤의 일하는 방식만 다룬다. 영상에서는 s6이다.
+
+| | 전 | 후 |
+|---|---|---|
+| 받는 것 | 블록도 한 장과 서술 문서 | 블록별 예산 `BUD-RCV-001`, interface 계약 `HSI-RCV-010` |
+| 정의하는 것 | RTL 코드 그 자체 | Microarchitecture의 선택(상태, 큐 깊이, pipeline), 불변식, 통과 기준, 고칠 수 없는 것 |
+| 실행 | 직접 쓰고 lint·CDC 경고를 손으로 지움 | 에이전트가 RTL 생성과 lint·CDC·formal·합성을 반복 |
+| 판단의 근거 | diff를 줄 단위로 읽음 | Formal 증명, 예산 대비 면적·timing 표, 계약 assertion 통과. 코드는 위험한 곳만 골라 읽음 |
+| 예산을 못 지킬 때 | 혼자 끼워 맞추거나 후반에 드러남 | 구조 변경 요청을 올림 |
+
+**받는 것.** 예산표는 2 ms를 꼬리 경로의 구간으로 나눈 값과 블록별 면적이고, 계약은 순서와 한계까지 적은 것이다(예: `order: host 먼저. gc는 host 4건당 1건 이상`, `verify: [sva:a_host_first, sva:a_gc_no_starve]`). 둘 다 아키텍트 소유이고 설계자와 에이전트는 고칠 수 없다.
+
+**정의하는 것.** 설계자는 예산을 어떻게 지킬지를 정해 작업 지시서로 적는다. 지시의 단위는 Jira의 설계 기능 이슈다. 설계자가 `FEAT-352` 를 에이전트 계정 `rtl-agent` 에 할당하고 "구현 중"으로 옮긴다(사람의 전환). 지시서 원본은 git에 있고 이슈에는 경로만 적는다.
+
+```yaml
+task: RTL-RCV-021   jira: FEAT-352   # 예시
+inputs: [BUD-RCV-001, HSI-RCV-010]
+intent: soft 경로는 host 우선, 예산 안에서 처리
+uarch:                   # 설계자가 정함
+  - 상태: IDLE·RETRY·SOFT_RD·SOFT_DEC·DONE
+  - 큐 깊이 64 · decoder 앞 pipeline 1단
+invariant:
+  - host 요청이 gc 요청보다 먼저
+  - gc는 host 4건당 1건 이상 (기아 없음)
+pass: formal 증명, 계약 assertion, 예산 표
+forbid: 예산, 계약, sva/ 완화, 신규 waiver
+stop: 예산을 못 지키면 멈추고 보고
+```
+
+`uarch` 는 구조가 넘겨준 출발점(상태, 큐 깊이, decoder 수)에서 설계자가 고른 것이다. `forbid` 는 검증의 경우와 같이 부탁이 아니라 권한이다. `rtl-agent` 는 예산표, 계약, 계약에서 나온 assertion에 쓸 수 없다. `stop` 이 중요하다. 예산을 못 지킬 때 에이전트가 할 일은 assertion을 완화하거나 다른 블록의 여유를 끌어 쓰는 것이 아니라 멈추고 보고하는 것이다.
+
+**에이전트가 하는 것.** RTL을 만들고 lint, CDC, formal, 합성을 통과할 때까지 반복한다. 끝나면 댓글 한 건에 요약과 증거 경로를 적고 "검토 대기"로 옮긴다. 에이전트가 갈 수 있는 상태는 여기까지다.
+
+**증거로 판단하는 것.** 증거 묶음의 요약과 MR에 붙는 예산 대비 표다. 수치는 tool 출력에서 온다.
+
+```yaml
+task: RTL-RCV-021  rtl: 8d2e5b7      # 예시
+lint:    신규 경고 0
+cdc:     신규 경고 0 · 신규 waiver 0
+formal:  a_host_first     proven
+         a_gc_no_starve   proven
+changed: rtl/soft_path/ 만 변경. 금지 경로 0건
+agent:   "구현 완료"   # 판정 근거 아님
+```
+
+```text
+MR !2207  FEAT-352 soft 경로 · 예산 검사 (예시)
+항목                예산      측정      판정
+rcv_ctrl 단계 전환  2 µs      1.4 µs    통과
+soft decode (최대)  250 µs    236 µs    통과
+timing slack        ≥ 0 ns    +0.06 ns  통과
+ECC 블록 면적       +15%      +17%      초과
+```
+
+설계자는 RTL 줄을 전부 읽지 않는다. 불변식이 증명됐는지(vacuous 통과가 아닌지), 계약 assertion이 그대로인지, 측정이 예산 안인지를 먼저 본다. 그리고 증거가 덮지 못하는 곳을 골라 직접 읽는다. CDC 경계, reset 순서, 큐가 차거나 비는 경계다. 3장의 등급으로는 B에 해당한다. Microarchitecture가 지시서의 `uarch` 대로인지도 이때 본다.
+
+**예산을 넘으면 구조로 올린다.** 위 표에서 ECC 블록 면적이 +17%로 예산 +15%를 넘었다. 원인은 soft decoder 3기라는 구조 결정에 있다. 설계자는 RTL을 깎아 혼자 끼워 맞추지 않고, 구조 결정 이슈에 변경 요청을 올린다.
+
+```text
+FEAT-330 댓글  RTL 설계자  [구조 변경 요청]  (예시)
+ECC 블록 면적 +17% (예산 +15%)
+soft_dec 3 → 2 검토 요청
+→ 구조 모델 재실행: soft_dec 3 → 2
+  host P99.99 1.74 ms (판정선 1.78) · 통과
+  ECC 블록 면적 +13%
+→ ADR-RCV-003 개정 2 · 아키텍트 승인
+```
+
+에이전트가 구조 모델을 다시 돌리고, 아키텍트가 결정 기록을 개정한다. 예산 자체를 바꾸는 것은 아키텍트의 결정이다. 그 예산을 지키는 방법과 지켰다는 판단의 책임은 설계자에게 있다.
+
+이 예제에서 `RTL-RCV-021`, `rtl-agent`, `8d2e5b7`, timing slack 줄, pipeline 1단은 이 문서에서 더한 가상 값이다. 나머지 ID와 수치는 `docs/06` 의 것 그대로다.
 
 ### 4.5 FW 엔지니어의 경우
 

@@ -78,25 +78,34 @@ BASE = {
 }
 
 # 사례 7단계. 항목 문구로 찾는다. (문구, 기준 시점, 문장 번호)
+# 씬마다 (기준 길이, 기록 시점, (원칙 시점, 문장) 또는 None, (마무리 시점, 문장) 또는 None, [항목…]).
+# content.ts 의 beat 를 더하거나 문구를 바꾸면 여기의 줄도 같은 문구로 맞춘다(문구가 다르면 "pattern not found" 로 멈춘다).
+# 항목의 넷째 값(없어도 된다)은 그 문장이 끝난 뒤 다음 문장까지 더 두는 쉼(초)이다. 문장이 끝나기 전에 화면이
+# 바뀌는 항목(본문 전체를 쓰는 배경 그림, 원칙 띠 자리를 먼저 쓰는 강조 문구)에 준다.
 STAGES = {
     "S5-1": (11, 9.4, None, None, [
         ("문서 수작업 대조, 충돌은 뒤늦게 발견", 0.8, 1),
         ("조항 단위 추출 · 충돌 위험 탐지", 3.4, 2),
         ("우선순위 결정 · 수용 기준 확정", 6.6, 3),
     ]),
-    "S5-2": (17, 15.4, None, None, [
-        ("소수 후보, 회의로 결정", 0.8, None),
-        ("보정된 성능 모델로 수백 구성 탐색", 3.2, 1),
-        ("선택: 오류 복구 제어를 FW에서 HW로", 6.2, 2),
-        ("구조 검증: GC 중 P99.99 초과", 9.2, 3),
-        ("host read 우선 큐 추가 · RTL 작성 전 발견", 12.2, 4),
+    # 배경(context)과 "현재"에도 문장이 붙는다: 1 요구사항 급변, 2 RTL 먼저
+    "S5-2": (19.2, 17.6, None, None, [
+        ("요구사항 급변 → 구조 재설계", 0.8, 1, 0.3),
+        ("RTL 먼저, 구조 문제는 emulation에서 발견", 3.0, 2, 0.6),
+        ("목적별 모델 · 수백 구성 여러 관점에서 탐색", 5.4, 3),
+        ("선택: 오류 복구 제어를 FW에서 HW로", 8.4, 4),
+        ("구조 검증: GC 중 P99.99 초과", 11.4, 5),
+        ("host read 우선 큐 추가 · RTL 작성 전 발견", 14.4, 6),
     ]),
-    "S5-3": (12, 10.6, (9.6, 4), None, [
+    # "현재"(문장 없음) 뒤에 배경(1 설계자가 받는 것)이 오고, 해결 뒤에 강조 문구(5 설계자의 결정)가 온다
+    "S5-3": (17, 15.6, (14.6, 6), None, [
         ("register는 SystemRDL, 동작 규약은 API 문서", 0.8, None),
-        ("동작 규약을 실행 가능한 계약으로 정의", 2.8, 1),
-        ("계약 기반 RTL 생성 · commit마다 PPA 추정", 4.8, 2),
-        ("ECC 블록 면적 초과", 6.8, 3),
-        ("축소안 · 구조 모델로 지연 재확인", 8.6, None),
+        ("블록도 한 장 → 블록별 예산 · interface 계약", 2.8, 1, 0.6),
+        ("동작 규약을 실행 가능한 계약으로 정의", 4.8, 2),
+        ("계약 기반 RTL 생성 · commit마다 PPA 추정", 6.8, 3),
+        ("ECC 블록 면적 초과", 8.8, 4),
+        ("축소안 · 구조 모델로 지연 재확인", 10.6, None),
+        ("지키는 방법은 설계자의 결정", 12.6, 5, 0.4),
     ]),
     "S5-4": (18, 16.6, (15.0, 6), None, [
         ("실패 수백 건, 원인 분석은 수작업", 0.8, None),
@@ -146,10 +155,11 @@ def ceil_half(x):
 
 
 def place(events, durs, scene):
-    """events: [(key, base, line|None)] → ({key: new}, [(line, start)], shift, last_end)"""
+    """events: [(key, base, line|None[, hold])] → ({key: new}, [(line, start)], shift, last_end)"""
     shift, prev_end = 0.0, -GAP
     new, starts = {}, []
-    for key, base, line in sorted(events, key=lambda e: e[1]):
+    for key, base, line, *rest in sorted(events, key=lambda e: e[1]):
+        hold = rest[0] if rest else 0.0
         t = base + shift
         if line is not None:
             need = prev_end + GAP - LEAD
@@ -158,7 +168,7 @@ def place(events, durs, scene):
                 t = need
             start = t + LEAD
             starts.append((line, start))
-            prev_end = start + durs[f"{scene}_{line}"]
+            prev_end = start + durs[f"{scene}_{line}"] + hold
         new[key] = t
     return new, starts, shift, prev_end
 
@@ -198,7 +208,7 @@ def main():
 
     # ── 사례 7단계 ──
     for scene, (base_len, record, principle, closing, beats) in STAGES.items():
-        events = [(text, at, line) for text, at, line in beats]
+        events = [(text, at, line, *rest) for text, at, line, *rest in beats]
         events.append(("__record", record, None))
         if principle:
             events.append(("__principle", principle[0], principle[1]))
@@ -208,7 +218,7 @@ def main():
         s = content.index(f'id: "{scene}"')
         nxt = content.find('\n  {\n    id: "S5-', s + 1)
         e = nxt if nxt != -1 else content.index("export const LANES")
-        for text, at, line in beats:
+        for text, *_ in beats:
             patch((s, e), cap(text), new[text])
         patch((s, e), field("recordAt"), new["__record"])
         if principle:

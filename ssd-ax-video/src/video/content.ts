@@ -94,13 +94,14 @@ export const S4J = {
 } as const;
 
 // ── S5 사례 7단계 ──────────────────────────────────────────────────────
+// context:  흐름에 앞서 나오는 배경 문구. 본문 위쪽에 크게 나왔다가 다음 항목 앞에서 물러난다. 흐름도에는 놓이지 않는다.
 // before:   전환 전의 방식. 먼저 나왔다가 흐려진다.
 // human:    사람 줄에 놓이는 항목
 // agent:    에이전트 줄에 놓이는 항목
 // problem:  흐름 중간에 끼어드는 문제 (경고색)
 // resolved: 문제의 해결
 // note:     흐름과 별개로 화면에 크게 나오는 강조 문구
-export type BeatKind = "before" | "human" | "agent" | "problem" | "resolved" | "note";
+export type BeatKind = "context" | "before" | "human" | "agent" | "problem" | "resolved" | "note";
 export type Beat = { kind: BeatKind; at: number; text: string };
 
 export type Principle = {
@@ -136,13 +137,14 @@ export const S5: Stage[] = [
     id: "S5-2",
     index: 1,
     record: "구조 모델",
-    recordAt: 21.87,
+    recordAt: 32.28,
     beats: [
-      { kind: "before", at: 0.8, text: "소수 후보, 회의로 결정" },
-      { kind: "agent", at: 3.2, text: "보정된 성능 모델로 수백 구성 탐색" },
-      { kind: "human", at: 7.31, text: "선택: 오류 복구 제어를 FW에서 HW로" },
-      { kind: "problem", at: 11.87, text: "구조 검증: GC 중 P99.99 초과" },
-      { kind: "resolved", at: 18.67, text: "host read 우선 큐 추가 · RTL 작성 전 발견" },
+      { kind: "context", at: 0.8, text: "요구사항 급변 → 구조 재설계" },
+      { kind: "before", at: 6.07, text: "RTL 먼저, 구조 문제는 emulation에서 발견" },
+      { kind: "agent", at: 11.62, text: "목적별 모델 · 수백 구성 여러 관점에서 탐색" },
+      { kind: "human", at: 17.59, text: "선택: 오류 복구 제어를 FW에서 HW로" },
+      { kind: "problem", at: 22.56, text: "구조 검증: GC 중 P99.99 초과" },
+      { kind: "resolved", at: 29.08, text: "host read 우선 큐 추가 · RTL 작성 전 발견" },
     ],
   },
   {
@@ -150,15 +152,17 @@ export const S5: Stage[] = [
     index: 2,
     record: "interface 계약",
     jira: "FEAT-341",
-    recordAt: 18.07,
+    recordAt: 29.28,
     beats: [
       { kind: "before", at: 0.8, text: "register는 SystemRDL, 동작 규약은 API 문서" },
-      { kind: "human", at: 2.8, text: "동작 규약을 실행 가능한 계약으로 정의" },
-      { kind: "agent", at: 8.06, text: "계약 기반 RTL 생성 · commit마다 PPA 추정" },
-      { kind: "problem", at: 11.76, text: "ECC 블록 면적 초과" },
-      { kind: "resolved", at: 13.56, text: "축소안 · 구조 모델로 지연 재확인" },
+      { kind: "context", at: 2.8, text: "블록도 한 장 → 블록별 예산 · interface 계약" },
+      { kind: "human", at: 8.95, text: "동작 규약을 실행 가능한 계약으로 정의" },
+      { kind: "agent", at: 14.97, text: "계약 기반 RTL 생성 · commit마다 PPA 추정" },
+      { kind: "problem", at: 18.74, text: "ECC 블록 면적 초과" },
+      { kind: "resolved", at: 20.54, text: "축소안 · 구조 모델로 지연 재확인" },
+      { kind: "note", at: 24.11, text: "지키는 방법은 설계자의 결정" },
     ],
-    principle: { at: 17.07, name: "스펙 원본화" },
+    principle: { at: 28.28, name: "스펙 원본화" },
   },
   {
     id: "S5-4",
@@ -303,13 +307,63 @@ export const FIG = {
     conflict: "충돌 위험",
     criterion: "수용 기준",
   },
+  // 수치와 식별자는 docs/06-architecture-exploration.md 5장의 예제와 같다(모두 예시).
   "S5-2": {
+    // 배경: 이전 세대 대비 바뀐 것과, 이전 구조(FW 순차 제어)가 새 조건에서 기준을 넘는 모습
+    change: {
+      head: { from: "이전 세대", to: "이번 과제 (예시)" },
+      rows: [
+        { item: "NAND", from: "TLC", to: "차세대 QLC", note: "" },
+        { item: "용량", from: "30.72 TB", to: "122.88 TB", note: "4배" },
+        { item: "전력 한도", from: "25 W", to: "25 W", note: "그대로" },
+      ],
+    },
+    prev: { title: "이전 구조", fw: "FW 순차 제어", limit: "기준 2 ms", over: "3.41 ms (예시)" },
+    // 현재: RTL 먼저. 구조의 문제는 emulation 에서야 보인다
+    rtlFirst: {
+      steps: ["구조", "RTL", "블록 검증", "emulation"],
+      found: "P99.99 초과",
+      back: "구조부터 재작업",
+    },
+    // 목적별 모델은 구조 기술 하나에서 파생된다. views 는 탐색 결과를 보는 관점
+    source: "구조 기술",
+    models: ["지연 · 전력", "면적", "기능", "formal"],
+    views: ["지연 꼬리", "전력", "면적", "FW 복잡도", "검증 가능성", "재사용"],
     axes: { x: "면적", y: "지연" },
     chosen: "선택안",
     queue: { host: "host read", gc: "GC read", decoder: "soft decoder" },
     limit: "P99.99 기준",
   },
   "S5-3": {
+    // 배경: RTL 설계자가 받는 것. 지연 예산은 BUD-RCV-001 의 tail_path_ms, 계약은 HSI-RCV-010
+    handoff: {
+      sheet: "블록도 한 장",
+      to: "RTL 설계자",
+      budget: {
+        title: "블록별 지연 예산 (예시)",
+        total: 2, // ms. 요구사항의 기준
+        // 구간의 합 1.66 + 여유 0.12 = 판정선 1.78
+        parts: [
+          { name: "host · FTL", ms: 0.1 },
+          { name: "첫 read", ms: 0.35 },
+          { name: "HW retry", ms: 0.51 },
+          { name: "soft read", ms: 0.3 },
+          { name: "soft 큐", ms: 0.15 },
+          { name: "soft decode", ms: 0.25 },
+        ],
+        margin: 0.12,
+        line: { ms: 1.78, text: "판정선 1.78 ms" },
+        limit: "기준 2 ms",
+      },
+      contract: {
+        title: "interface 계약",
+        id: "HSI-RCV-010",
+        rules: [
+          { key: "order", text: "host 먼저 · GC는 host 4건당 1건 이상" },
+          { key: "bound", text: "모든 요청은 성공 또는 실패로 한 번 종료" },
+        ],
+      },
+    },
     from: "API 문서",
     contract: "계약",
     outputs: ["RTL", "C++ header", "assertion"],

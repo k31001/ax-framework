@@ -47,7 +47,11 @@ export const PlaceholderIllustration: Illustration = ({ stage, width, height, be
           {beats.map((beat, i) => {
             const on = progress(frame, beat.frame, 10);
             const tint =
-              beat.kind === "before" ? color.inkDim : beat.kind === "note" ? color.ink : kindColor[beat.kind];
+              beat.kind === "before" || beat.kind === "context"
+                ? color.inkDim
+                : beat.kind === "note"
+                  ? color.ink
+                  : kindColor[beat.kind];
             return (
               <div
                 key={i}

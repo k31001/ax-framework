@@ -1,207 +1,190 @@
 import React from "react";
 import { useCurrentFrame } from "remotion";
-import { ease, enter, enterExit, progress } from "../../../video/anim";
-import { AgentIcon, CheckIcon, HumanIcon } from "../../../video/components/Icons";
+import { ease, enter, progress } from "../../../video/anim";
+import { CheckIcon, HumanIcon } from "../../../video/components/Icons";
 import { Trace } from "../../../video/components/Trace";
 import { color, fullSvg, mono, sans, size, stroke, withAlpha } from "../../../video/theme";
 import { ShiftSheet, useScene } from "../../lib";
-import { BundleIcon, DocIcon, LockIcon, Steps, mix, split } from "./kit";
+import { STEP_WORDS, Steps, Tag, split } from "./kit";
 
-// s7 기술 요소와 실행 순서.
-//   s7.1  부품 네 개가 낱말에 맞춰 차례로 채워진다
-//   s7.2  1번 '분리 규칙': 생성 경로와 검증 기준 경로 사이의 벽, ref_model/ 에 자물쇠
-//   s7.3  벽이 사라진 가정: RTL 과 testbench 가 같은 오해(?)를 공유하고 서로 통과 → 벽이 서면 드러난다
-//   s7.4  2 → 3 → 4 → (측정이 쌓인 뒤) 5
+// s7 FW, 그리고 리뷰.
+//   (처음부터) RTL 설계자 카드: 앞 씬(s6)의 요약. 흐리게 켜져 있다
+//   s7.1  FW 엔지니어 카드: 정의(불변식)
+//   s7.2  같은 카드: 증거(불변식 시험 결과)
+//   s7.3  줄 단위 diff(흐림) → 위험 등급 3단 띠, A 만 진하다
+//   s7.4  주니어가 놓친 bug 하나를 파형과 함께 직접 본다
 
-const PARTS = [
-  { title: "작업 지시서 양식", sub: "YAML, 직접 구축", c: color.human },
-  { title: "증거 묶음 형식", sub: "tool 출력 수집, 직접 구축", c: color.agent },
-  { title: "mutation tool", sub: "상용 · 오픈소스", c: color.inkSoft },
-  { title: "권한 · 승인 기록", sub: "저장소 권한, 직접 구축", c: color.human },
-];
-const PART = { y: 138, w: 408, h: 186, pitch: 440 };
+const CARD_Y = 136;
+const CARD_W = 840;
+const HEAD_H = 54;
+const DEF_H = 118;
+const EVI_H = 164;
+const LINE = 46;
+const EVIDENCE = "증거";
 
-const STAIRS = [["분리 규칙"], ["블록 하나에서", "작업 지시서"], ["증거 묶음"], ["mutation 측정"], ["리뷰 방식 전환"]];
-const STAIR = { y: 780, w: 320, h: 110, pitch: 352 };
-const AFTER = "측정이 쌓인 뒤";
+type Row = { text: string; at: number; bar?: boolean };
 
-// 분리 규칙 그림
-const FX = 220;
-const UP = 446; // 생성 경로
-const LOW = 654; // 검증 기준 경로
-const WALL = 566;
-const Q = { x: FX + 800, y: UP };
-
-const Box: React.FC<{ x: number; y: number; w: number; c: string; at: number; children: React.ReactNode }> = ({ x, y, w, c, at, children }) => {
+const Card: React.FC<{ x: number; title: string; at: number; define: Row[]; evidence: Row[]; defineAt: number; evidenceAt: number; dim: number; dy: number }> = ({ x, title, at, define, evidence, defineAt, evidenceAt, dim, dy }) => {
   const frame = useCurrentFrame();
+  const open = progress(frame, at, 16, ease.out);
+  if (open <= 0) return null;
+  const eLit = progress(frame, evidenceAt, 14, ease.out);
+  const section = (y: number, h: number, c: string, label: string, rows: Row[], lit: number, monoFont: boolean) => (
+    <div style={{ position: "absolute", left: 0, top: y, width: CARD_W, height: h }}>
+      <div style={{ position: "absolute", left: 0, top: 0, width: 6, height: h * lit, backgroundColor: c }} />
+      <div style={{ position: "absolute", left: 24, top: 14, ...sans(size.small, 800), color: c, opacity: 0.35 + 0.65 * lit }}>{label}</div>
+      {rows.map((r, i) => (
+        <div key={i} style={{ position: "absolute", left: 112, top: 12 + i * LINE, height: LINE, display: "flex", alignItems: "center", gap: 24, ...(monoFont ? { ...mono(size.small, 500), color: color.ink } : sans(size.small, 600)), whiteSpace: "pre", ...enter(frame, r.at) }}>
+          {r.text}
+          {r.bar ? (
+            <svg width={300} height={30}>
+              <rect x={1} y={8} width={280} height={14} fill="none" stroke={color.lineStrong} strokeWidth={stroke.hair} />
+              <rect x={1} y={8} width={196 * progress(frame, r.at + 6, 20, ease.out)} height={14} fill={color.agent} />
+              <line x1={240} y1={1} x2={240} y2={29} stroke={color.human} strokeWidth={stroke.trace} />
+            </svg>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  );
   return (
-    <div style={{ position: "absolute", left: x, top: y - 34, width: w, height: 68, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, border: `${stroke.trace}px solid ${c}`, backgroundColor: color.panel, boxSizing: "border-box", ...mono(size.small, 700), color: color.ink, ...enter(frame, at) }}>
-      {children}
+    <div style={{ position: "absolute", left: x, top: CARD_Y + dy, width: CARD_W, height: HEAD_H + DEF_H + EVI_H, opacity: open * (1 - 0.55 * dim) }}>
+      <svg width={CARD_W} height={HEAD_H + DEF_H + EVI_H} style={{ position: "absolute", inset: 0 }}>
+        <rect x={1} y={1} width={CARD_W - 2} height={HEAD_H + DEF_H + EVI_H - 2} fill={withAlpha(color.panel, 0.92)} stroke={color.lineStrong} strokeWidth={stroke.thin} />
+        <line x1={1} y1={HEAD_H} x2={CARD_W - 1} y2={HEAD_H} stroke={color.line} strokeWidth={stroke.hair} />
+        <line x1={1} y1={HEAD_H + DEF_H} x2={CARD_W - 1} y2={HEAD_H + DEF_H} stroke={color.line} strokeWidth={stroke.hair} strokeDasharray="6 6" />
+      </svg>
+      <div style={{ position: "absolute", left: 24, top: 0, height: HEAD_H, display: "flex", alignItems: "center", ...sans(size.small, 800), whiteSpace: "nowrap" }}>{title}</div>
+      {section(HEAD_H, DEF_H, color.human, STEP_WORDS[0], define, progress(frame, defineAt, 14, ease.out), false)}
+      {section(HEAD_H + DEF_H, EVI_H, color.agent, EVIDENCE, evidence, eLit, true)}
     </div>
   );
 };
 
+const TIERS = [
+  { k: "A", target: "무결성 경로 · checker", how: "사람이 전부 직접" },
+  { k: "B", target: "제어 로직 · interface", how: "증거 + 표본" },
+  { k: "C", target: "sequence · 스크립트", how: "증거 + 무작위 표본" },
+];
+const TIER = { x: 560, y: 504, w: 860, h: 108, pitch: 124 };
+const OLD = { x: 96, y: 504, w: 380, h: 356 };
+
 export const S7: React.FC = () => {
   const frame = useCurrentFrame();
   const { cue, end } = useScene();
-  const c1 = cue("s7.1");
-  const c2 = cue("s7.2");
-  const c3 = cue("s7.3");
-  const c4 = cue("s7.4");
-  const e1 = end("s7.1");
-  const e2 = end("s7.2");
-  const e3 = end("s7.3");
-  const e4 = end("s7.4");
-
-  const partsDim = progress(frame, c2 - 4, 14, ease.inOut);
-  const wallUp = split(c2, e2, 1, 2);
-  const wallBack = split(c3, e3, 3, 5);
-  const wall = progress(frame, wallUp, 16, ease.out) * (1 - progress(frame, c3, 12, ease.in)) + progress(frame, wallBack, 14, ease.out);
-  const lowDim = progress(frame, c3, 12) * (1 - progress(frame, wallBack, 12));
-  const shared = split(c3, e3, 1, 4); // "같은 오해를 공유합니다" 앞에서 물음표가 뜬다
-  const passAt = split(c3, e3, 2, 5);
-  const exposed = progress(frame, wallBack + 10, 14, ease.out);
-  const figDim = progress(frame, c4 - 4, 14, ease.inOut);
-  const stairAt = [c2, c4, split(c4, e4, 1, 4), split(c4, e4, 2, 4), split(c4, e4, 3, 4) + 8];
-  const icons = [<DocIcon key="d" size={52} color={color.human} />, <BundleIcon key="b" size={52} color={color.agent} />, null, <LockIcon key="l" size={52} color={color.human} />];
+  const c3 = cue("s7.1");
+  const fwEvidence = cue("s7.2");
+  const c4 = cue("s7.3");
+  const c5 = cue("s7.4");
+  const e4 = end("s7.3");
+  const r0 = 4; // RTL 카드는 앞 씬의 요약이라 씬과 함께 켜진다
+  const tiersAt = split(c4, e4, 2, 5);
+  const dim = progress(frame, c4, 16, ease.inOut);
+  const dy = 170 * (1 - progress(frame, c4 - 12, 20, ease.inOut)); // 카드는 가운데에서 시작해 위로 물러난다
+  const aLit = progress(frame, split(c4, e4, 7, 10), 14, ease.out);
 
   return (
     <ShiftSheet>
-      <Steps />
-      {/* ── 부품표 ─────────────────────────────────────────────────── */}
-      {PARTS.map((p, i) => {
-        const at = split(c1, e1, i, 4);
-        return (
-          <div key={i} style={{ position: "absolute", left: 96 + i * PART.pitch, top: PART.y + 230 * (1 - progress(frame, c2 - 14, 20, ease.inOut)), width: PART.w, height: PART.h, boxSizing: "border-box", border: `${stroke.thin}px solid ${color.lineStrong}`, backgroundColor: withAlpha(color.panel, 0.9), ...enter(frame, at), opacity: progress(frame, at) * (1 - 0.6 * partsDim) }}>
-            <div style={{ position: "absolute", left: 0, top: 0, width: 6, height: "100%", backgroundColor: p.c }} />
-            <div style={{ position: "absolute", left: 26, top: 16, ...mono(size.label, 700), color: color.inkDim }}>{`PART 0${i + 1}`}</div>
-            <div style={{ position: "absolute", right: 22, top: 16 }}>
-              {icons[i] ?? (
-                <svg width={52} height={52}>
-                  {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((k) => (
-                    <circle key={k} cx={10 + (k % 3) * 16} cy={10 + Math.floor(k / 3) * 16} r={5} fill={k === 4 ? color.problem : color.agent} />
-                  ))}
-                </svg>
-              )}
-            </div>
-            <div style={{ position: "absolute", left: 26, top: 76, ...sans(size.body, 800), whiteSpace: "nowrap" }}>{p.title}</div>
-            <div style={{ position: "absolute", left: 26, top: 128, ...sans(size.small, 500), color: color.inkSoft, whiteSpace: "nowrap" }}>{p.sub}</div>
-          </div>
-        );
-      })}
+      <Steps
+        activeAt={[
+          { index: 0, at: 0 },
+          { index: 2, at: fwEvidence },
+        ]}
+      />
+      <Card
+        x={96}
+        title="RTL 설계자 · soft 경로"
+        at={r0}
+        defineAt={r0}
+        evidenceAt={r0}
+        dim={Math.max(dim, 0.8 * progress(frame, c3, 16, ease.inOut))}
+        dy={dy}
+        define={[
+          { text: "불변식 1: host 요청이 GC 요청보다 먼저", at: r0 + 4 },
+          { text: "불변식 2: GC 요청도 반드시 처리 (기아 없음)", at: r0 + 7 },
+        ]}
+        evidence={[
+          { text: "formal:  proven 2 / 2", at: r0 + 10 },
+          { text: "면적:    예산 대비", at: r0 + 13, bar: true },
+          { text: "CDC:     신규 경고 0 · 신규 waiver 0", at: r0 + 16 },
+        ]}
+      />
+      <Card
+        x={984}
+        title="FW 엔지니어 · read 오류 복구"
+        at={c3}
+        defineAt={c3 + 6}
+        evidenceAt={fwEvidence}
+        dim={dim}
+        dy={dy}
+        define={[{ text: "정정 실패 데이터는 host에 반환하지 않는다", at: split(c3, end("s7.1"), 1, 2) }]}
+        evidence={[{ text: "정정 실패 주입 → host 반환 0건 (예시)", at: fwEvidence + 4 }]}
+      />
 
-      {/* ── 분리 규칙 그림 ─────────────────────────────────────────── */}
-      <div style={{ opacity: 1 - 0.7 * figDim }}>
-        <svg {...fullSvg}>
-          {/* 생성 경로 */}
-          <Trace pts={[[FX + 80, UP], [FX + 330, UP], [FX + 330, UP - 46], [FX + 400, UP - 46]]} stroke={color.agent} arrow at={c2 + 8} />
-          <Trace pts={[[FX + 330, UP], [FX + 330, UP + 46], [FX + 400, UP + 46]]} stroke={color.agent} arrow at={c2 + 12} />
-          {/* 검증 기준 경로 */}
-          <g opacity={1 - 0.65 * lowDim}>
-            <Trace pts={[[FX + 80, LOW], [FX + 400, LOW]]} stroke={color.human} arrow at={wallUp + 4} />
-          </g>
-          {/* 벽 */}
-          {wall > 0 ? (
-            <g opacity={Math.min(1, wall)}>
-              <line x1={FX - 30} y1={WALL} x2={FX - 30 + 1180 * Math.min(1, wall)} y2={WALL} stroke={color.ink} strokeWidth={5} />
-              {Array.from({ length: 40 }, (_, k) => (
-                <line key={k} x1={FX - 22 + k * 29} y1={WALL + 3} x2={FX - 34 + k * 29} y2={WALL + 15} stroke={color.inkSoft} strokeWidth={stroke.hair} opacity={k * 29 < 1160 * wall ? 1 : 0} />
-              ))}
-            </g>
-          ) : null}
-          {/* 같은 오해 */}
-          <Trace pts={[[FX + 680, UP - 46], [Q.x, UP - 46], [Q.x, UP - 34]]} stroke={color.problem} at={shared} />
-          <Trace pts={[[FX + 680, UP + 46], [Q.x, UP + 46], [Q.x, UP + 34]]} stroke={color.problem} at={shared} />
-          {frame >= shared ? <circle cx={Q.x} cy={Q.y} r={34} fill={color.bg} stroke={color.problem} strokeWidth={stroke.bold} opacity={progress(frame, shared + 6, 10)} /> : null}
-          {exposed > 0 ? <circle cx={Q.x} cy={Q.y} r={34 + 14 * exposed} fill="none" stroke={color.human} strokeWidth={stroke.bold} opacity={exposed} /> : null}
-          {/* 벽이 서면 사람의 기준이 오해를 드러낸다 */}
-          <Trace pts={[[FX + 720, LOW], [Q.x, LOW], [Q.x, UP + 52]]} stroke={color.human} width={stroke.bold} arrow at={wallBack + 4} duration={18} />
+      {/* 줄 단위 전수 리뷰 (흐림) */}
+      <div style={{ position: "absolute", left: OLD.x, top: OLD.y, width: OLD.w, height: OLD.h, opacity: progress(frame, c4, 14) * (1 - 0.5 * progress(frame, tiersAt, 14)) }}>
+        <svg width={OLD.w} height={OLD.h}>
+          <rect x={1} y={1} width={OLD.w - 2} height={OLD.h - 2} fill={withAlpha(color.panel, 0.9)} stroke={color.line} strokeWidth={stroke.thin} />
+          {Array.from({ length: 10 }, (_, i) => (
+            <rect key={i} x={24} y={26 + i * 32} width={[250, 190, 150, 220, 270, 240, 120, 200, 160, 90][i]} height={10} fill={color.lineStrong} />
+          ))}
         </svg>
-        <div style={{ position: "absolute", left: FX, top: UP - 38, ...enter(frame, c2 + 4) }}>
-          <AgentIcon size={76} color={color.agent} />
-        </div>
-        <div style={{ position: "absolute", left: FX + 130, top: UP - 50, ...sans(size.small, 800), color: color.agent, ...enter(frame, c2 + 8) }}>생성</div>
-        <Box x={FX + 400} y={UP - 46} w={280} c={color.agent} at={c2 + 14}>
-          RTL
-        </Box>
-        <Box x={FX + 400} y={UP + 46} w={280} c={color.agent} at={c2 + 18}>
-          testbench
-        </Box>
-        <div style={{ opacity: 1 - 0.65 * lowDim }}>
-          <div style={{ position: "absolute", left: FX, top: LOW - 38, ...enter(frame, wallUp) }}>
-            <HumanIcon size={76} color={color.human} />
-          </div>
-          <div style={{ position: "absolute", left: FX + 130, top: LOW - 50, ...sans(size.small, 800), color: color.human, ...enter(frame, wallUp + 4) }}>검증 기준</div>
-          <Box x={FX + 400} y={LOW} w={320} c={color.human} at={wallUp + 10}>
-            ref_model/
-            <LockIcon size={34} color={color.human} />
-          </Box>
-        </div>
-        {frame >= shared ? (
-          <div style={{ position: "absolute", left: Q.x - 34, top: Q.y - 34, width: 68, height: 68, display: "flex", alignItems: "center", justifyContent: "center", ...mono(size.sub, 700), color: color.problem, opacity: progress(frame, shared + 6, 10) }}>?</div>
-        ) : null}
-        {[0, 1].map((k) => (
-          <div
-            key={k}
-            style={{
-              position: "absolute",
-              left: Q.x + 70,
-              top: UP - 46 + k * 92 - 28,
-              height: 56,
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "0 14px",
-              border: `${stroke.thin}px solid ${mix(exposed, color.agent, color.lineStrong)}`,
-              ...sans(size.small, 700),
-              color: mix(exposed, color.agent, color.inkDim),
-              textDecoration: exposed > 0.5 ? "line-through" : "none",
-              ...enterExit(frame, passAt + k * 8),
-            }}
-          >
-            <CheckIcon size={26} color={mix(exposed, color.agent, color.inkDim)} />
-            통과
+        {Array.from({ length: 10 }, (_, i) => (
+          <div key={i} style={{ position: "absolute", right: 22, top: 18 + i * 32, opacity: progress(frame, c4 + 4 + i * 2, 8) }}>
+            <CheckIcon size={24} color={color.human} />
           </div>
         ))}
       </div>
-
-      {/* ── 실행 순서 다섯 칸 ──────────────────────────────────────── */}
       <svg {...fullSvg}>
-        {[1, 2, 3, 4].map((i) => (
-          <Trace key={i} pts={[[96 + i * STAIR.pitch - 30, STAIR.y + STAIR.h / 2], [96 + i * STAIR.pitch - 2, STAIR.y + STAIR.h / 2]]} stroke={color.inkSoft} arrow at={stairAt[i] - 6} duration={8} />
-        ))}
+        <Trace pts={[[OLD.x + OLD.w + 10, OLD.y + OLD.h / 2], [TIER.x - 12, OLD.y + OLD.h / 2]]} stroke={color.inkSoft} width={stroke.bold} arrow at={tiersAt - 6} />
       </svg>
-      {STAIRS.map((lines, i) => {
-        const lit = progress(frame, stairAt[i], 14, ease.out);
+
+      {/* 위험 기반 3단 띠 */}
+      {TIERS.map((t, i) => {
+        const a = i === 0;
+        const lit = a ? aLit : 0;
         return (
           <div
-            key={i}
+            key={t.k}
             style={{
               position: "absolute",
-              left: 96 + i * STAIR.pitch,
-              top: STAIR.y,
-              width: STAIR.w,
-              height: STAIR.h,
-              boxSizing: "border-box",
+              left: TIER.x,
+              top: TIER.y + i * TIER.pitch,
+              width: TIER.w,
+              height: TIER.h,
               display: "flex",
               alignItems: "center",
-              gap: 16,
-              paddingLeft: 20,
-              border: `${stroke.trace}px solid ${mix(lit, color.line, color.human)}`,
-              backgroundColor: withAlpha(color.human, 0.14 * lit),
-              ...enter(frame, c2 - 6 + i * 3),
+              border: `${a ? stroke.bold : stroke.thin}px solid ${a ? withAlpha(color.human, 0.4 + 0.6 * lit) : color.lineStrong}`,
+              backgroundColor: a ? withAlpha(color.human, 0.2 * lit) : withAlpha(color.panel, 0.9),
+              boxSizing: "border-box",
+              ...enter(frame, tiersAt + i * 6),
             }}
           >
-            <div style={{ ...mono(size.head, 700), color: mix(lit, color.lineStrong, color.human) }}>{i + 1}</div>
-            <div style={{ ...sans(size.small, 700), color: mix(lit, color.inkDim, color.ink), whiteSpace: "nowrap", lineHeight: 1.22 }}>
-              {lines.map((l) => (
-                <div key={l}>{l}</div>
-              ))}
-            </div>
+            <div style={{ width: 96, textAlign: "center", ...mono(size.head, 700), color: a ? color.human : color.inkDim }}>{t.k}</div>
+            <div style={{ flex: 1, ...sans(size.body, a ? 800 : 600), color: a ? color.ink : color.inkSoft, whiteSpace: "nowrap" }}>{t.target}</div>
+            <div style={{ marginRight: 28, ...sans(size.small, 700), color: a ? color.human : color.agent, whiteSpace: "nowrap" }}>{t.how}</div>
           </div>
         );
       })}
-      <div style={{ position: "absolute", left: 96 + 4 * STAIR.pitch - 16 - 150, width: 300, top: 728, textAlign: "center", ...sans(size.small, 700), color: color.human, ...enter(frame, split(c4, e4, 3, 4)) }}>{AFTER}</div>
+
+      {/* 주니어의 직접 debug */}
+      <div style={{ position: "absolute", left: 1480, top: 512, display: "flex", flexDirection: "column", alignItems: "center", gap: 12, ...enter(frame, c5) }}>
+        <HumanIcon size={104} color={color.human} />
+        <Tag text="주니어" c={color.human} at={c5} />
+      </div>
+      {frame >= c5 ? (
+        <svg {...fullSvg} opacity={progress(frame, c5 + 10, 14)}>
+          <Trace pts={[[1604, 566], [1716, 566]]} stroke={color.human} width={stroke.bold} arrow at={c5 + 10} />
+          <circle cx={1756} cy={566} r={20} fill={color.problem} />
+          <circle cx={1756} cy={566} r={32} fill="none" stroke={color.problem} strokeWidth={stroke.thin} />
+          <Trace pts={[[1756, 600], [1756, 716]]} stroke={color.problem} at={c5 + 22} />
+          <rect x={1700} y={724} width={40} height={124} fill={withAlpha(color.problem, 0.22)} stroke={color.problem} strokeWidth={stroke.thin} />
+          <path d="M 1560 770 H 1620 V 740 H 1660 V 770 H 1700 V 740 H 1740 V 770 H 1824" fill="none" stroke={color.inkSoft} strokeWidth={stroke.thin} />
+          <path d="M 1560 836 H 1700 V 806 H 1740 V 836 H 1824" fill="none" stroke={color.inkSoft} strokeWidth={stroke.thin} />
+        </svg>
+      ) : null}
+      <div style={{ position: "absolute", left: 1480, top: 746, ...mono(size.label, 700), color: color.inkDim, opacity: progress(frame, c5 + 22) }}>PUSH</div>
+      <div style={{ position: "absolute", left: 1480, top: 812, ...mono(size.label, 700), color: color.inkDim, opacity: progress(frame, c5 + 22) }}>POP</div>
     </ShiftSheet>
   );
 };

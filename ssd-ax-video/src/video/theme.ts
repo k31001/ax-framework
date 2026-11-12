@@ -32,8 +32,8 @@ export const color = {
   resolved: "#E6EEFB", // 해결: 붉은색이 빠지고 선의 색으로 돌아온다
 } as const;
 
-/** 흐름도에 놓이는 항목의 종류 (before·note 제외) */
-export type FlowKind = Exclude<BeatKind, "before" | "note">;
+/** 흐름도에 놓이는 항목의 종류 (context·before·note 제외) */
+export type FlowKind = Exclude<BeatKind, "context" | "before" | "note">;
 
 export const kindColor: Record<FlowKind, string> = {
   agent: color.agent,

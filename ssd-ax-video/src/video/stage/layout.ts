@@ -5,7 +5,7 @@
 // 화면의 세로 구성 (1920×1080)
 //    72 ~ 245   머리: 왼쪽 단계 제목 · 가운데 요구사항 카드 · 오른쪽 "현재"
 //   292         7단계 진행 표시 (이름은 314 ~ 352)
-//   392 ~       본문: 두 줄 흐름도 + 그림 자리
+//   392 ~       본문: 두 줄 흐름도 + 그림 자리 (배경 문구가 있는 단계는 흐름도가 그려지기 전에 본문 전체를 쓴다)
 //   874 ~ 1008  원칙 띠 (있는 단계만)
 
 import type { Box, FlowGeometry, FlowSlot } from "../components/Flow";
@@ -71,7 +71,7 @@ export type StageLayout = {
   /** 원칙 띠 */
   strip?: Box;
   principleIcon?: PrincipleIcon;
-  /** 강조 문구(note) */
+  /** 강조 문구(note). 없으면 StageScene 은 강조 문구를 그리지 않는다(그림이 직접 그리는 단계). */
   note?: Box;
   /** 마무리 문구(closing) */
   closing?: Box;
@@ -108,20 +108,21 @@ export const STAGE_LAYOUT: Record<string, StageLayout> = {
     illustration: rightColumn(744),
   },
 
-  // 항목 4개(문제·해결 포함).
+  // 항목 4개(문제·해결 포함). 흐름에 앞서 배경 문구(context)와 "현재"가 차례로 나온다.
   "S5-2": {
     flow: { ...TALL, right: 784, stripRight: 784 },
     slots: [
-      { type: "step", x: 244, w: 328, br: 3 },
+      { type: "step", x: 244, w: 388, br: 5 },
       { type: "step", x: 380, w: 384, br: 4 },
       { type: "problem", x: 690, flag: { x: 244, w: 524 } },
       { type: "gate", x: 804, w: 300, br: [3, 6] },
     ],
-    before: { x: BEFORE_X, cy: splitY(TALL), w: 284 },
+    before: { x: BEFORE_X, cy: splitY(TALL), w: 304, br: 4 },
     illustration: rightColumn(1104),
   },
 
   // 항목 4개 + 원칙(이름만). 원칙 띠는 흐름도 폭만큼만 쓰고, 그림은 아래까지 내려온다.
+  // "현재" 뒤에 배경 문구(context)가 오고, 강조 문구(note)는 그림(s5_3/DesignerChoice)이 원칙 띠 자리에 그린다(note 자리를 두지 않는다).
   "S5-3": {
     flow: { ...G, right: 884, stripRight: 884 },
     slots: [
@@ -213,6 +214,9 @@ export const stageLayout = (id: string): StageLayout => {
   if (!layout) throw new Error(`no stage layout: ${id}`);
   return layout;
 };
+
+/** 본문 전체(흐름도 + 그림 자리)의 사각형. 배경 문구(context)와 그 그림이 쓴다. */
+export const BODY: Box = { x: safe.left, y: G.top, w: safe.right - safe.left, h: BODY_BOTTOM - G.top };
 
 /** 단계별 그림 자리 (화면 좌표) */
 export const illustrationBox = (id: string): Box => stageLayout(id).illustration;

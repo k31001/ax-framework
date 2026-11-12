@@ -4,6 +4,7 @@ import { DUR, ease, enter, f, progress, sceneFade } from "../anim";
 import { BEFORE_LABEL, CARD, LANES, S5, STAGES } from "../content";
 import type { BeatKind, Stage } from "../content";
 import { BeforeLine, beforeHeight } from "../components/BeforeLine";
+import { ContextLine } from "../components/ContextLine";
 import { Flow, ITEM_ENTER, flagRect, flowRect } from "../components/Flow";
 import type { Box, FlowItem } from "../components/Flow";
 import { ReturnIcon } from "../components/Icons";
@@ -16,7 +17,7 @@ import type { FlowKind } from "../theme";
 import { color, mono, pad2, sans, size, stroke, withAlpha } from "../theme";
 import type { SceneId } from "../timeline";
 import { sceneFrames } from "../timeline";
-import { STAGE_COUNT, TITLE_POS, TRACK_Y, cardAnchor, cardRect, recordSlotAt, stageLayout } from "./layout";
+import { BODY, STAGE_COUNT, TITLE_POS, TRACK_Y, cardAnchor, cardRect, recordSlotAt, stageLayout } from "./layout";
 
 // 사례 7단계(S5-1 ~ S5-7)의 공통 씬.
 // content.ts 의 Stage 하나와 그 단계의 "그림" 하나를 받아 씬 전체를 그린다.
@@ -25,6 +26,8 @@ import { STAGE_COUNT, TITLE_POS, TRACK_Y, cardAnchor, cardRect, recordSlotAt, st
 //   0f        요구사항 카드와 진행 표시의 고리가 앞 단계 자리에서 이 단계 자리로 옮겨 온다 (24f)
 //             단계 제목이 들어온다
 //   before.at "현재" 한 줄이 본문 자리에 크게 나온다
+//   context.at (있는 단계만) 배경 문구가 본문 위쪽에 크게 나온다. 그 아래 본문 전체는 그림이 쓴다.
+//             "현재"보다 먼저 오면 "현재"가 나올 때 물러나고, 뒤에 오면 "현재"를 머리 쪽으로 보내고 나온다.
 //   첫 항목 20f 전  "현재"가 머리 쪽으로 물러나고, 두 줄의 바탕이 그려진다
 //   beat.at   항목이 순서대로 나타난다 (직전 항목에서 연결선이 먼저 그려진다)
 //   recordAt  이 단계의 기록이 카드에 붙는다
@@ -36,9 +39,9 @@ export type IllustrationBeat = {
   text: string;
   /** 등장 프레임 (씬 시작 기준) */
   frame: number;
-  /** 흐름도 번호(1부터). before·note 는 0 */
+  /** 흐름도 번호(1부터). context·before·note 는 0 */
   index: number;
-  /** 흐름도에서 이 항목이 차지하는 사각형. 그림 자리의 왼쪽 위가 (0,0). before·note 는 null */
+  /** 흐름도에서 이 항목이 차지하는 사각형. 그림 자리의 왼쪽 위가 (0,0). context·before·note 는 null */
   rect: Box | null;
   /** 문제 항목만: 깃발이 차지하는 사각형(rect 는 trace 위의 마름모다). 그림 자리 좌표 */
   flag?: Box;
@@ -57,6 +60,9 @@ export type IllustrationProps = {
   frames: {
     /** "현재" 한 줄이 나오는 시점 */
     before: number;
+    /** 배경 문구가 나오는 시점과 물러나기 시작하는 시점. 없으면 null. 그 사이에는 본문 전체(layout 의 BODY)가 비어 있다. */
+    context: number | null;
+    contextOut: number | null;
     /** "현재"가 물러나고 흐름도가 그려지기 시작하는 시점 */
     flowStart: number;
     /** 문제가 나타나는 시점. 없으면 null */
@@ -83,7 +89,7 @@ const RECORD_KEYS = S5.map((s) => s.jira);
 const MOVE = DUR.move;
 const ATTACH = 18;
 
-const isFlowKind = (kind: BeatKind): kind is FlowKind => kind !== "before" && kind !== "note";
+const isFlowKind = (kind: BeatKind): kind is FlowKind => kind !== "context" && kind !== "before" && kind !== "note";
 
 export const StageScene: React.FC<{
   stage: Stage;
@@ -98,6 +104,7 @@ export const StageScene: React.FC<{
 
   // ── 시점 ──
   const before = stage.beats.filter((b) => b.kind === "before")[0];
+  const context = stage.beats.filter((b) => b.kind === "context")[0];
   const note = stage.beats.filter((b) => b.kind === "note")[0];
   // 강조 문구는 다음 흐름도 항목이 나오기 직전에 물러난다. 다음 항목이 없으면 원칙 띠가 나오기 전에.
   const afterNote = note ? stage.beats.find((b) => b.at > note.at && b.kind !== "note") : undefined;
@@ -117,6 +124,16 @@ export const StageScene: React.FC<{
   const principleAt = stage.principle ? f(stage.principle.at) : null;
   const noteOut = afterNote ? f(afterNote.at) - 8 : principleAt === null ? undefined : principleAt - 12;
   const closingAt = stage.closing ? f(stage.closing.at) : null;
+  // 배경 문구는 다음 항목 직전에 물러난다. 다음이 흐름도 항목이면 흐름도가 그려지기 전에 자리를 비운다.
+  const afterContext = context ? stage.beats.find((b) => b.at > context.at && b.kind !== "context") : undefined;
+  const contextAt = context ? f(context.at) : null;
+  const contextOut =
+    contextAt === null
+      ? null
+      : (afterContext && !isFlowKind(afterContext.kind) ? f(afterContext.at) : flowStart) - DUR.exit;
+  // "현재" 뒤에 배경 문구가 오면 "현재"는 그 앞에서 머리 쪽으로 물러난다.
+  const beforeOut =
+    before && context && contextAt !== null && context.at > before.at ? Math.min(flowStart, contextAt - 20) : flowStart;
 
   // ── 카드와 진행 표시: 앞 단계에서 이 단계로 ──
   const move = first ? 1 : progress(frame, 0, MOVE, ease.inOut);
@@ -215,6 +232,8 @@ export const StageScene: React.FC<{
             beats={beats}
             frames={{
               before: before ? f(before.at) : 0,
+              context: contextAt,
+              contextOut,
               flowStart,
               problem: frameOf("problem"),
               resolved: frameOf("resolved"),
@@ -241,8 +260,13 @@ export const StageScene: React.FC<{
               y: layout.before.cy - (beforeHeight(beforeLines) * beforeScale) / 2,
             }}
             at={f(before.at)}
-            retreatAt={flowStart}
+            retreatAt={beforeOut}
           />
+        ) : null}
+
+        {/* 배경 문구: 본문 위쪽. 아래쪽 그림은 Illustration 이 그린다 */}
+        {context && contextAt !== null && contextOut !== null ? (
+          <ContextLine text={context.text} x={BODY.x} y={BODY.y} at={contextAt} out={contextOut} />
         ) : null}
 
         {/* 강조 문구: 원칙 띠와 같은 자리를 쓰면 원칙이 나오기 전에 비켜 준다 */}
