@@ -88,14 +88,14 @@ export const S1: React.FC = () => {
       <At x={96} y={TRACKS.y2 + 8} p={progress(frame, c4 + 14, DUR.enter)} style={tx(32, 700, color.agent)}>
         {TX1.model}
       </At>
-      <TrackRow x={TRACKS.x} y={TRACKS.y1} h={TRACKS.h} pitch={TRACKS.pitch} cellW={TRACKS.cellW} cells={Array.from({ length: 6 }, () => ({}))} p={progress(frame, c4 + 4, 40, ease.inOut)} dashEmpty />
+      <TrackRow x={TRACKS.x} y={TRACKS.y1} h={TRACKS.h} pitch={TRACKS.pitch} cellW={TRACKS.cellW} cells={Array.from({ length: 6 }, () => ({ c: color.inkDim, lit: 0.7 }))} p={progress(frame, c4 + 4, 40, ease.inOut)} dashEmpty />
       <TrackRow
         x={TRACKS.x}
         y={TRACKS.y2}
         h={TRACKS.h}
         pitch={TRACKS.pitch}
         cellW={TRACKS.cellW}
-        cells={Array.from({ length: 6 }, () => ({ c: color.agent, lit: 0.45 }))}
+        cells={Array.from({ length: 6 }, () => ({ c: color.agent, lit: 0.7 }))}
         p={progress(frame, c4 + 18, 40, ease.inOut)}
         dashEmpty
       />

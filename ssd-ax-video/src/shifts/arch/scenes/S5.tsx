@@ -60,8 +60,8 @@ export const S5: React.FC = () => {
 
   // 아래 줄이 가운데로 올라온다
   const rise = progress(frame, c1 + 2, 30, ease.inOut);
-  const rowY = lerp(840, STEPS.y, rise);
-  const rowH = lerp(48, STEPS.h, rise);
+  const rowY = lerp(848, STEPS.y, rise);
+  const rowH = lerp(42, STEPS.h, rise);
   const stepAt = [0.0, 0.3, 0.42, 0.55, 0.68, 0.88].map((t) => within("s5.2", t));
   const loopAt = within("s5.2", 0.62);
   const lanes = progress(frame, c2 + 6, 20);
@@ -108,7 +108,7 @@ export const S5: React.FC = () => {
       </At>
 
       {/* 위 줄: RTL 먼저 (흐리게) */}
-      <div style={{ opacity: lerp(0.75, 0.32, progress(frame, c1, 24)) }}>
+      <div style={{ opacity: lerp(0.8, 0.45, progress(frame, c1, 24)) }}>
         <At x={96} y={156} style={tx(30, 700, color.inkDim)}>
           {T.rtl}
         </At>

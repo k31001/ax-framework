@@ -100,7 +100,7 @@ export const S10: React.FC = () => {
           <React.Fragment key={i}>
             <T x={PW.x0 - 14} y={y - 3} text={GROUPS[i]} px={24} code weight={700} c={color.inkSoft} align="right" at={powerAt + 4 + i * 4} />
             <div style={{ position: "absolute", left: PW.x0, top: y + 4, width: Math.max(3, v * PW.per * p), height: 18, backgroundColor: blend(i === 2 ? color.agent : color.inkSoft, color.problem, over), opacity: p }} />
-            <T x={PW.x0 + Math.max(3, v * PW.per) + 12} y={y - 3} text={`+${v}%`} px={24} code weight={700} c={blend(color.inkSoft, color.problem, over)} at={powerAt + 14 + i * 4} />
+            <T x={PW.x0 + 14 * PW.per + 14} y={y - 3} text={`+${v}%`} px={24} code weight={700} c={blend(color.inkSoft, color.problem, over)} at={powerAt + 14 + i * 4} />
           </React.Fragment>
         );
       })}

@@ -39,7 +39,7 @@ const TX = {
 } as const;
 
 // ── 표 ──
-const TB = { x: 96, y: 84, c1: 96, c2: 500, c3: 1130, headY: 132, headH: 92, rowH: 54 } as const;
+const TB = { x: 96, y: 84, c1: 96, c2: 356, c3: 710, right: 1110, headY: 128, headH: 112, rowH: 50 } as const;
 const STAGES_RTL = ["ARCH", "RTL", "VERIF", "EMUL"] as const;
 const STAGES_MODEL = ["ARCH", "MODEL", "RTL", "VERIF", "EMUL"] as const;
 
@@ -66,21 +66,22 @@ const crossing = (fixed: number): number => {
 const CARD = { x: 1160, y: 96, w: 664 } as const;
 const ITEM_H = 66;
 
-const MiniLine: React.FC<{ x: number; y: number; stages: readonly string[]; hit: number; c: string; p: number }> = ({ x, y, stages, hit, c, p }) => {
-  const step = 420 / (stages.length - 1);
+const MiniLine: React.FC<{ x: number; y: number; w: number; stages: readonly string[]; hit: number; c: string; p: number }> = ({ x, y, w, stages, hit, c, p }) => {
+  const step = w / (stages.length - 1);
+  const L = 34;
   return (
-    <div style={{ position: "absolute", left: x, top: y, width: 460, height: 70, opacity: p }}>
-      <svg width={460} height={70} style={{ position: "absolute", inset: 0, overflow: "visible" }}>
-        <line x1={20} x2={20 + 420 * p} y1={22} y2={22} stroke={color.lineStrong} strokeWidth={stroke.thin} />
+    <div style={{ position: "absolute", left: x, top: y, width: w + 2 * L, height: 60, opacity: p }}>
+      <svg width={w + 2 * L} height={60} style={{ position: "absolute", inset: 0, overflow: "visible" }}>
+        <line x1={L} x2={L + w * p} y1={16} y2={16} stroke={color.lineStrong} strokeWidth={stroke.thin} />
         {stages.map((s, i) => (
           <g key={s}>
-            <circle cx={20 + i * step} cy={22} r={i === hit ? 9 : 6} fill={i === hit ? c : color.bg} stroke={i === hit ? c : color.inkDim} strokeWidth={stroke.thin} />
-            {i === hit ? <circle cx={20 + i * step} cy={22} r={17} fill="none" stroke={c} strokeWidth={stroke.thin} /> : null}
+            <circle cx={L + i * step} cy={16} r={i === hit ? 8 : 5} fill={i === hit ? c : color.bg} stroke={i === hit ? c : color.inkDim} strokeWidth={stroke.thin} />
+            {i === hit ? <circle cx={L + i * step} cy={16} r={14} fill="none" stroke={c} strokeWidth={stroke.thin} /> : null}
           </g>
         ))}
       </svg>
       {stages.map((s, i) => (
-        <div key={s} style={{ position: "absolute", left: 20 + i * step - 60, width: 120, top: 44, textAlign: "center", ...mono(22, 700), color: i === hit ? c : color.inkDim }}>{s}</div>
+        <div key={s} style={{ position: "absolute", left: L + i * step - 60, width: 120, top: 32, textAlign: "center", ...mono(22, 700), color: i === hit ? c : color.inkDim }}>{s}</div>
       ))}
     </div>
   );
@@ -98,8 +99,8 @@ export const S15: React.FC = () => {
   const t8 = cue("s15.8");
 
   // 표: 그래프가 나오면 흐려지고, 판단 기준이 나오기 전에 나간다
-  const tableOut = t5 - 12;
-  const table = vis(frame, t1 - 6, tableOut) * (1 - 0.5 * progress(frame, t2 - 4, 16, ease.inOut));
+  const tableOut = t8 - 10;
+  const table = vis(frame, t1 - 6, tableOut) * (1 - 0.45 * progress(frame, t2 - 4, 16, ease.inOut));
   const rowAt = (r: number): number => t1 + 16 + r * 9;
 
   // 그래프
@@ -144,19 +145,19 @@ export const S15: React.FC = () => {
         <div style={{ opacity: table }}>
           <T x={TB.x} y={TB.y} px={30} weight={600} c={color.inkSoft} at={t1 - 6}>{TX.tableTitle}</T>
           <svg {...fullSvg}>
-            <line x1={TB.x} x2={lerp(TB.x, 1824, progress(frame, t1, 24, ease.inOut))} y1={TB.headY + TB.headH} y2={TB.headY + TB.headH} stroke={color.lineStrong} strokeWidth={stroke.thin} />
+            <line x1={TB.x} x2={lerp(TB.x, TB.right, progress(frame, t1, 24, ease.inOut))} y1={TB.headY + TB.headH} y2={TB.headY + TB.headH} stroke={color.lineStrong} strokeWidth={stroke.thin} />
             {TX.rows.map((_, r) => (
-              <line key={r} x1={TB.x} x2={1824} y1={TB.headY + TB.headH + (r + 1) * TB.rowH} y2={TB.headY + TB.headH + (r + 1) * TB.rowH} stroke={color.line} strokeWidth={stroke.hair} opacity={progress(frame, rowAt(r), 10)} />
+              <line key={r} x1={TB.x} x2={TB.right} y1={TB.headY + TB.headH + (r + 1) * TB.rowH} y2={TB.headY + TB.headH + (r + 1) * TB.rowH} stroke={color.line} strokeWidth={stroke.hair} opacity={progress(frame, rowAt(r), 10)} />
             ))}
-            <rect x={TB.c3 - 24} y={TB.headY} width={1824 - TB.c3 + 24} height={TB.headH + 4 * TB.rowH} fill={withAlpha(color.agent, 0.07)} opacity={progress(frame, t1 + 8, 14)} />
-            <rect x={TB.c3 - 24} y={TB.headY} width={5} height={(TB.headH + 4 * TB.rowH) * progress(frame, t1 + 8, 20)} fill={color.agent} />
+            <rect x={TB.c3 - 20} y={TB.headY} width={TB.right - TB.c3 + 20} height={TB.headH + 4 * TB.rowH} fill={withAlpha(color.agent, 0.07)} opacity={progress(frame, t1 + 8, 14)} />
+            <rect x={TB.c3 - 20} y={TB.headY} width={5} height={(TB.headH + 4 * TB.rowH) * progress(frame, t1 + 8, 20)} fill={color.agent} />
           </svg>
-          <T x={TB.c2} y={TB.headY + 22} px={38} weight={800} at={t1 + 4}>{TX.rtlFirst}</T>
-          <T x={TB.c3} y={TB.headY + 22} px={38} weight={800} c={color.agent} at={t1 + 8}>{TX.modelFirst}</T>
-          <MiniLine x={TB.c2 + 180} y={TB.headY + 12} stages={STAGES_RTL} hit={3} c={color.problem} p={progress(frame, t1 + 12, 18)} />
-          <MiniLine x={TB.c3 + 210} y={TB.headY + 12} stages={STAGES_MODEL} hit={1} c={color.agent} p={progress(frame, t1 + 16, 18)} />
+          <T x={TB.c2} y={TB.headY + 4} px={38} weight={800} at={t1 + 4}>{TX.rtlFirst}</T>
+          <T x={TB.c3} y={TB.headY + 4} px={38} weight={800} c={color.agent} at={t1 + 8}>{TX.modelFirst}</T>
+          <MiniLine x={TB.c2 - 4} y={TB.headY + 54} w={260} stages={STAGES_RTL} hit={3} c={color.problem} p={progress(frame, t1 + 12, 18)} />
+          <MiniLine x={TB.c3 - 4} y={TB.headY + 54} w={320} stages={STAGES_MODEL} hit={1} c={color.agent} p={progress(frame, t1 + 16, 18)} />
           {TX.rows.map((row, r) => {
-            const y = TB.headY + TB.headH + r * TB.rowH + 7;
+            const y = TB.headY + TB.headH + r * TB.rowH + 5;
             return (
               <React.Fragment key={r}>
                 <T x={TB.c1} y={y} px={32} weight={600} c={color.inkSoft} at={rowAt(r)}>{row[0]}</T>
@@ -208,7 +209,7 @@ export const S15: React.FC = () => {
             ) : null}
           </svg>
 
-          <T x={96} y={G.y1 - 62} px={30} weight={600} c={color.inkSoft} at={t2}>{TX.yAxis}</T>
+          <T x={G.x0 + 20} y={G.y1 - 38} px={30} weight={600} c={color.inkSoft} at={t2}>{TX.yAxis}</T>
           <T x={G.x0} y={G.y0 + 20} px={30} weight={600} c={color.inkSoft} at={t2 + 8}>{TX.xAxis}</T>
           <div style={{ position: "absolute", left: 866, top: G.y0 + 18, width: 244, height: 42, boxSizing: "border-box", border: `${stroke.hair}px solid ${color.lineStrong}`, display: "flex", alignItems: "center", justifyContent: "center", ...sans(30, 500), color: color.inkDim, whiteSpace: "nowrap", opacity: progress(frame, t2 + 14, DUR.enter) }}>{TX.concept}</div>
 

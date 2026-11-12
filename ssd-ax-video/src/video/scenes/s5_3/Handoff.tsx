@@ -85,9 +85,8 @@ export const Handoff: React.FC<{ at: number; out: number }> = ({ at, out }) => {
           stroke={sheetTint}
           strokeWidth={stroke.thin}
           strokeLinejoin="round"
-          strokeDasharray={faded >= 1 ? "8 6" : undefined}
           pathLength={faded >= 1 ? undefined : 1}
-          {...(faded >= 1 ? {} : draw(sheet))}
+          {...(faded >= 1 ? { strokeDasharray: "8 6" } : draw(sheet))}
         />
         <g opacity={sub(sheet, 0.4, 1)} stroke={sheetTint} strokeWidth={stroke.hair} fill="none">
           {BLOCKS.map((b, i) => (

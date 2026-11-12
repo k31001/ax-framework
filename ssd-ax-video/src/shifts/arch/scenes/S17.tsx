@@ -148,7 +148,7 @@ export const S17: React.FC = () => {
 
       {/* ── 마무리 문구 ── */}
       <div style={{ position: "absolute", left: 0, width: 1920, top: 420, textAlign: "center", ...sans(112, 800), letterSpacing: "-0.03em", whiteSpace: "nowrap", ...enter(frame, t3 + 12, { distance: 20, duration: 18 }) }}>{TX.closing}</div>
-      <div style={{ position: "absolute", left: 0, width: 1920, top: 600, textAlign: "center", ...mono(34, 700), color: color.agent, letterSpacing: "0.06em", ...enter(frame, t3 + 28) }}>{`${script.series ?? ""} · ${script.seriesNo ?? ""}`}</div>
+      <div style={{ position: "absolute", left: 0, width: 1920, top: 600, textAlign: "center", ...sans(36, 700), color: color.agent, whiteSpace: "nowrap", ...enter(frame, t3 + 28) }}>{`${script.series ?? ""} · ${script.seriesNo ?? ""}`}</div>
       <div style={{ position: "absolute", left: 96, top: 856, ...mono(22, 500), color: color.inkDim, opacity: progress(frame, t3 + 34, 12) }}>{TX.footer}</div>
     </ShiftSheet>
   );

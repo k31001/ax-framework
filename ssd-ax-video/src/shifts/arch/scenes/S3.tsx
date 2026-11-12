@@ -38,12 +38,12 @@ const T = {
 } as const;
 
 const TABLE = { x: 96, y: 206, cols: [0, 268, 520], w: 830, headH: 46, rowH: 46 } as const;
-const FW = { x: 1010, y: 206, w: 440, h: 60 } as const;
-const NAND = { x: 980, y: 400, w: 236, h: 64 } as const;
-const LDPC = { x: 1290, y: 400, w: 216, h: 64 } as const;
-const UP_X = 1424;
-const DOWN_X = 1076;
-const STEP = { x: 1540, y: 244, pitch: 70 } as const;
+const FW = { x: 980, y: 206, w: 440, h: 60 } as const;
+const NAND = { x: 950, y: 400, w: 236, h: 64 } as const;
+const LDPC = { x: 1260, y: 400, w: 216, h: 64 } as const;
+const UP_X = 1394;
+const DOWN_X = 1046;
+const STEP = { x: 1496, y: 244, pitch: 70 } as const;
 const AX = { y: 716, x0: 240, x1: 1700 } as const;
 const logX = (v: number): number => 960 + 660 * (Math.log10(v) + 4);
 
@@ -55,7 +55,6 @@ export const S3: React.FC = () => {
   const c3 = cue("s3.3");
   const c4 = cue("s3.4");
   const c5 = cue("s3.5");
-  const c6 = cue("s3.6");
   const c7 = cue("s3.7");
 
   // 7단계 선: 잠깐 보였다가 위로 물러난다
@@ -145,7 +144,7 @@ export const S3: React.FC = () => {
         return (
           <React.Fragment key={s}>
             <At x={STEP.x} y={STEP.y + i * STEP.pitch} p={progress(frame, c4 + 12 + i * 4, 12)} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={mx(22, 700, blend(blend(color.inkDim, color.human, on), color.problem, h))}>0{i + 1}</div>
+              <div style={{ width: 10, height: 10, backgroundColor: blend(blend(color.lineStrong, color.human, on), color.problem, h) }} />
               <div style={tx(30, 700, blend(blend(color.inkDim, color.ink, on), color.problem, h))}>{s}</div>
             </At>
             <At x={1824} y={STEP.y - 2 + i * STEP.pitch} right p={progress(frame, tripAt(i) + Math.round(span * 0.45), 12)}>
@@ -184,7 +183,7 @@ export const S3: React.FC = () => {
       <At x={xT} y={AX.y - 62} center p={progress(frame, tlcAt + 4, DUR.enter)} style={tx(30, 700)}>
         {T.tlc}
       </At>
-      <At x={xQ} y={AX.y - 84} center p={progress(frame, qlcAt + 4, DUR.enter)} style={tx(30, 700, color.problem)}>
+      <At x={xQ} y={AX.y - 66} center p={progress(frame, qlcAt + 4, DUR.enter)} style={tx(30, 700, color.problem)}>
         {T.qlc}
       </At>
       <At x={AX.x1} y={AX.y + 86} right p={progress(frame, within("s3.7", 0.3), 16)} style={tx(56, 800, color.problem)}>

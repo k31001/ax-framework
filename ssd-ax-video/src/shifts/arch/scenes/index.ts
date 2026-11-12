@@ -9,6 +9,8 @@ import { S7 } from "./S7";
 import { S8 } from "./S8";
 import { S9 } from "./S9";
 import { S10 } from "./S10";
+import { S11 } from "./S11";
+import { S12 } from "./S12";
 import { S13 } from "./S13";
 import { S14 } from "./S14";
 import { S15 } from "./S15";
@@ -27,6 +29,8 @@ export const scenes: SceneMap = {
   s8: S8,
   s9: S9,
   s10: S10,
+  s11: S11,
+  s12: S12,
   s13: S13,
   s14: S14,
   s15: S15,

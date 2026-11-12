@@ -133,7 +133,7 @@ export const S14: React.FC = () => {
           <g>
             <circle cx={1470} cy={LINE_Y} r={12 * progress(frame, t7 + 18, 10)} fill={color.bg} stroke={color.agent} strokeWidth={stroke.bold} />
             <Trace pts={[[1470, LINE_Y + 14], [1470, MODEL.y + MODEL.h / 2], [MODEL.x + MODEL.w + 3, MODEL.y + MODEL.h / 2]]} stroke={color.agent} width={stroke.bold} arrow at={within("s14.7", 0.45)} duration={26} />
-            <CurvePair x={1560} y={300} w={264} h={150} gap={gap} p={progress(frame, t7 + 24, DUR.enter)} />
+            <CurvePair x={1570} y={300} w={254} h={170} gap={gap} p={progress(frame, t7 + 24, DUR.enter)} />
           </g>
         ) : null}
       </svg>
@@ -199,7 +199,7 @@ export const S14: React.FC = () => {
       </Box>
 
       {/* emulation 실측 */}
-      <T x={1470} y={LINE_Y - 66} px={32} weight={700} c={color.agent} align="center" at={t7 + 16}>{TX.emul}</T>
+      <T x={1484} y={LINE_Y - 66} px={32} weight={700} c={color.agent} align="right" at={t7 + 16}>{TX.emul}</T>
       <T x={1250} y={MODEL.y - 14} px={32} weight={700} c={color.agent} align="center" at={within("s14.7", 0.5)}>{TX.recal}</T>
     </ShiftSheet>
   );

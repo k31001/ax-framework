@@ -224,6 +224,8 @@ export const Table: React.FC<{
 // ── 문서 창: 이름표 열 + 본문 (ADR, Jira 카드) ──────────────────────────
 export type DocRow = {
   label?: string;
+  /** 이름표 열 없이 왼쪽 끝부터 쓴다 */
+  full?: boolean;
   text: React.ReactNode;
   at: number;
   /** 이 프레임에 흐린 글자가 또렷해진다. 없으면 처음부터 또렷하다 */
@@ -264,9 +266,9 @@ export const DocPanel: React.FC<{
           return (
             <div key={i} style={{ position: "relative", height: lineH, display: "flex", alignItems: "center", paddingLeft: 24, opacity: p }}>
               {on > 0 ? <div style={{ position: "absolute", left: 6, right: 2, top: 1, bottom: 1, backgroundColor: withAlpha(mc, 0.16 * on), borderLeft: `3px solid ${withAlpha(mc, on)}` }} /> : null}
-              {labelW > 0 ? <div style={{ position: "relative", width: labelW, flex: "none", ...mono(px, 700), letterSpacing: "0", color: blend(color.lineStrong, color.inkSoft, lit) }}>{row.label ?? ""}</div> : null}
+              {labelW > 0 && !row.full ? <div style={{ position: "relative", width: labelW, flex: "none", ...mono(px, 700), letterSpacing: "0", color: blend(color.lineStrong, color.inkSoft, lit) }}>{row.label ?? ""}</div> : null}
               <div style={{ position: "relative", ...mono(px, 500), letterSpacing: "0", whiteSpace: "pre", fontVariantLigatures: "none", color: ink }}>{row.text}</div>
-              {row.right ? <div style={{ position: "relative", marginLeft: 22 }}>{row.right}</div> : null}
+              {row.right ? <div style={{ position: "relative", marginLeft: 14 }}>{row.right}</div> : null}
             </div>
           );
         })}
@@ -320,7 +322,7 @@ export const sx = (r: PlotRect, a: number): number => r.x + (a / A_MAX) * r.w;
 export const sy = (r: PlotRect, p: number): number => r.y + r.h - ((Math.log(p) - Math.log(P_MIN)) / (Math.log(P_MAX) - Math.log(P_MIN))) * r.h;
 
 export const GROUPS = ["A", "B", "C", "D"] as const;
-const labelAt: [number, number][] = [[3.4, 4.3], [6.8, 2.95], [19, 2.32], [38.6, 1.95]];
+const labelAt: [number, number][] = [[3.4, 4.3], [6.8, 2.95], [19, 2.32], [33.4, 1.5]];
 
 /**
  * 산점도의 svg 부분. 화면 전체를 덮는 <svg> 안에 놓는다.

@@ -124,7 +124,7 @@ export const S2: React.FC = () => {
 
       {/* 오른쪽: 문제는 블록과 블록 사이 */}
       <div style={{ opacity: lerp(0.35, 1, rightOn) }}>
-        <BlockRow x={R.x + 54} y={236} bw={140} bh={84} gap={60} p={progress(frame, 12, 30, ease.linear)} hotGaps={[0, 2]} hot={progress(frame, hotAt, 12)} ring={pulse(frame, hotAt, 40)} />
+        <BlockRow x={R.x + 54} y={250} bw={140} bh={96} gap={60} p={progress(frame, 12, 30, ease.linear)} hotGaps={[0, 2]} hot={progress(frame, hotAt, 12)} ring={pulse(frame, hotAt, 40)} />
         <Cond x={R.x} lines={T.condR} c={color.agent} at={within("s2.5", 0.62)} />
       </div>
 

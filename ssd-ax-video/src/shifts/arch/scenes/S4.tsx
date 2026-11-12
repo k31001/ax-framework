@@ -1,6 +1,6 @@
 import React from "react";
 import { useCurrentFrame } from "remotion";
-import { DUR, ease, lerp, progress, pulse } from "../../../video/anim";
+import { ease, lerp, progress, pulse } from "../../../video/anim";
 import { CheckIcon, WarnIcon } from "../../../video/components/Icons";
 import { Trace } from "../../../video/components/Trace";
 import { color, fullSvg, stroke, withAlpha } from "../../../video/theme";
@@ -78,7 +78,7 @@ export const S4: React.FC = () => {
         <div style={tx(30, 600)}>{T4.pass}</div>
       </At>
       {/* P99.99 를 보려면 */}
-      <At x={cl(1)} y={UNDER + 54} p={on(c4 + 2)} style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <At x={cl(1)} y={UNDER + 48} p={on(c4 + 2)} style={{ display: "flex", alignItems: "center", gap: 14 }}>
         {T4.calc.map((s, i) => (
           <React.Fragment key={s}>
             {i > 0 ? <div style={{ ...mx(30, 700, color.inkDim), opacity: on(within("s4.4", i === 1 ? 0.25 : 0.55)) }}>=</div> : null}
@@ -87,21 +87,21 @@ export const S4: React.FC = () => {
         ))}
       </At>
       {/* 시뮬레이션으로는 못 본다 → emulation */}
-      <At x={cl(1)} y={UNDER + 108} p={on(c5)}>
-        <div style={{ position: "relative", ...tx(30, 600, blend(color.ink, color.inkDim, strike)) }}>
+      <At x={cl(1)} y={UNDER + 96} p={on(c5)}>
+        <div style={{ position: "relative", ...tx(30, 600, blend(color.ink, color.inkSoft, strike)) }}>
           {T4.sim}
           <div style={{ position: "absolute", left: -6, top: 19, height: 3, width: `calc(${strike * 100}% + ${12 * strike}px)`, backgroundColor: color.problem }} />
         </div>
       </At>
       <svg {...fullSvg}>
-        <Trace pts={[[cl(1) + 226, UNDER + 127], [cx(3), UNDER + 127], [cx(3), LINE4.y + LINE4.h + 2]]} stroke={color.human} arrow at={toEmu - 4} duration={22} />
+        <Trace pts={[[cl(1) + 226, UNDER + 115], [cx(3), UNDER + 115], [cx(3), LINE4.y + LINE4.h + 2]]} stroke={color.human} arrow at={toEmu - 4} duration={22} />
         {/* emulation → 구조 회의 */}
         <Trace pts={[[cx(3), LINE4.y - 3], [cx(3), LINE4.y - 22], [cx(0), LINE4.y - 22], [cx(0), LINE4.y - 3]]} stroke={color.problem} width={stroke.bold} dash="12 9" arrow at={backAt} duration={34} easing={ease.inOut} />
         {/* 2회차의 문제 */}
         <circle cx={cl(5) + 14} cy={LINE4.y - 44} r={9 * on(gcAt)} fill={color.problem} />
         <circle cx={cl(5) + 14} cy={LINE4.y - 44} r={9 + 16 * pulse(frame, gcAt, 40)} fill="none" stroke={color.problem} strokeWidth={stroke.thin} opacity={on(gcAt) * (1 - pulse(frame, gcAt, 40))} />
       </svg>
-      <At x={cx(3) + 16} y={LINE4.y - 68} p={on(toEmu + 10) * (1 - 0.5 * on(backAt))} style={tx(30, 700, color.human)}>
+      <At x={cx(3) + 16} y={LINE4.y - 68} p={on(toEmu + 10) * (1 - 0.25 * on(backAt))} style={tx(30, 700, color.human)}>
         {T4.meet}
       </At>
 
@@ -129,17 +129,17 @@ export const S4: React.FC = () => {
 
       {/* 단서 */}
       {T4.notes.map((s, i) => (
-        <At key={s} x={96} y={UNDER + 162 + i * 46} p={on(i === 0 ? c8 + 4 : within("s4.8", 0.5))} style={tx(30, 500, color.ink)}>
+        <At key={s} x={96} y={UNDER + 158 + i * 44} p={on(i === 0 ? c8 + 4 : within("s4.8", 0.5))} style={tx(30, 500, color.ink)}>
           {s}
         </At>
       ))}
 
       {/* 아래 줄: 모델 먼저 (흐리게) */}
       <div style={{ opacity: 0.4 * on(c1 + 10) }}>
-        <At x={96} y={846} style={tx(30, 700, color.agent)}>
+        <At x={96} y={850} style={tx(30, 700, color.agent)}>
           {T4.model}
         </At>
-        <TrackRow x={324} y={840} h={48} pitch={250} cellW={226} cells={Array.from({ length: 6 }, () => ({ c: color.agent, lit: 0.5 }))} dashEmpty />
+        <TrackRow x={324} y={848} h={42} pitch={250} cellW={226} cells={Array.from({ length: 6 }, () => ({ c: color.agent, lit: 0.5 }))} dashEmpty />
       </div>
     </ShiftSheet>
   );
