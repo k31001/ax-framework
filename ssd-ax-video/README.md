@@ -2,16 +2,17 @@
 
 SSD 컨트롤러 SoC를 설계·검증하는 팀의 AI Transformation(AX) 전략과, 그 전략을 소개하는 5분 32초짜리 모션그래픽 영상(한국어 나레이션 포함)의 소스다. 영상은 [Remotion](https://www.remotion.dev)으로 만든다.
 
-영상은 6편이고 모두 1920×1080, 30fps, 나레이션·배경음악 포함이다. `index.html` 을 열면 웹에서 바로 볼 수 있다.
+영상은 7편이고 모두 1920×1080, 30fps, 나레이션·배경음악 포함이다. `index.html` 을 열면 웹에서 바로 볼 수 있다.
 
 | 영상 | 파일 | 길이 |
 |---|---|---|
 | 본편 | `video/ssd-ax-strategy.mp4` | 5:32 |
 | 5대 전환 1 산출물 | `video/shift1-artifacts.mp4` | 3:35 |
 | 5대 전환 2 프로세스 | `video/shift2-process.mp4` | 3:36 |
-| 5대 전환 3 업무 방식 | `video/shift3-way-of-working.mp4` | 3:39 |
+| 5대 전환 3 업무 방식 | `video/shift3-way-of-working.mp4` | 4:45 |
 | 5대 전환 4 시스템 | `video/shift4-system.mp4` | 3:39 |
 | 5대 전환 5 문화 | `video/shift5-culture.mp4` | 3:31 |
+| 구조 설계 편 | `video/arch-architecture.mp4` | 9:16 |
 
 ## 문서
 
@@ -21,7 +22,8 @@ SSD 컨트롤러 SoC를 설계·검증하는 팀의 AI Transformation(AX) 전략
 | `docs/02-storyboard.md` | 영상 대본·스토리보드 |
 | `docs/03-workflow-case.md` | 요구사항 하나가 스펙에서 퀄까지 가는 사례 (영상 S4~S5의 원본) |
 | `docs/04-narration.md` | 나레이션 대본과 만드는 법 |
-| `docs/05-jira-traceability.md` | Jira(Data Center, R4J, Xray) 추적성 모델. 6편이 공통으로 따른다 |
+| `docs/05-jira-traceability.md` | Jira(Data Center, R4J, Xray) 추적성 모델. 모든 영상이 공통으로 따른다 |
+| `docs/06-architecture-exploration.md` | 구조 탐색과 모델 기반 검증. RTL 먼저 대 모델 먼저, 모델 구성 전략, RTL 설계자의 역할 (구조 설계 편의 원본) |
 | `docs/shifts/` | 5대 전환 축별 분석 문서(전환 전략, 실행 계획, 기술 요소, 실제 예제, 출처)와 대본 형식 |
 | `docs/research/` | 도메인별 리서치 4건 (출처 URL과 확인 수준 표기) |
 
@@ -37,6 +39,7 @@ SSD 컨트롤러 SoC를 설계·검증하는 팀의 AI Transformation(AX) 전략
 | `src/video/scenes/` | 씬별 코드 |
 | `src/video/README.md` | 씬을 고칠 때의 규칙과 확인 명령 |
 | `src/shifts/lib/` | 5대 전환 상세 영상의 공통 틀. 나레이션 길이가 화면 시간을 정한다 |
+| `src/shifts/arch/` | 구조 설계 편 (컴포지션 `Arch`). 틀은 상세 영상과 같다 |
 | `src/shifts/shift1/` … `shift5/` | 편별 대본(`script.json`), 문장 길이(`durations.json`), 씬 코드 |
 | `audio/narrate_shift.py` | 상세 영상의 나레이션 합성 |
 | `audio/make_bgm.py` | 배경음악 합성 스크립트 (numpy) |

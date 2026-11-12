@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SSD 컨트롤러 SoC · AX 전략 영상</title>
-<meta name="description" content="SSD 컨트롤러 SoC 팀의 AI 중심 재설계 전략을 소개하는 영상 6편">
+<meta name="description" content="SSD 컨트롤러 SoC 팀의 AI 중심 재설계 전략을 소개하는 영상 7편">
 <style>
   @font-face { font-family: "Pretendard"; src: url("public/fonts/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
   @font-face { font-family: "JetBrains Mono"; src: url("public/fonts/jetbrains-mono-latin-500-normal.woff2") format("woff2"); font-weight: 500; font-display: swap; }
@@ -36,6 +36,7 @@
   .meta { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; padding: 14px 18px 16px; }
   .meta strong { font-size: 20px; font-weight: 700; }
   .meta .time { font-family: var(--mono); font-size: 13px; color: var(--ink-dim); }
+  .meta .links { flex-basis: 100%; }
   .meta p { flex-basis: 100%; margin: 2px 0 0; color: var(--ink-soft); }
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 20px; }
   .card { border: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; }
@@ -61,7 +62,7 @@
   <header>
     <div class="label">SSD Controller SoC · AX</div>
     <h1>AI 중심 재설계</h1>
-    <p>SSD 컨트롤러 SoC를 설계·검증하는 팀의 AI 전환 전략을 소개하는 영상입니다. 본편 한 편과, 본편의 "5대 전환"을 축마다 풀어 쓴 상세 영상 다섯 편이 있습니다.</p>
+    <p>SSD 컨트롤러 SoC를 설계·검증하는 팀의 AI 전환 전략을 소개하는 영상입니다. 본편 한 편과, 본편의 "5대 전환"을 축마다 풀어 쓴 상세 영상 다섯 편, 그리고 구조 설계를 RTL 설계자의 자리에서 깊게 다룬 한 편이 있습니다.</p>
   </header>
 
   <main>
@@ -71,7 +72,18 @@
       <video controls preload="metadata" poster="video/posters/main.jpg" src="video/ssd-ax-strategy.mp4"></video>
       <div class="meta">
         <strong>SSD 컨트롤러 SoC AX 전략</strong><span class="time">5:32</span>
-        <p>수확한 열매와 남은 나무, 병목 이동, Jira로 잇는 추적과 소통, 사례 7단계(요구사항 분석 → 아키텍처 → IP 설계·PPA → 시뮬레이션 검증 → Emulation·FPGA → FW 개발 → 제품 테스트·퀄), 5대 전환, 책임, 3단계 로드맵.</p>
+        <p>수확한 열매와 남은 나무, 병목 이동, Jira로 잇는 추적과 소통, 사례 7단계(구조 설계는 모델 먼저, RTL 설계자는 블록별 예산과 계약을 받음)(요구사항 분석 → 아키텍처 → IP 설계·PPA → 시뮬레이션 검증 → Emulation·FPGA → FW 개발 → 제품 테스트·퀄), 5대 전환, 책임, 3단계 로드맵.</p>
+      </div>
+    </div>
+
+    <h2>구조 설계 편</h2>
+    <p class="sub">요구사항이 크게 바뀔 때 RTL부터 짜는 것이 빠른지, 모델로 먼저 검증하는 것이 빠른지를 예제 하나로 끝까지 따라갑니다.</p>
+    <div class="player">
+      <video controls preload="metadata" poster="video/posters/arch.jpg" src="video/arch-architecture.mp4"></video>
+      <div class="meta">
+        <strong>구조 설계: RTL 먼저 → 모델로 먼저 검증</strong><span class="time">9:16</span>
+        <p>TLC에서 차세대 QLC로 바뀌는 과제. "RTL 먼저" 경로와 "모델 먼저" 경로의 비교, 후보 구조 4개, 통합 모델 대 목적별 모델(모델은 여럿, 구조 기술은 하나), 여러 관점의 탐색과 제약 판정, 모델이 찾은 GC 경쟁 문제, 결정 기록, RTL 설계자가 받는 예산과 계약, RTL에서 구조로 되돌리는 길, 손익분기점과 판단 기준.</p>
+        <div class="links"><a href="https://github.com/k31001/ax-framework/blob/main/ssd-ax-video/docs/06-architecture-exploration.md">분석 문서</a></div>
       </div>
     </div>
 
@@ -101,10 +113,10 @@
       <article class="card">
         <video controls preload="metadata" poster="video/posters/shift3.jpg" src="video/shift3-way-of-working.mp4"></video>
         <div class="body">
-          <div class="no">03 / 05 · 3:39</div>
+          <div class="no">03 / 05 · 4:45</div>
           <h3>업무 방식</h3>
           <div class="shift">직접 작성 <span>→</span> <b>의도 정의 · 증거 기반 판단</b></div>
-          <p>검증 엔지니어가 쓰는 작업 지시서와 에이전트가 올린 증거 묶음. 지시는 Jira에서 에이전트 계정에 할당하고, 에이전트는 검토 대기까지만 전환합니다. 반려와 승인은 증거를 본 사람이 합니다.</p>
+          <p>검증 엔지니어가 쓰는 작업 지시서와 에이전트가 올린 증거 묶음. 지시는 Jira에서 에이전트 계정에 할당하고, 에이전트는 검토 대기까지만 전환합니다. 반려와 승인은 증거를 본 사람이 합니다. RTL 설계자 예제에서는 예산과 계약을 받아 microarchitecture와 불변식을 정하고, formal과 합성 결과로 판단합니다.</p>
           <div class="links"><a href="https://github.com/k31001/ax-framework/blob/main/ssd-ax-video/docs/shifts/03-way-of-working.md">분석 문서</a></div>
         </div>
       </article>
@@ -134,6 +146,7 @@
     <ul class="docs">
       <li><a href="https://github.com/k31001/ax-framework/blob/main/ssd-ax-video/docs/01-strategy.md">전략 제안서</a><span>성숙도 3단계, 원칙, 5대 전환, 7단계, 로드맵, 지표, 리스크</span></li>
       <li><a href="https://github.com/k31001/ax-framework/blob/main/ssd-ax-video/docs/05-jira-traceability.md">Jira 추적성 모델</a><span>이슈 유형과 링크, R4J와 Xray의 역할, 사람과 에이전트의 사용 방식</span></li>
+      <li><a href="https://github.com/k31001/ax-framework/blob/main/ssd-ax-video/docs/06-architecture-exploration.md">구조 탐색과 모델 기반 검증</a><span>RTL 먼저 대 모델 먼저의 판단 기준, 모델 구성 전략, 예제, RTL 설계자의 역할</span></li>
       <li><a href="https://github.com/k31001/ax-framework/blob/main/ssd-ax-video/docs/03-workflow-case.md">사례로 보는 워크플로</a><span>요구사항 하나가 스펙에서 퀄까지 가는 과정</span></li>
       <li><a href="https://github.com/k31001/ax-framework/blob/main/ssd-ax-video/docs/02-storyboard.md">본편 스토리보드</a><span>씬 구성과 자막</span></li>
       <li><a href="https://github.com/k31001/ax-framework/blob/main/ssd-ax-video/docs/04-narration.md">본편 나레이션 대본</a><span>문장별 대본과 만드는 법</span></li>
