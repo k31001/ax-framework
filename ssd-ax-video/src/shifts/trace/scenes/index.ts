@@ -1,5 +1,6 @@
 import type { SceneMap } from "../../lib";
 import { S1 } from "./S1";
+import { S2 } from "./S2";
 import { S4 } from "./S4";
 import { S5 } from "./S5";
 import { S6 } from "./S6";
@@ -16,6 +17,7 @@ import { S17 } from "./S17";
 // 씬 id → 씬 컴포넌트. 여기에 없는 씬은 임시 화면(DraftScene)으로 나온다.
 export const scenes: SceneMap = {
   s1: S1,
+  s2: S2,
   s4: S4,
   s5: S5,
   s6: S6,
