@@ -1,0 +1,705 @@
+{
+  "key": "trace",
+  "series": "DEEP DIVE",
+  "seriesNo": "추적성 편",
+  "axis": "추적성",
+  "from": "이슈 수준 연결",
+  "to": "코드 · 문서 수준 지식 그래프",
+  "scenes": [
+    {
+      "id": "s1",
+      "name": "제목과 질문",
+      "visual": "공통 규칙(전 씬). 본편과 같은 설계도 스타일(깊은 남색 바탕, 가는 격자선, 직각 trace, 오른쪽 위 'SHEET nn / 17'). 그래프 표기: 사람이 쓴 것(조항, 추적 태그 엣지, 승인)은 호박색, 도구·에이전트가 만든 것(추출된 노드와 엣지)은 청록, 문제는 붉은색, Jira 이슈는 흰 테두리의 둥근 칩. 노드 모양: 조항 = 모서리가 접힌 문서, Jira 이슈 = 둥근 칩, register field = 칸이 나뉜 작은 사각, RTL module·assertion = 각진 사각(assertion은 체크 무늬 모서리), C++ 심볼·FW 함수 = 중괄호 표시가 달린 사각, 테스트·실행 결과 = 원. 엣지: 도구 추출 = 청록 가는 실선, 태그 = 호박색 굵은 실선, LLM 제안 = 청록 점선, 문제 경로 = 붉은 실선. 엣지 이름은 선 가운데에 mono 소문자로 적는다. 그래프의 자리(s4에서 정해지고 끝까지 유지): 왼쪽 세로 띠 'JIRA'에 위에서 아래로 칩 REQ-207, FEAT-338, VER-541·542·543, BUG-2317. 가운데 세로축에 위에서 아래로 조항 'REQ-QOS-07#AC-1' → 'HSI-RCV-010#order' → field 'PRIOQ_CFG.HOST_BURST'. 가운데 아래 왼쪽(HW 쪽)에 'prio_q', 'a_host_first', 'a_gc_no_starve'. 가운데 아래 오른쪽(FW 쪽)에 'set_host_burst', 'rcv::policy_init', 'gc::throttle_update', 'rcv::stats_dump'. 맨 아래 가로 띠 '검증 · 증거'에 'prio_q_ratio_test', 'VER-631 PASS', 'VER-640 FAIL'.\n\ns1.1: 왼쪽 위에 mono 라벨 'DEEP DIVE · 추적성 편', 그 아래 큰 제목 '추적성', 제목 아래에 '이슈 수준 연결 → 코드 · 문서 수준 지식 그래프'(화살표 왼쪽은 흐린 회청색, 오른쪽은 청록). s1.2: 화면 가운데 위에 본편의 요구사항 카드(REQ-QOS-07 · P99.99 ≤ 2 ms (예시), Jira 키 REQ-207). 카드 아래로 trace 두 줄이 내려가 왼쪽 코드 패널 'rtl/rcv/prio_q.sv'와 오른쪽 코드 패널 'fw/rcv/rcv_policy.cpp'에 닿는다(패널 안은 코드 줄 무늬만). s1.3: 두 trace의 가운데 구간이 붉은 점선으로 바뀌고 끊어진다. 끊어진 자리에 사람 아이콘(호박색)과 말풍선 둘: '기억', 'grep'. s1.4: 끊어진 자리에 청록 노드 셋과 엣지 둘이 차례로 놓이며 trace가 다시 이어진다. 라벨 '지식 그래프'.",
+      "lines": [
+        {
+          "id": "s1.1",
+          "text": "추적성 편입니다. Jira 아래의 연결을 다룹니다.",
+          "say": "추적성 편입니다. 지라 아래의 연결을 다룹니다.",
+          "caption": "추적성 · Jira 아래 계층"
+        },
+        {
+          "id": "s1.2",
+          "text": "요구사항이 RTL과 FW로 구현되면, 문서와 코드는 이어져야 합니다.",
+          "say": "요구사항이 RTL과 펌웨어로 구현되면, 문서와 코드는 이어져야 합니다.",
+          "caption": "문서 ↔ 코드의 연결"
+        },
+        {
+          "id": "s1.3",
+          "text": "지금 그 연결은 사람의 기억과 grep에 있습니다.",
+          "say": "지금 그 연결은 사람의 기억과 그렙에 있습니다.",
+          "caption": "현재 · 기억과 grep"
+        },
+        {
+          "id": "s1.4",
+          "text": "이것을 지식 그래프로 옮기는 방법과 효과를 보겠습니다.",
+          "say": "이것을 지식 그래프로 옮기는 방법과 효과를 보겠습니다.",
+          "caption": "지식 그래프의 구성과 효과"
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "name": "Jira가 아는 것과 모르는 것",
+      "visual": "화면을 위아래로 나눈다. 위 절반은 'JIRA가 아는 것', 아래 절반은 어둡게 가려진 '그 아래'. s2.1: 위 절반에 Jira 칩 넷이 가로로 놓이고 칩 사이에 흰 실선 링크. s2.2: 링크 이름이 켜진다. 아래 조각이 왼쪽에 함께 뜬다.\n\nREQ-207  요구사항  REQ-QOS-07 · P99.99 ≤ 2 ms\n └─ is implemented by ─ FEAT-338  우선 큐\n      │                  계약 HSI-RCV-010\n      ├─ tested by ─ VER-541  a_host_first\n      ├─ tested by ─ VER-542  a_gc_no_starve\n      └─ tested by ─ VER-543  prio_q_ratio_test\n\ns2.3: 위 절반과 아래 절반 사이에 흰 가로 점선이 그어지고 라벨 'Jira의 바닥 · 이슈 단위'. FEAT-338 칩 안에 작은 글자 '파일 수십 개 · 몇 주의 일'. s2.4: 아래 절반의 왼쪽이 붉은 점선 테두리로 켜진다. 흐린 상자 셋 '계약의 조항', 'RTL module', 'assertion'이 떠 있고 서로 이어지지 않았다. 사이에 붉은 물음표. s2.5: 아래 절반의 오른쪽에 흐린 상자 둘 'register field', 'FW 함수'와 붉은 물음표. 아래에 표가 켜진다.\n\n질문                               지금 답이 있는 곳\n어느 조항 → 어느 module · assertion  설계자의 기억\n어느 field → 어느 FW 함수            grep · 물어보기\n이 함수는 왜 있는가                  commit 메시지",
+      "lines": [
+        {
+          "id": "s2.1",
+          "text": "Jira의 링크는 이슈와 이슈를 잇습니다.",
+          "say": "지라의 링크는 이슈와 이슈를 잇습니다.",
+          "caption": "Jira 링크 = 이슈 ↔ 이슈"
+        },
+        {
+          "id": "s2.2",
+          "text": "설계 기능 이슈가 요구사항을 구현하고, Test가 그것을 시험합니다.",
+          "say": "설계 기능 이슈가 요구사항을 구현하고, 테스트가 그것을 시험합니다.",
+          "caption": "Implements · Tests"
+        },
+        {
+          "id": "s2.3",
+          "text": "Jira가 아는 것은 여기까지입니다.",
+          "say": "지라가 아는 것은 여기까지입니다.",
+          "caption": "Jira의 바닥 · 이슈 단위"
+        },
+        {
+          "id": "s2.4",
+          "text": "계약의 어느 조항을 어느 module과 assertion이 맡는지는 모릅니다.",
+          "say": "계약의 어느 조항을 어느 모듈과 어서션이 맡는지는 모릅니다.",
+          "caption": "조항 ↔ module · assertion"
+        },
+        {
+          "id": "s2.5",
+          "text": "어느 register field를 어느 FW 함수가 쓰는지도 모릅니다.",
+          "say": "어느 레지스터 필드를 어느 펌웨어 함수가 쓰는지도 모릅니다.",
+          "caption": "register field ↔ FW 함수"
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "name": "팀의 장면: 숫자 하나를 바꾸려는 날",
+      "visual": "s3.1: 구조 설계 편 s11의 그림이 작게 돌아온다. 'rcv_ctrl' → '복구 요청 큐(prio_q)' → 'soft LDPC ×2'. 큐는 위 칸 'host 우선', 아래 칸 'GC', 중재기에 'host 4 : GC 1'. 오른쪽 위에 작은 글자 '구조 설계 편에서 이어짐 · soft decoder 3 → 2'. s3.2: 중재기의 '4'가 호박색으로 깜박이고 그 옆에 '→ 3 ?'. 사람 레인에 호박색 상자 'FW 리드 · GC 처리량이 빠듯함'. 아래에 계약 조각이 뜨고 order 줄이 밝다.\n\nid: HSI-RCV-010          # 복구 요청 계약 (예시)\njira: FEAT-338\norder: host 먼저. gc는 host 4건당 1건 이상\nfull: 큐가 차면 gc 요청부터 backpressure\nverify: [sva:a_host_first, sva:a_gc_no_starve]\n\ns3.3: 호박색 상자 'RTL 리드'와 말풍선 '그 4가 어디어디에 있지?'. s3.4: 화면 왼쪽에 Jira 검색 결과 패널. 네 줄이 켜지고 아래에 '이슈 4건'.\n\nFEAT-338  우선 큐                 구현 중\nVER-541   a_host_first            승인\nVER-542   a_gc_no_starve          승인\nVER-543   prio_q_ratio_test       승인\n\ns3.5: 화면 오른쪽에 저장소의 파일 트리가 흐리게 깔리고, 그 위로 실제로 봐야 할 곳 일곱 줄이 하나씩 켜진다(모두 서로 이어지지 않은 점으로).\n\nhsi/contracts/HSI-RCV-010.yaml    order 조항\narch/struct/rcv.arch.yaml         prio_q.order\nhsi/rdl/rcv_ctrl.rdl              HOST_BURST = 4\nrtl/rcv/prio_q_sva.sv             assertion 2개\ndv/rcv/tests/prio_q_ratio_test.sv 기대값이 비율\nfw/rcv/rcv_policy.cpp             kHostBurst = 4\nfw/gc/gc_throttle.cpp             ?\n\ns3.6: 마지막 줄 'fw/gc/gc_throttle.cpp'만 붉은 점선 테두리로 남고 꼬리표 'FW GC 담당의 코드 · 복구 블록은 모름'. 왼쪽의 '이슈 4건'과 오른쪽 목록 사이에 붉은 빈틈 표시.",
+      "lines": [
+        {
+          "id": "s3.1",
+          "text": "구조 설계 편의 host 우선 큐를 다시 보겠습니다.",
+          "say": "구조 설계 편의 호스트 우선 큐를 다시 보겠습니다.",
+          "caption": "예제 · host 우선 큐"
+        },
+        {
+          "id": "s3.2",
+          "text": "host 네 건에 GC 한 건이라는 비율을, 셋 대 하나로 바꾸려 합니다.",
+          "say": "호스트 네 건에 지씨 한 건이라는 비율을, 셋 대 하나로 바꾸려 합니다.",
+          "caption": "host 4 : GC 1 → 3 : 1 (예시)"
+        },
+        {
+          "id": "s3.3",
+          "text": "RTL 리드가 묻습니다. 그 숫자 4가 어디어디에 있습니까.",
+          "say": "RTL 리드가 묻습니다. 그 숫자 사가 어디어디에 있습니까.",
+          "caption": "\"그 4가 어디에 있지?\""
+        },
+        {
+          "id": "s3.4",
+          "text": "Jira에서는 이슈 네 건이 나옵니다.",
+          "say": "지라에서는 이슈 네 건이 나옵니다.",
+          "caption": "Jira의 답 · 이슈 4건"
+        },
+        {
+          "id": "s3.5",
+          "text": "실제로 볼 곳은 계약과 register, assertion, FW 함수입니다.",
+          "say": "실제로 볼 곳은 계약과 레지스터, 어서션, 펌웨어 함수입니다.",
+          "caption": "실제로 볼 곳 · 파일 7개"
+        },
+        {
+          "id": "s3.6",
+          "text": "그중 하나는 GC 담당의 코드에 있고, 아무도 그 존재를 모릅니다.",
+          "say": "그중 하나는 지씨 담당의 코드에 있고, 아무도 그 존재를 모릅니다.",
+          "caption": "아무도 모르는 한 곳"
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "name": "그래프란: 노드",
+      "visual": "이 씬에서 그래프의 자리가 정해진다(s1의 공통 규칙의 배치). 처음에는 빈 화면에 띠의 이름만 흐리게 있다: 왼쪽 세로 띠 'JIRA', 가운데 위 '문서 · 조항', 가운데 아래 왼쪽 'HW', 가운데 아래 오른쪽 'FW', 맨 아래 가로 띠 '검증 · 증거'. 엣지는 이 씬에서 그리지 않는다. 노드만 놓는다. s4.1: 화면 가운데에 작은 범례 '노드 = 사물 · 엣지 = 관계'. s4.2: 가운데 세로축에 호박색 문서 모양 노드 둘이 위에서 아래로 놓인다. 'REQ-QOS-07#AC-1'(작은 글자 '고객 요구서 §4.2'), 그 아래 'HSI-RCV-010#order'(이 노드가 화면의 중심이고 가장 크다). order 노드 옆에 계약 파일의 한 줄이 꼬리표로 붙는다.\n\norder: host 먼저. gc는 host 4건당 1건 이상\n\ns4.3: 왼쪽 띠에 흰 테두리 칩 넷이 위에서 아래로 놓인다. REQ-207, FEAT-338, 'VER-541 · 542 · 543'(겹친 칩 셋), BUG-2317(아직 흐리게). 띠 위에 'Jira 이슈도 노드'. s4.4: 가운데 축 맨 아래에 청록 field 노드 'PRIOQ_CFG.HOST_BURST'(칸 나뉜 사각, 작은 글자 '[3:0] reset 4'). 왼쪽 아래 HW 자리에 청록 각진 사각 셋 'prio_q', 'a_host_first', 'a_gc_no_starve'. s4.5: 오른쪽 아래 FW 자리에 청록 중괄호 사각 넷 'set_host_burst'(작은 글자 'header · 생성물'), 'rcv::policy_init', 'gc::throttle_update', 'rcv::stats_dump'. 맨 아래 띠에 원 셋 'prio_q_ratio_test', 'VER-631 PASS', 'VER-640 FAIL'(마지막은 흐리게). s4.6: 'a_host_first' 노드가 확대되며 속성 카드가 열린다. 'line' 줄에 취소선이 그어졌다가 '속성일 뿐'으로 바뀐다.\n\n(:Assertion)\n  name  prio_q.a_host_first       ← 식별자\n  path  rtl/rcv/prio_q_sva.sv\n  line  12-14                     ← 속성일 뿐\n  kind  assert\n\n카드 옆에 세 단계 눈금 '파일(굵다) · 심볼(단위) · 줄(움직인다)', 가운데 '심볼'이 호박색.",
+      "lines": [
+        {
+          "id": "s4.1",
+          "text": "지식 그래프는 이 연결을 노드와 엣지로 적은 것입니다.",
+          "say": "지식 그래프는 이 연결을 노드와 엣지로 적은 것입니다.",
+          "caption": "노드 = 사물 · 엣지 = 관계"
+        },
+        {
+          "id": "s4.2",
+          "text": "맨 위의 노드는 문서의 조항입니다. 계약의 order 조항이 한 예입니다.",
+          "say": "맨 위의 노드는 문서의 조항입니다. 계약의 오더 조항이 한 예입니다.",
+          "caption": "조항 노드 · HSI-RCV-010#order"
+        },
+        {
+          "id": "s4.3",
+          "text": "Jira 이슈도 노드입니다. 그래프는 Jira를 포함합니다.",
+          "say": "지라 이슈도 노드입니다. 그래프는 지라를 포함합니다.",
+          "caption": "Jira 이슈 = 노드"
+        },
+        {
+          "id": "s4.4",
+          "text": "그 아래는 register field, module, assertion입니다.",
+          "say": "그 아래는 레지스터 필드, 모듈, 어서션입니다.",
+          "caption": "field · module · assertion"
+        },
+        {
+          "id": "s4.5",
+          "text": "C++ header의 심볼과 FW 함수, 테스트도 노드입니다.",
+          "say": "씨플러스플러스 헤더의 심볼과 펌웨어 함수, 테스트도 노드입니다.",
+          "caption": "header 심볼 · FW 함수 · 테스트"
+        },
+        {
+          "id": "s4.6",
+          "text": "단위는 줄이 아니라 심볼입니다. 줄 번호는 commit마다 움직입니다.",
+          "say": "단위는 줄이 아니라 심볼입니다. 줄 번호는 커밋마다 움직입니다.",
+          "caption": "단위 = 심볼"
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "name": "그래프란: 엣지와 출처",
+      "visual": "s4의 노드가 그대로 있고, 이 씬에서 엣지가 그려진다. 아직 출처 구분 없이 모두 흰 가는 선으로 그리고, s5.4에서 색이 갈린다. s5.1: 엣지가 위에서 아래 순서로 그려진다. ① 'HSI-RCV-010#order' → 'REQ-QOS-07#AC-1' (derives_from). ② 'PRIOQ_CFG.HOST_BURST' → 'HSI-RCV-010#order', 'prio_q' → 'HSI-RCV-010#order' (implements). ③ 'a_host_first', 'a_gc_no_starve', 'prio_q_ratio_test' → 'HSI-RCV-010#order' (verifies). ④ 'prio_q' → 'PRIOQ_CFG.HOST_BURST' (reads), 'rcv::policy_init'과 'gc::throttle_update' → 'PRIOQ_CFG.HOST_BURST' (writes), 'rcv::stats_dump' → 'PRIOQ_CFG.HOST_BURST' (reads), 'set_host_burst' → 'PRIOQ_CFG.HOST_BURST' (generated_from). ⑤ 왼쪽 띠와 가운데를 잇는 가로선: FEAT-338 ↔ 'HSI-RCV-010#order', REQ-207 ↔ 'REQ-QOS-07#AC-1', VER-541 ↔ 'a_host_first', VER-542 ↔ 'a_gc_no_starve', VER-543 ↔ 'prio_q_ratio_test' (tracks). 왼쪽 띠 안의 세로선 FEAT-338 → REQ-207 (Implements), VER 칩들 → FEAT-338 (Tests). 화면 오른쪽 위에 엣지 종류 범례가 함께 켜진다.\n\nderives_from · implements · verifies\nreads · writes · calls · instantiates\ngenerated_from · tracks · result · observed_at\n\ns5.2: 맨 아래 띠에서 'VER-631 PASS' → VER-541, VER-542 (result). 흐렸던 BUG-2317 칩과 'VER-640 FAIL'이 잠깐 켜지고 BUG-2317 → 'PRIOQ_CFG.HOST_BURST' (observed_at)가 붉은 선으로 한 번 그려졌다가 흐려진다(s13에서 다시 쓴다). s5.3: 'rcv::policy_init'에서 나가는 implements 엣지 하나가 확대되고 엣지의 속성 카드가 열린다.\n\n-[:IMPLEMENTS {\n    method:      'tag',          // extract | tag\n    commit:      '9f3c2e1',\n    approved_by: 'FW 복구 담당',\n    mr:          '!2334' }]->\n(:Clause {id:'HSI-RCV-010#fw_role'})\n\ns5.4: 모든 엣지의 색이 한꺼번에 갈린다. reads, writes, generated_from, tracks, result, Implements, Tests는 청록 가는 실선(꼬리표 'extract · 도구가 읽음'). implements, verifies, derives_from은 호박색 굵은 실선(꼬리표 'tag · 사람이 적고 승인'). 화면 아래에 범례 두 줄. s5.5: 엣지 카드의 'approved_by' 줄이 호박색으로 밝아지고 옆에 서명 표시.",
+      "lines": [
+        {
+          "id": "s5.1",
+          "text": "엣지는 관계입니다. 유도, 구현, 검증, 읽기와 쓰기, 호출입니다.",
+          "say": "엣지는 관계입니다. 유도, 구현, 검증, 읽기와 쓰기, 호출입니다.",
+          "caption": "엣지 = 관계의 종류"
+        },
+        {
+          "id": "s5.2",
+          "text": "실행 결과와 버그도 엣지로 이어집니다.",
+          "say": "실행 결과와 버그도 엣지로 이어집니다.",
+          "caption": "실행 결과 · 버그"
+        },
+        {
+          "id": "s5.3",
+          "text": "엣지마다 출처를 적습니다. 어떤 방법으로, 어느 commit에서 확인했는지입니다.",
+          "say": "엣지마다 출처를 적습니다. 어떤 방법으로, 어느 커밋에서 확인했는지입니다.",
+          "caption": "엣지의 출처 · method · commit"
+        },
+        {
+          "id": "s5.4",
+          "text": "도구가 읽은 링크와 사람이 승인한 링크를 구분합니다.",
+          "say": "도구가 읽은 링크와 사람이 승인한 링크를 구분합니다.",
+          "caption": "extract (청록) · tag (호박색)"
+        },
+        {
+          "id": "s5.5",
+          "text": "누가 승인했는지도 엣지의 속성으로 남깁니다.",
+          "say": "누가 승인했는지도 엣지의 속성으로 남깁니다.",
+          "caption": "승인자 기록"
+        }
+      ]
+    },
+    {
+      "id": "s6",
+      "name": "채우는 방법 ① 도구로 읽는다",
+      "visual": "s6.1: 화면 위에 네 단계 띠가 놓인다. '① 도구 추출' → '② 추적 태그' → '③ 에이전트 제안 · 사람 승인' → '④ commit마다 갱신'. 이 씬에서는 ①만 청록으로 켜진다. s6.2: 화면 왼쪽에 원천 상자 다섯이 세로로 놓이고(Jira, git, SystemRDL, RTL, FW), 오른쪽에 s5의 그래프가 노드만 흐리게 남아 있다. 엣지는 모두 지워진 상태에서 시작한다. s6.3: 'Jira' 상자에서 trace가 나가 왼쪽 띠의 칩 넷과 Implements, Tests, result 엣지가 청록으로 그려진다. 상자 아래에 한 줄씩.\n\nJira REST    이슈 · 링크 · 변경 이력\nR4J REST     트리 위치\nXray REST    Test · Test Execution 결과\n\ns6.4: 'SystemRDL' 상자에서 trace가 나가 field 노드가 켜진다. 상자 옆에 조각.\n\n// hsi/rdl/rcv_ctrl.rdl (예시)\nreg {\n  field { sw = rw; hw = r; } HOST_BURST[3:0] = 4;\n  field { sw = rw; hw = r; } GC_BOOST[8:8] = 0;\n} PRIOQ_CFG @ 0x60;\n\n→ systemrdl-compiler → Reg 1 · Field 2\n\ns6.5: 'RTL' 상자에서 trace가 나가 'prio_q', 'a_host_first', 'a_gc_no_starve' 노드와 'prio_q' → field의 reads 엣지가 청록으로 그려진다. 상자 아래 'elaboration → module · port · assertion · 계층'. s6.6: 'FW' 상자에서 trace가 나가 FW 함수 넷과 writes, reads, generated_from 엣지가 청록으로 그려진다. 'gc::throttle_update'의 writes 엣지에는 꼬리표 'via: reg (통째 쓰기)'. 상자 옆에 조각.\n\n// fw/gc/gc_throttle.cpp (예시)\nvoid gc::throttle_update(Bus& bus, uint32_t backlog) {\n  bus.write(rcv_ctrl::PRIOQ_CFG, (backlog > kHigh) << 8);\n}\n→ compile DB + clang 색인 → WRITES {via:'reg'}\n\ns6.7: 그래프에 청록 엣지만 있는 상태에서 화면 아래에 'LLM 사용 0 · method: extract'. 호박색 엣지(implements, verifies)의 자리는 빈 점선 자국으로 남아 있다.",
+      "lines": [
+        {
+          "id": "s6.1",
+          "text": "그래프를 어떻게 채우는지가 이 편의 핵심입니다.",
+          "say": "그래프를 어떻게 채우는지가 이 편의 핵심입니다.",
+          "caption": "그래프를 채우는 네 단계"
+        },
+        {
+          "id": "s6.2",
+          "text": "먼저, 틀릴 수 없는 것부터 도구로 읽습니다.",
+          "say": "먼저, 틀릴 수 없는 것부터 도구로 읽습니다.",
+          "caption": "① 결정론적 추출"
+        },
+        {
+          "id": "s6.3",
+          "text": "Jira에서는 이슈와 링크, R4J의 트리, Xray의 실행 결과를 가져옵니다.",
+          "say": "지라에서는 이슈와 링크, 알포제이의 트리, 엑스레이의 실행 결과를 가져옵니다.",
+          "caption": "Jira · R4J · Xray REST"
+        },
+        {
+          "id": "s6.4",
+          "text": "SystemRDL 컴파일러가 register와 field를 줍니다.",
+          "say": "시스템 알디엘 컴파일러가 레지스터와 필드를 줍니다.",
+          "caption": "SystemRDL → Reg · Field"
+        },
+        {
+          "id": "s6.5",
+          "text": "RTL은 elaboration으로 module과 assertion을 읽습니다.",
+          "say": "RTL은 일래버레이션으로 모듈과 어서션을 읽습니다.",
+          "caption": "RTL elaboration"
+        },
+        {
+          "id": "s6.6",
+          "text": "FW는 빌드 정보에서 함수와 호출, register 접근을 읽습니다.",
+          "say": "펌웨어는 빌드 정보에서 함수와 호출, 레지스터 접근을 읽습니다.",
+          "caption": "FW · compile DB와 색인"
+        },
+        {
+          "id": "s6.7",
+          "text": "여기까지는 LLM이 전혀 필요하지 않습니다.",
+          "say": "여기까지는 엘엘엠이 전혀 필요하지 않습니다.",
+          "caption": "LLM 없이 추출"
+        }
+      ]
+    },
+    {
+      "id": "s7",
+      "name": "채우는 방법 ② 추적 태그와 CI",
+      "visual": "네 단계 띠에서 ②가 호박색으로 켜진다. 그래프는 화면 오른쪽 1/3에 작게, 청록 엣지만 있고 implements·verifies 자리는 빈 점선 자국이다. s7.1: 'a_host_first' 노드와 'HSI-RCV-010#order' 노드 사이의 빈 자국에 호박색 물음표 '왜 있는가?'. s7.2: 화면 왼쪽에 태그 문법 카드.\n\n@trace <관계> <ID>#<조항>\n관계: implements | verifies\n\ns7.3: 코드 패널 'rtl/rcv/prio_q_sva.sv'가 열리고 태그 주석 두 줄이 호박색으로 밝다. 패널에서 그래프로 trace가 가서 'a_host_first'와 'a_gc_no_starve'의 verifies 엣지가 호박색 굵은 실선으로 채워진다.\n\n// rtl/rcv/prio_q_sva.sv (예시)\n// @trace verifies HSI-RCV-010#order\na_host_first: assert property (@(posedge clk)\n  host_req && gc_req && host_cnt < cfg_host_burst\n  |-> !gc_gnt);\n// @trace verifies HSI-RCV-010#order\na_gc_no_starve: assert property (@(posedge clk)\n  gc_req |-> s_eventually gc_gnt);\n\ns7.4: 코드 패널 둘이 나란히 열린다. 태그 줄이 호박색. field와 'rcv::policy_init'의 implements 엣지가 채워진다.\n\n// hsi/rdl/rcv_ctrl.rdl\nfield { sw = rw; hw = r;\n  trace = \"implements HSI-RCV-010#order\";\n} HOST_BURST[3:0] = 4;\n\n// fw/rcv/rcv_policy.cpp\n// @trace implements HSI-RCV-010#fw_role\nvoid rcv::policy_init(Bus& bus) {\n  rcv_ctrl::set_host_burst(bus, kHostBurst);  // 4\n}\n\ns7.5: 저장소의 파일 트리가 흐리게 깔리고, 계약이 걸린 경계(hsi/, 계약 대상 module, field를 쓰는 FW 함수)만 호박색 테두리로 켜진다. 나머지는 어둡다. 라벨 '태그 필수 = 계약이 걸린 경계'. s7.6: CI 패널이 열린다. 3번 줄이 붉게 켜지고 그래프의 'gc::throttle_update' 노드에 붉은 테두리.\n\ntrace-lint · MR !2334 (예시)\n1 깨진 태그       가리키는 조항이 없음          0\n2 verify 불일치   계약 verify ↔ 태그 달린 검사  0\n3 태그 없는 접근  계약 걸린 field를 쓰는 함수   1\n    fw/gc/gc_throttle.cpp gc::throttle_update\n4 Jira 불일치     태그의 계약 ↔ MR의 이슈 키    0\n결과 실패 → merge 차단",
+      "lines": [
+        {
+          "id": "s7.1",
+          "text": "도구가 읽지 못하는 것이 있습니다. 이 코드가 왜 있는가입니다.",
+          "say": "도구가 읽지 못하는 것이 있습니다. 이 코드가 왜 있는가입니다.",
+          "caption": "구조에 없는 것 · 의도"
+        },
+        {
+          "id": "s7.2",
+          "text": "그것은 사람이 코드에 한 줄로 적습니다. 추적 태그입니다.",
+          "say": "그것은 사람이 코드에 한 줄로 적습니다. 추적 태그입니다.",
+          "caption": "② 추적 태그"
+        },
+        {
+          "id": "s7.3",
+          "text": "assertion 위에는 어느 조항을 검증하는지 적습니다.",
+          "say": "어서션 위에는 어느 조항을 검증하는지 적습니다.",
+          "caption": "@trace verifies"
+        },
+        {
+          "id": "s7.4",
+          "text": "SystemRDL에는 property로, FW 함수에는 주석으로 적습니다.",
+          "say": "시스템 알디엘에는 프로퍼티로, 펌웨어 함수에는 주석으로 적습니다.",
+          "caption": "@trace implements"
+        },
+        {
+          "id": "s7.5",
+          "text": "모든 함수에 달지 않습니다. 계약이 걸린 경계에만 답니다.",
+          "say": "모든 함수에 달지 않습니다. 계약이 걸린 경계에만 답니다.",
+          "caption": "태그는 경계에만"
+        },
+        {
+          "id": "s7.6",
+          "text": "CI가 깨진 태그와 빠진 태그를 찾아 merge를 막습니다.",
+          "say": "씨아이가 깨진 태그와 빠진 태그를 찾아 머지를 막습니다.",
+          "caption": "CI · trace-lint"
+        }
+      ]
+    },
+    {
+      "id": "s8",
+      "name": "채우는 방법 ③ 에이전트 제안, 사람 승인",
+      "visual": "네 단계 띠에서 ③이 켜진다. 본편과 같은 두 레인이 화면 아래에 깔린다. 위 '에이전트 AGENT'(청록), 아래 '사람 HUMAN'(호박색). 그래프는 화면 위쪽에 있고, 태그 없는 노드 셋('gc::throttle_update', 'rcv::stats_dump', 새로 나타난 'a_full_gc_bp')에 회색 테두리와 '태그 없음'. 가운데 축에 조항 노드 'HSI-RCV-010#full', 'HSI-RCV-010#fw_role'이 order 옆에 작게 더해진다. s8.1: 태그 없는 노드 셋이 깜박인다. s8.2: 에이전트 레인에 청록 상자 'trace-agent · 조항 · 코드 · commit 메시지를 읽음'. Jira 댓글 카드가 열린다.\n\n[에이전트 · trace-agent · 초안]  FEAT-338\n링크 후보 3건 (rcv 블록, 태그 없는 심볼)\n 1 rcv::stats_dump      implements? #fw_role\n 2 gc::throttle_update  implements? #order\n 3 a_full_gc_bp         verifies?   #full\n확인 못 한 것  1번은 관계가 약함\n요청  블록 담당: MR !2341 에서 승인 또는 반려\n\ns8.3: 그래프에 청록 점선 엣지 셋이 그려진다(후보 1, 2, 3). 선 위에 'proposed'. 옆에 작은 대비 카드.\n\n-[:IMPLEMENTS {method:'tag'}]->     확정 · 실선\n-[:PROPOSED {relation:'implements'}]->  제안 · 점선\n\ns8.4: 사람 레인에 호박색 상자 '블록 담당 · MR !2341 승인'. MR의 diff 한 줄이 뜬다.\n\n+ // @trace implements HSI-RCV-010#order\n  void gc::throttle_update(Bus& bus, uint32_t backlog) {\n\n후보 2와 3의 점선이 호박색 굵은 실선으로 바뀐다. s8.5: 바뀐 엣지에서 화살표가 그래프 밖의 'git' 상자(호박색 테두리)로 간다. 라벨 '확정 = 코드의 태그'. 그래프 상자에는 '직접 쓰기 없음'. s8.6: 후보 1의 점선이 회색으로 바뀌며 사라지고 파일 한 줄이 남는다.\n\n# trace/rejected.yaml\n- {from: rcv::stats_dump, to: \"HSI-RCV-010#fw_role\",\n   by: FW 복구 담당, why: 로그 출력일 뿐}",
+      "lines": [
+        {
+          "id": "s8.1",
+          "text": "기존 코드에는 태그가 없습니다. 이 틈은 에이전트가 메웁니다.",
+          "say": "기존 코드에는 태그가 없습니다. 이 틈은 에이전트가 메웁니다.",
+          "caption": "③ 태그 없는 기존 코드"
+        },
+        {
+          "id": "s8.2",
+          "text": "에이전트가 조항과 코드를 읽고 링크 후보를 제안합니다.",
+          "say": "에이전트가 조항과 코드를 읽고 링크 후보를 제안합니다.",
+          "caption": "에이전트 · 링크 후보 제안"
+        },
+        {
+          "id": "s8.3",
+          "text": "제안은 확정과 다른 종류의 엣지로, 점선으로 저장합니다.",
+          "say": "제안은 확정과 다른 종류의 엣지로, 점선으로 저장합니다.",
+          "caption": "제안 (점선) ≠ 확정 (실선)"
+        },
+        {
+          "id": "s8.4",
+          "text": "블록 담당이 승인하면, 태그가 코드에 들어갑니다.",
+          "say": "블록 담당이 승인하면, 태그가 코드에 들어갑니다.",
+          "caption": "사람 승인 → 코드에 태그"
+        },
+        {
+          "id": "s8.5",
+          "text": "확정된 사실은 그래프가 아니라 git에 남습니다.",
+          "say": "확정된 사실은 그래프가 아니라 깃에 남습니다.",
+          "caption": "확정은 git에"
+        },
+        {
+          "id": "s8.6",
+          "text": "반려한 제안도 기록해, 다시 제안되지 않게 합니다.",
+          "say": "반려한 제안도 기록해, 다시 제안되지 않게 합니다.",
+          "caption": "반려 기록"
+        }
+      ]
+    },
+    {
+      "id": "s9",
+      "name": "채우는 방법 ④ 증분 갱신, 그래프는 파생물",
+      "visual": "네 단계 띠에서 ④가 켜진다. s9.1: 화면 위에 commit 점이 왼쪽에서 오른쪽으로 찍히는 가로선 'main'. 점 하나가 찍힐 때마다 아래 그래프에서 그 commit이 건드린 노드 두세 개만 청록으로 깜박인다(나머지는 그대로). 그래프 오른쪽 위에 'graph@9f3c2e1'. s9.2: 가로선에서 가지 하나가 갈라져 'MR'. 그래프의 'rcv::policy_init' 노드 이름이 'rcv::policy_setup'으로 바뀌고, 그 노드에 달려 있던 implements 엣지가 붉게 끊어진다. CI 줄이 뜬다.\n\ntrace-lint · 깨진 링크 1\n  rcv::policy_init → 없음 (이름 변경?)\n  태그 HSI-RCV-010#fw_role 의 대상이 사라짐\n\ns9.3: 화면 오른쪽에 달 아이콘과 '밤 · 전체 재생성'. 그래프가 통째로 지워졌다가 처음부터 다시 그려지고, 증분 결과와 겹쳐 '차이 0'. s9.4: 화면 아래에 큰 그림. 왼쪽에 호박색 테두리의 상자 둘 'Jira (이슈 · 링크 · 결과)', 'git (조항 · 코드 · 태그)' 위에 라벨 '원본'. 두 상자에서 청록 화살표 '추출'이 오른쪽의 청록 점선 테두리 상자 '그래프'로 간다. 라벨 '파생물'. 반대 방향 화살표는 없다(그래프에서 원본으로 가는 붉은 화살표가 그려지려다 X 표시로 막힌다). s9.5: 그래프 상자에 휴지통 아이콘이 겹쳤다가, 추출 화살표가 다시 흐르며 같은 그래프가 돌아온다.",
+      "lines": [
+        {
+          "id": "s9.1",
+          "text": "그래프는 commit마다 바뀐 부분만 다시 만듭니다.",
+          "say": "그래프는 커밋마다 바뀐 부분만 다시 만듭니다.",
+          "caption": "④ commit별 증분 갱신"
+        },
+        {
+          "id": "s9.2",
+          "text": "함수 이름이 바뀌어 링크가 깨지면, MR 단계에서 걸립니다.",
+          "say": "함수 이름이 바뀌어 링크가 깨지면, 엠알 단계에서 걸립니다.",
+          "caption": "깨진 링크 검출"
+        },
+        {
+          "id": "s9.3",
+          "text": "밤마다 전체를 처음부터 다시 만들어 비교합니다.",
+          "say": "밤마다 전체를 처음부터 다시 만들어 비교합니다.",
+          "caption": "야간 전체 재생성"
+        },
+        {
+          "id": "s9.4",
+          "text": "그래프는 파생물입니다. 원본은 Jira와 git입니다.",
+          "say": "그래프는 파생물입니다. 원본은 지라와 깃입니다.",
+          "caption": "원본 = Jira · git"
+        },
+        {
+          "id": "s9.5",
+          "text": "지워도 다시 만들 수 있어야 합니다.",
+          "say": "지워도 다시 만들 수 있어야 합니다.",
+          "caption": "언제든 재생성"
+        }
+      ]
+    },
+    {
+      "id": "s10",
+      "name": "그래프 DB 선택",
+      "visual": "s10.1: 화면 왼쪽에 원통 아이콘 '그래프 DB'와 그 안에 s5의 그래프 축소판. 아래에 'Neo4j · 기본안'. s10.2: 원통에서 엣지 하나가 확대되고 엣지 위에 속성 꼬리표 '{method, commit, approved_by}'. 라벨 '속성 그래프 · 엣지에도 속성'. s10.3: 짧은 질의 한 줄이 타자되듯 나타난다.\n\nMATCH (f:Func)-[w:WRITES]->(x:Field)\nRETURN f.name, w.via, x.name\n\ns10.4: 화면 오른쪽에 규모 표. 마지막 줄이 밝다.\n\n우리 그래프의 규모 (자릿수 가정)\nJira 이슈           1만 ~ 10만\nregister · field    1만 ~ 10만\nRTL module · port   10만 안팎\nFW 함수 · 심볼      1만 ~ 10만\n합계  노드 10만 ~ 100만 · 엣지 그 10배\n→ 서버 한 대\n\ns10.5: 판 비교 카드. 'RBAC' 줄이 붉은 점선 밑줄. 카드 아래에 작은 그림: 사람·에이전트 → '사내 MCP 서버 (정해진 질의 · 권한 필터)' → DB.\n\nNeo4j (2026-11 확인)   Community    Enterprise\n라이선스               GPLv3        상용\nvector 색인            있음         있음\nRBAC                   없음         있음\nonline backup · 군집   없음         있음\n\ns10.6: 원통이 작아지고 그 왼쪽의 두 상자 '스키마', '추출 파이프라인'이 크게 켜진다(호박색 테두리). 원통 아래에 흐린 대안 한 줄 'Memgraph · Apache AGE · RDF · 파일'. 추출기와 원통 사이에 '중립 파일(노드 · 엣지 목록)'이 끼어 있어 원통을 갈아 끼울 수 있다는 표시.",
+      "lines": [
+        {
+          "id": "s10.1",
+          "text": "그래프를 담을 DB로는 Neo4j를 기본안으로 봅니다.",
+          "say": "그래프를 담을 디비로는 네오포제이를 기본안으로 봅니다.",
+          "caption": "그래프 DB · Neo4j 기본안"
+        },
+        {
+          "id": "s10.2",
+          "text": "노드와 엣지에 속성을 싣는 모델이라, 엣지의 출처를 적기 좋습니다.",
+          "say": "노드와 엣지에 속성을 싣는 모델이라, 엣지의 출처를 적기 좋습니다.",
+          "caption": "속성 그래프"
+        },
+        {
+          "id": "s10.3",
+          "text": "질의는 Cypher라는 언어로 씁니다.",
+          "say": "질의는 사이퍼라는 언어로 씁니다.",
+          "caption": "질의어 Cypher"
+        },
+        {
+          "id": "s10.4",
+          "text": "우리 그래프는 노드 백만 개 이내로 추정합니다. 서버 한 대면 됩니다.",
+          "say": "우리 그래프는 노드 백만 개 이내로 추정합니다. 서버 한 대면 됩니다.",
+          "caption": "규모 추정 · 서버 한 대"
+        },
+        {
+          "id": "s10.5",
+          "text": "무료 판에는 접근 권한 제어가 없어, 조회는 사내 서버를 거칩니다.",
+          "say": "무료 판에는 접근 권한 제어가 없어, 조회는 사내 서버를 거칩니다.",
+          "caption": "Community 판 · RBAC 없음"
+        },
+        {
+          "id": "s10.6",
+          "text": "다만 DB 선택보다, 스키마와 채우는 파이프라인이 실제 일입니다.",
+          "say": "다만 디비 선택보다, 스키마와 채우는 파이프라인이 실제 일입니다.",
+          "caption": "일은 스키마와 파이프라인"
+        }
+      ]
+    },
+    {
+      "id": "s11",
+      "name": "효과 ① 변경 영향 분석",
+      "visual": "화면 왼쪽 40%는 질의와 결과 패널, 오른쪽 60%는 그래프(s5의 배치, 모든 엣지가 제 색으로 있고 전체가 흐리다). s11.1: 위에 제목 '효과 ① 변경 영향'. s3의 말풍선 '그 4가 어디어디에 있지?'가 작게 돌아온다. s11.2: 그래프에서 'HSI-RCV-010#order' 노드만 밝아지고 호박색 고리가 둘러진다. 질의의 첫 두 줄이 나타난다. s11.3: 질의의 나머지가 나타난다. 그래프에서 order 노드로 들어오는 implements·verifies 엣지를 거슬러 다섯 노드가 밝아지고(field, prio_q, a_host_first, a_gc_no_starve, prio_q_ratio_test), 이어서 field로 들어오는 reads·writes·generated_from 엣지를 거슬러 네 노드가 밝아진다(set_host_burst, rcv::policy_init, gc::throttle_update, rcv::stats_dump). 밝아지는 순서대로 빛이 엣지를 따라 흐른다.\n\nMATCH (c:Clause {id:'HSI-RCV-010#order'})\n      <-[:IMPLEMENTS|VERIFIES]-(s)\nOPTIONAL MATCH\n  (s)<-[:READS|WRITES|GENERATED_FROM]-(u)\nWITH collect(DISTINCT s) + collect(DISTINCT u) AS hit\nUNWIND hit AS n\nRETURN DISTINCT labels(n)[0] AS kind,\n       n.name AS name, n.path AS path\n\ns11.4: 질의 아래에 결과 표가 줄 단위로 채워진다.\n\ngraph@9f3c2e1 (예시) · 9행\nAssertion  a_gc_no_starve       rtl/rcv/prio_q_sva.sv\nAssertion  a_host_first         rtl/rcv/prio_q_sva.sv\nCSymbol    set_host_burst       fw/include/rcv_ctrl_hsi.hpp\nField      PRIOQ_CFG.HOST_BURST hsi/rdl/rcv_ctrl.rdl\nFunc       gc::throttle_update  fw/gc/gc_throttle.cpp\nFunc       rcv::policy_init     fw/rcv/rcv_policy.cpp\nFunc       rcv::stats_dump      fw/rcv/rcv_stats.cpp\nModule     prio_q               rtl/rcv/prio_q.sv\nTest       prio_q_ratio_test    dv/rcv/tests/\n\ns11.5: 표의 'gc::throttle_update' 줄과 그래프의 그 노드가 함께 호박색으로 깜박인다. 그 노드로 들어가는 엣지는 청록 writes 하나뿐이고 꼬리표 'extract · via: reg · 태그 없음'. s11.6: 그래프에서 order 노드 위로 derives_from 엣지를 따라 빛이 올라가 'REQ-QOS-07#AC-1'과, 이 씬에서만 가운데 위 오른쪽에 더해지는 조항 노드 둘 'rcv.arch.yaml#prio_q.order'(작은 글자 '값의 원본 · 모델이 여기서 파생'), 'ADR-RCV-003'이 밝아진다. s11.7: 화면 아래에 대비 표.\n\n\"host 4 : gc 1 을 바꾸면?\" (예시)\n          Jira만            그래프\n나오는 것 이슈 4건          심볼 9 · 파일 8 · 조항 3\n빠지는 것 FW 함수 · field   태그도 접근도 없는 코드\n하는 일   MR을 열어 훑기    질의 한 번 + 사람 확인",
+      "lines": [
+        {
+          "id": "s11.1",
+          "text": "이제 효과를 보겠습니다. 첫째는 변경 영향 분석입니다.",
+          "say": "이제 효과를 보겠습니다. 첫째는 변경 영향 분석입니다.",
+          "caption": "효과 ① 변경 영향 분석"
+        },
+        {
+          "id": "s11.2",
+          "text": "앞의 질문을 그래프에 묻습니다. order 조항에서 출발합니다.",
+          "say": "앞의 질문을 그래프에 묻습니다. 오더 조항에서 출발합니다.",
+          "caption": "출발점 · HSI-RCV-010#order"
+        },
+        {
+          "id": "s11.3",
+          "text": "구현과 검증 엣지를 거슬러 가고, register 접근을 한 번 더 따라갑니다.",
+          "say": "구현과 검증 엣지를 거슬러 가고, 레지스터 접근을 한 번 더 따라갑니다.",
+          "caption": "Cypher 질의"
+        },
+        {
+          "id": "s11.4",
+          "text": "심볼 아홉 개가 파일 여덟 개에서 나옵니다.",
+          "say": "심볼 아홉 개가 파일 여덟 개에서 나옵니다.",
+          "caption": "심볼 9개 · 파일 8개 (예시)"
+        },
+        {
+          "id": "s11.5",
+          "text": "GC 담당의 함수도 나옵니다. 태그는 없지만 접근이 추출됐습니다.",
+          "say": "지씨 담당의 함수도 나옵니다. 태그는 없지만 접근이 추출됐습니다.",
+          "caption": "태그 없는 함수도 검출"
+        },
+        {
+          "id": "s11.6",
+          "text": "위쪽으로는 구조 기술과 결정 기록, 수용 기준이 이어집니다.",
+          "say": "위쪽으로는 구조 기술과 결정 기록, 수용 기준이 이어집니다.",
+          "caption": "위쪽 · 구조 기술 · ADR · 수용 기준"
+        },
+        {
+          "id": "s11.7",
+          "text": "Jira는 이슈 네 건을, 그래프는 고칠 곳의 목록을 줍니다.",
+          "say": "지라는 이슈 네 건을, 그래프는 고칠 곳의 목록을 줍니다.",
+          "caption": "이슈 4건 대 고칠 곳의 목록"
+        }
+      ]
+    },
+    {
+      "id": "s12",
+      "name": "효과 ② 빈틈 검출",
+      "visual": "같은 좌우 구성. 그래프의 가운데 축에서 계약 HSI-RCV-010의 조항 노드 넷이 가로로 펼쳐진다. 왼쪽부터 '#order', '#full', '#bound', '#fw_role'(모두 호박색 문서 모양). 각 조항 아래로 verifies 엣지와 검사 노드, 그 아래 result 엣지와 'PASS' 원이 매달린다. s12.1: 제목 '효과 ② 빈틈 검출'. s12.2: 질의가 나타난다.\n\nMATCH (c:Clause {doc:'HSI-RCV-010'})\nOPTIONAL MATCH (c)<-[:VERIFIES]-(v)\nOPTIONAL MATCH (v)<-[:TRACKS]-(t:Issue)\n               <-[:RESULT {status:'PASS'}]-(:Exec)\nRETURN c.id AS clause,\n       count(DISTINCT v) AS checks,\n       count(DISTINCT t) AS passed\n\ns12.3: 화면 왼쪽 위에 R4J Coverage View 한 줄이 뜬다. 칸이 채워져 있고 청록 체크.\n\nR4J · Coverage View\nREQ-207 read 지연 보장   FEAT-338 우선 큐   3\n\ns12.4: 결과 표가 채워지고 bound 줄이 붉게 켜진다. 그래프에서 '#bound' 조항 아래가 비어 있고 붉은 점선 원 '검사 없음'.\n\nclause               checks  passed\nHSI-RCV-010#bound    0       0   ← 검증 없음\nHSI-RCV-010#full     1       0   ← 실행 증거 없음\nHSI-RCV-010#fw_role  0       0   ← 구현 태그만\nHSI-RCV-010#order    3       3\n\ns12.5: full 줄이 붉게 켜진다. 그래프에서 '#full' 아래에 'a_full_gc_bp' 노드는 매달려 있지만 그 아래 Jira 칩과 'PASS' 원의 자리가 붉은 점선으로 비어 있다. 꼬리표 'Xray Test 미등록 · 실행된 적 없음'. '#order' 아래에는 검사 셋과 'PASS @ VER-631' 원 셋이 청록으로 꽉 차 있어 대비된다. s12.6: 그래프가 다시 s5의 배치로 돌아가고 'gc::throttle_update' 노드만 붉은 점선 테두리. 둘째 질의와 결과.\n\nMATCH (f:Func)-[w:WRITES]->(:Field)\n      -[:IMPLEMENTS]->(c:Clause)\nWHERE NOT (f)-[:IMPLEMENTS]->(:Clause)\nRETURN f.name, f.owner, w.via, c.id\n\ngc::throttle_update  FW GC  reg  HSI-RCV-010#order",
+      "lines": [
+        {
+          "id": "s12.1",
+          "text": "둘째는 빈틈 검출입니다. 빠진 곳을 찾습니다.",
+          "say": "둘째는 빈틈 검출입니다. 빠진 곳을 찾습니다.",
+          "caption": "효과 ② 빈틈 검출"
+        },
+        {
+          "id": "s12.2",
+          "text": "계약의 조항마다 검사와 통과 증거가 있는지 셉니다.",
+          "say": "계약의 조항마다 검사와 통과 증거가 있는지 셉니다.",
+          "caption": "조항별 검사 · 증거 수"
+        },
+        {
+          "id": "s12.3",
+          "text": "Jira에서 이 설계 기능은 Test가 셋이라 채워진 칸입니다.",
+          "say": "지라에서 이 설계 기능은 테스트가 셋이라 채워진 칸입니다.",
+          "caption": "이슈 수준에서는 빈칸 없음"
+        },
+        {
+          "id": "s12.4",
+          "text": "조항으로 내려가면, 종료 조항에는 검사가 없습니다.",
+          "say": "조항으로 내려가면, 종료 조항에는 검사가 없습니다.",
+          "caption": "#bound · 검증 없음"
+        },
+        {
+          "id": "s12.5",
+          "text": "큐가 찼을 때의 조항은 assertion은 있는데 실행된 적이 없습니다.",
+          "say": "큐가 찼을 때의 조항은 어서션은 있는데 실행된 적이 없습니다.",
+          "caption": "#full · 실행 증거 없음"
+        },
+        {
+          "id": "s12.6",
+          "text": "어느 조항에도 닿지 않는 코드도 같은 방법으로 찾습니다.",
+          "say": "어느 조항에도 닿지 않는 코드도 같은 방법으로 찾습니다.",
+          "caption": "고아 코드 검출"
+        }
+      ]
+    },
+    {
+      "id": "s13",
+      "name": "효과 ③ 버그 역추적",
+      "visual": "같은 좌우 구성. 그래프는 s5의 배치. s13.1: 제목 '효과 ③ 버그 역추적'. s13.2: 맨 아래 띠의 'VER-640 FAIL' 원이 붉게 켜지고, 왼쪽 띠의 BUG-2317 칩이 붉은 테두리로 켜진다. 버그 카드가 열린다.\n\nBUG-2317  버그   상태: 초안   triage-agent\nGC 구간에서 host P99.99 2.4 ms (예시)\n발견   emulation · VER-530 FAIL @ VER-640\nsignature  prio_q / soft 큐 대기 급증\n           PRIOQ_CFG.HOST_BURST = 0\n\ns13.3: 카드의 마지막 줄이 붉게 밝아지고, BUG-2317 칩에서 field 노드 'PRIOQ_CFG.HOST_BURST'로 붉은 실선 엣지 observed_at이 그려진다. field 노드의 작은 글자 'reset 4'가 붉은 '= 0'으로 바뀐다. s13.4: 질의가 나타나고, 그래프에서 붉은 빛이 field → (implements) → '#order' 조항으로 올라간 뒤, field로 들어오는 writes·reads 엣지를 거슬러 함수 셋으로 퍼진다.\n\nMATCH (b:Issue {key:'BUG-2317'})\n      -[:OBSERVED_AT]->(f:Field)\nMATCH (f)-[:IMPLEMENTS]->(c:Clause)\nMATCH (fn:Func)-[x:READS|WRITES]->(f)\nRETURN c.id, type(x) AS access, x.via,\n       fn.name, fn.owner\n\ns13.5: 결과 표. 둘째 줄이 붉게 켜지고 그래프의 'gc::throttle_update' 노드가 붉은색으로 채워진다. 코드 한 줄이 꼬리표로 붙는다.\n\naccess  via       func                 owner\nWRITES  accessor  rcv::policy_init     FW 복구\nWRITES  reg       gc::throttle_update  FW GC   ←\nREADS   accessor  rcv::stats_dump      FW 복구\n\nbus.write(PRIOQ_CFG, (backlog > kHigh) << 8);\n// GC_BOOST 를 켜면서 HOST_BURST 를 0 으로 덮음\n\n'a_host_first' 노드 옆에 작은 회색 글자 'host_cnt < 0 은 성립 안 함 · 조건을 못 만난 통과', '#order' 조항 옆에 '값의 범위 없음 · 계약의 빈칸'. s13.6: 셋째 질의와 결과. 그래프 오른쪽 가장자리에 새 노드 둘 'nand::retry_cfg_apply'와 register 'RETRY_CFG'가 붉은 점선 테두리로 나타난다.\n\nMATCH (fn:Func)-[:WRITES {via:'reg'}]->(f:Field)\n      <-[:HAS_FIELD]-(r:Reg)\nWITH fn, r, count(f) AS fields WHERE fields > 1\nRETURN fn.name, r.name, fields\n\ngc::throttle_update     PRIOQ_CFG  2\nnand::retry_cfg_apply   RETRY_CFG  3\n\ns13.7: 'nand::retry_cfg_apply' 노드에 꼬리표 '아직 실패 안 함'. 화면 아래에 수정의 범위 한 줄 'MR !2334 · 계약에 범위 1~8 · FW는 접근 함수 사용 · 태그 추가'.",
+      "lines": [
+        {
+          "id": "s13.1",
+          "text": "셋째는 버그 역추적입니다. 실패에서 거슬러 갑니다.",
+          "say": "셋째는 버그 역추적입니다. 실패에서 거슬러 갑니다.",
+          "caption": "효과 ③ 버그 역추적"
+        },
+        {
+          "id": "s13.2",
+          "text": "emulation에서 GC 구간의 host 지연이 기준을 넘었습니다.",
+          "say": "에뮬레이션에서 지씨 구간의 호스트 지연이 기준을 넘었습니다.",
+          "caption": "emulation 실패 · BUG-2317"
+        },
+        {
+          "id": "s13.3",
+          "text": "실패 시점에 우선 큐 설정 field의 값이 0이었습니다.",
+          "say": "실패 시점에 우선 큐 설정 필드의 값이 영이었습니다.",
+          "caption": "HOST_BURST = 0"
+        },
+        {
+          "id": "s13.4",
+          "text": "그 field에서 조항으로, 그리고 그 field를 쓰는 함수로 갑니다.",
+          "say": "그 필드에서 조항으로, 그리고 그 필드를 쓰는 함수로 갑니다.",
+          "caption": "field → 조항 → 쓰는 함수"
+        },
+        {
+          "id": "s13.5",
+          "text": "GC 코드가 register를 통째로 쓰면서 옆 field를 0으로 덮었습니다.",
+          "say": "지씨 코드가 레지스터를 통째로 쓰면서 옆 필드를 영으로 덮었습니다.",
+          "caption": "원인 · register 통째 쓰기"
+        },
+        {
+          "id": "s13.6",
+          "text": "같은 형태의 코드를 그래프에 물으면, 한 곳이 더 나옵니다.",
+          "say": "같은 형태의 코드를 그래프에 물으면, 한 곳이 더 나옵니다.",
+          "caption": "같은 형태의 다른 코드"
+        },
+        {
+          "id": "s13.7",
+          "text": "아직 실패하지 않은, 같은 종류의 문제입니다.",
+          "say": "아직 실패하지 않은, 같은 종류의 문제입니다.",
+          "caption": "아직 실패하지 않은 후보"
+        }
+      ]
+    },
+    {
+      "id": "s14",
+      "name": "효과 ④ 에이전트의 맥락",
+      "visual": "s14.1: 제목 '효과 ④ 에이전트의 맥락'. 에이전트 레인(청록)이 화면 가운데에 놓인다. s14.2: 왼쪽 절반 '지금'. 에이전트 아이콘에서 저장소 전체(파일 수백 개의 흐린 격자)로 선이 흩어진다. 터미널 조각.\n\n$ grep -rn HOST_BURST .\nfw/include/rcv_ctrl_hsi.hpp   (생성물)\ndocs/api/rcv_ctrl.md          (문서)\nbuild/rcv_ctrl_regs.sv        (생성물)\nlogs/emu_run_231.log          (로그)\n…  겹치고 섞인 결과 · 통째 쓰기는 안 나옴\n\n마지막 줄은 붉은 점선 밑줄(bus.write(PRIOQ_CFG, …)에는 HOST_BURST라는 글자가 없다). s14.3: 오른쪽 절반 '그래프'. 에이전트 아이콘에서 선 하나가 그래프의 field 노드로 가고, 그 노드에서 두 걸음 안의 노드만 밝아져 덩어리째 떼어져 에이전트에게 온다. 도구 호출 조각.\n\ntrace.subgraph(\n  seed='rcv_ctrl.PRIOQ_CFG.HOST_BURST', hops=2)\n→ 노드 14 · 엣지 19 · 파일 8 (예시)\n  각 노드: 종류 · 이름 · 경로 · 줄 범위\n  각 엣지: 종류 · method · commit\n\n에이전트는 받은 파일의 줄 범위만 연다. 아래에 작은 글자 '에이전트에게 연 것: 이름 붙은 질의 · 부분 그래프 · 제안. 그래프 쓰기 없음'. s14.4: 화면 아래에 MR 화면이 열리고 리뷰 봇의 댓글이 달린다.\n\n[에이전트 · req-agent · 영향 분석]  MR !2334\n변경      gc::throttle_update (fw/gc/)\n닿는 조항 HSI-RCV-010#order (HOST_BURST 쓰기)\n요구사항  REQ-207 (REQ-QOS-07 AC-1) · FEAT-338\n다시 볼 것 VER-541 · VER-542 · VER-543 → 선택 실행\n근거      graph@9f3c2e1 · 질의 impact_v1\n확인 못 한 것  제안 링크 2건은 제외함\n\ns14.5: 화면 오른쪽 위에 흰색 주석 카드(과장하지 않는다는 표시).\n\n공개 근거 (2026-11 확인)\n코드 그래프 + 에이전트   연구 있음 · 뚜렷한 우위는 아님\n스펙 · RTL 그래프 → SVA  연구 있음\nSoC 추적 그래프의 효과   공개 수치 없음 → 직접 측정",
+      "lines": [
+        {
+          "id": "s14.1",
+          "text": "넷째는 에이전트가 일할 때 받는 맥락입니다.",
+          "say": "넷째는 에이전트가 일할 때 받는 맥락입니다.",
+          "caption": "효과 ④ 에이전트의 맥락"
+        },
+        {
+          "id": "s14.2",
+          "text": "지금 에이전트는 grep과 의미 검색으로 파일을 긁습니다.",
+          "say": "지금 에이전트는 그렙과 의미 검색으로 파일을 긁습니다.",
+          "caption": "지금 · grep과 의미 검색"
+        },
+        {
+          "id": "s14.3",
+          "text": "그래프가 있으면, 필요한 부분 그래프만 받아서 일합니다.",
+          "say": "그래프가 있으면, 필요한 부분 그래프만 받아서 일합니다.",
+          "caption": "부분 그래프 조회"
+        },
+        {
+          "id": "s14.4",
+          "text": "리뷰 봇은 MR마다, 이 변경이 닿는 요구사항을 댓글로 답니다.",
+          "say": "리뷰 봇은 엠알마다, 이 변경이 닿는 요구사항을 댓글로 답니다.",
+          "caption": "MR 댓글 · 닿는 요구사항"
+        },
+        {
+          "id": "s14.5",
+          "text": "이 효과를 잰 공개 수치는 아직 없습니다. 우리가 재야 합니다.",
+          "say": "이 효과를 잰 공개 수치는 아직 없습니다. 우리가 재야 합니다.",
+          "caption": "미확인 · 직접 측정"
+        }
+      ]
+    },
+    {
+      "id": "s15",
+      "name": "Jira와의 관계",
+      "visual": "화면을 위아래 두 층으로 나눈 단면도. 위층 'Jira · 사람과 에이전트가 만나는 곳'(흰 테두리), 아래층 '그래프 · 조항과 코드'(청록 점선 테두리). s15.1: 위층에 Jira 이슈 화면 하나(FEAT-338)와 그 주위의 아이콘 '지시', '질문', '승인'(호박색). s15.2: 아래층에 s5의 그래프 축소판이 켜진다. 위층의 FEAT-338 칩과 아래층 그래프의 왼쪽 띠에 있는 FEAT-338 칩이 세로 점선으로 이어져 같은 것임을 보인다. 라벨 '그래프는 Jira 이슈를 노드로 포함'. s15.3: 아래층에서 위층으로 청록 화살표 둘이 올라간다. 하나는 '댓글', 하나는 'remote link'. 위층의 이슈 화면에 조각이 채워진다.\n\nFEAT-338  설계 기능           상태: 구현 중\n우선 큐 · 계약 HSI-RCV-010\n링크  implements REQ-207 · tested by VER-541 외 2\n      추적 그래프에서 보기 ↗\n댓글\n  req-agent  [에이전트 · req-agent · 영향 분석]\n     MR !2334 · 닿는 조항 #order · 다시 볼 것 3건\n     근거 graph@9f3c2e1\n\n사람 아이콘(호박색)은 위층에만 있다. s15.4: 위층 오른쪽에 Xray Test Execution 한 줄 'VER-631 · PASS 3 · 올린 계정 ci-import'가 켜지고, 아래층 그래프의 'PASS' 원으로 내려가는 청록 화살표 '복사'. 반대 방향 화살표는 없다. 라벨 '판정은 Xray · 그래프는 옆에 놓을 뿐'.",
+      "lines": [
+        {
+          "id": "s15.1",
+          "text": "Jira는 그대로 소통과 승인의 창구입니다.",
+          "say": "지라는 그대로 소통과 승인의 창구입니다.",
+          "caption": "Jira = 소통과 승인의 창구"
+        },
+        {
+          "id": "s15.2",
+          "text": "그래프는 Jira를 대신하지 않고, 그 아래를 잇습니다.",
+          "say": "그래프는 지라를 대신하지 않고, 그 아래를 잇습니다.",
+          "caption": "그래프 = Jira 아래 계층"
+        },
+        {
+          "id": "s15.3",
+          "text": "사람은 그래프를 직접 열지 않고, Jira 이슈의 댓글로 결과를 봅니다.",
+          "say": "사람은 그래프를 직접 열지 않고, 지라 이슈의 댓글로 결과를 봅니다.",
+          "caption": "결과는 Jira 댓글과 링크로"
+        },
+        {
+          "id": "s15.4",
+          "text": "통과 여부의 판정도 그대로 Xray의 실행 결과입니다.",
+          "say": "통과 여부의 판정도 그대로 엑스레이의 실행 결과입니다.",
+          "caption": "판정은 Xray"
+        }
+      ]
+    },
+    {
+      "id": "s16",
+      "name": "실행 순서와 측정",
+      "visual": "계단 넷이 왼쪽 아래에서 오른쪽 위로 오른다. 계단마다 그래프의 작은 그림이 붙어 단계가 오를수록 채워진다. s16.1: 계단 아래에 블록 하나의 테두리 'read 오류 복구 · rcv_ctrl · prio_q'. 그 안에 노드만 있는 작은 그래프. s16.2: 첫 계단 '01 도구 추출'. 작은 그래프에 청록 엣지가 채워진다. 꼬리표 'LLM 없음'. s16.3: 둘째 계단 '02 태그 관례 + trace-lint'. 호박색 엣지가 더해진다. 꼬리표 '처음에는 경고만 · 새 코드부터'. s16.4: 셋째 계단 '03 에이전트 링크 제안'. 청록 점선이 더해지고 일부가 호박색 실선으로 바뀐다. 넷째 계단 '04 블록 확대'는 흐리게. s16.5: 계단 오른쪽에 측정 카드.\n\n측정 (블록 하나에서)\n링크 정밀도    확정 엣지 표본을 담당이 확인\n링크 재현율    담당이 적은 정답 목록과 대조\n영향 분석 시간 같은 변경을 두 방식으로\n빈틈의 추이    검증 없는 조항 · 태그 없는 접근\n\n카드 아래에 성숙도 꼬리표가 흐리게 놓인다.\n\nSystemRDL · SystemVerilog · C++ 파서  오픈소스\nJira · R4J · Xray REST               상용 + 연결 구축\n태그 스캐너 · CI 검사                 직접 구축\n그래프 DB                            오픈소스 · 상용",
+      "lines": [
+        {
+          "id": "s16.1",
+          "text": "시작은 블록 하나, read 오류 복구입니다.",
+          "say": "시작은 블록 하나, 리드 오류 복구입니다.",
+          "caption": "블록 하나에서 시작"
+        },
+        {
+          "id": "s16.2",
+          "text": "먼저 도구 추출만으로 그래프를 만듭니다.",
+          "say": "먼저 도구 추출만으로 그래프를 만듭니다.",
+          "caption": "① 도구 추출"
+        },
+        {
+          "id": "s16.3",
+          "text": "다음에 태그 관례와 CI 검사를 켭니다.",
+          "say": "다음에 태그 관례와 씨아이 검사를 켭니다.",
+          "caption": "② 태그 관례와 CI"
+        },
+        {
+          "id": "s16.4",
+          "text": "에이전트의 링크 제안은 그다음입니다.",
+          "say": "에이전트의 링크 제안은 그다음입니다.",
+          "caption": "③ 에이전트 링크 제안"
+        },
+        {
+          "id": "s16.5",
+          "text": "링크의 정밀도와 재현율을 표본으로 재고, 영향 분석 시간도 잽니다.",
+          "say": "링크의 정밀도와 재현율을 표본으로 재고, 영향 분석 시간도 잽니다.",
+          "caption": "측정 · 정밀도 · 재현율 · 시간"
+        }
+      ]
+    },
+    {
+      "id": "s17",
+      "name": "지키는 선과 마무리",
+      "visual": "호박색 굵은 가로선 위에 네 항목이 차례로 선다. s17.1: '그래프는 파생물 · 원본은 Jira와 git'. 옆에 s9의 그림(원본 둘 → 그래프, 반대 화살표는 X)이 작게. s17.2: '확정 링크는 사람이 승인'. 옆에 청록 점선이 호박색 실선으로 바뀌는 작은 그림과 서명 표시. s17.3: '태그 ≠ 통과'. 옆에 호박색 verifies 엣지와, 그 아래 비어 있는 'PASS' 자리(s12의 #full). s17.4: '충족 판정은 사람'. Jira 전환 '승인 → 충족 확인'에 호박색 사람 아이콘. s17.5: 가로선이 위로 물러나고 화면 가운데에 s1의 그림이 돌아온다. 요구사항 카드(REQ-QOS-07, REQ-207) 아래로 이번에는 끊어지지 않은 선이 조항, field, assertion, FW 함수 노드를 지나 두 코드 패널까지 이어진다. 위쪽 구간(이슈와 이슈)은 흰 선에 'Jira', 아래쪽 구간(조항과 코드)은 청록·호박색 선에 '그래프'. s17.6: 요구사항 카드의 한 줄이 호박색으로 깜박이면 그 아래로 이어진 노드들이 위에서 아래로 차례로 밝아진다. 가운데에 마무리 문구 '한 줄이 바뀌면, 고칠 곳이 보인다'. 아래에 작게 'DEEP DIVE · 추적성 편', 왼쪽 아래 'SSD CONTROLLER SOC · AX'.",
+      "lines": [
+        {
+          "id": "s17.1",
+          "text": "지키는 선도 있습니다. 그래프를 원본으로 착각하지 않습니다.",
+          "say": "지키는 선도 있습니다. 그래프를 원본으로 착각하지 않습니다.",
+          "caption": "그래프는 파생물"
+        },
+        {
+          "id": "s17.2",
+          "text": "LLM의 제안이 사실처럼 굳지 않게, 확정은 사람이 승인합니다.",
+          "say": "엘엘엠의 제안이 사실처럼 굳지 않게, 확정은 사람이 승인합니다.",
+          "caption": "확정 링크는 사람의 승인"
+        },
+        {
+          "id": "s17.3",
+          "text": "태그가 있다는 것은, 통과했다는 뜻이 아닙니다.",
+          "say": "태그가 있다는 것은, 통과했다는 뜻이 아닙니다.",
+          "caption": "태그 ≠ 통과"
+        },
+        {
+          "id": "s17.4",
+          "text": "요구사항이 충족됐는지는 사람이 판정합니다.",
+          "say": "요구사항이 충족됐는지는 사람이 판정합니다.",
+          "caption": "충족 판정은 사람"
+        },
+        {
+          "id": "s17.5",
+          "text": "Jira는 이슈를 잇고, 그래프는 조항과 코드를 잇습니다.",
+          "say": "지라는 이슈를 잇고, 그래프는 조항과 코드를 잇습니다.",
+          "caption": "Jira = 이슈 · 그래프 = 조항과 코드"
+        },
+        {
+          "id": "s17.6",
+          "text": "요구사항 한 줄이 바뀌면, 고칠 곳이 바로 보여야 합니다.",
+          "say": "요구사항 한 줄이 바뀌면, 고칠 곳이 바로 보여야 합니다.",
+          "caption": "한 줄이 바뀌면, 고칠 곳이 보인다"
+        }
+      ]
+    }
+  ]
+}
