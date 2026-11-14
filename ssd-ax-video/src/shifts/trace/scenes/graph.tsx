@@ -150,6 +150,7 @@ export const EDGES: readonly GEdge[] = [
   // 실행 결과
   { id: "res_541", from: "pass", to: "VER-541", rel: "result", origin: "extract", pts: resultBus(530), labelAt: [126, 768] },
   { id: "res_542", from: "pass", to: "VER-542", rel: "result", origin: "extract", pts: resultBus(600), labelAt: [126, 768] },
+  { id: "res_543", from: "pass", to: "VER-543", rel: "result", origin: "extract", pts: resultBus(670), labelAt: [126, 768] },
 ];
 
 /** 기본 그래프에는 없고 add 로 더하는 엣지 */

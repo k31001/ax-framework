@@ -56,6 +56,7 @@ export const S6: React.FC = () => {
     trk_feat: treeAt + 4,
     res_541: xrayAt + 4,
     res_542: xrayAt + 8,
+    res_543: xrayAt + 12,
     reads_prio_q: within("s6.5", 0.7),
     trk_541: within("s6.5", 0.7) + 6,
     trk_542: within("s6.5", 0.7) + 9,

@@ -55,6 +55,7 @@ export const S5: React.FC = () => {
     tests_543: g5 + 16,
     res_541: c2 + 2,
     res_542: c2 + 6,
+    res_543: c2 + 10,
     observed: bugAt + 8,
     fw_role: c3 + 2,
     impl_policy: c3 + 10,
