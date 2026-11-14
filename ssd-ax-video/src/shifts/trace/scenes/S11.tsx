@@ -5,7 +5,7 @@ import { HumanIcon } from "../../../video/components/Icons";
 import { Trace } from "../../../video/components/Trace";
 import { color, fullSvg, sans, stroke, withAlpha } from "../../../video/theme";
 import { CodePanel, ShiftSheet } from "../../lib";
-import { TraceGraph, place } from "./graph";
+import { JIRA_EDGES, TraceGraph, place } from "./graph";
 import { Box, Note, T, Table, useCues } from "./kitB";
 
 // s11 효과 ① 변경 영향 분석 (이 편의 정점).
@@ -19,9 +19,11 @@ const HOP1_NODES = ["field", "prio_q", "a_host_first", "a_gc_no_starve", "ratio_
 const HOP2 = ["reads_prio_q", "gen_shb", "writes_policy", "writes_gc", "reads_stats"];
 const HOP2_NODES = ["set_host_burst", "policy_init", "throttle_update", "stats_dump"];
 const GAP = 36;
+// 결과 표가 덮는 자리(JIRA 띠)의 노드와 엣지
+const JIRA_SIDE = ["REQ-207", "FEAT-338", "VER-541", "VER-542", "VER-543", "BUG-2317", "pass", ...JIRA_EDGES];
 
 const RESULT_X = 893; // 3) 에서 결과 표가 옮겨 가는 자리
-const ROW_H = 40;
+const ROW_H = 38;
 
 export const S11: React.FC = () => {
   const frame = useCurrentFrame();
@@ -71,7 +73,7 @@ export const S11: React.FC = () => {
         opacity={graphOp}
         add={["arch", "adr", "derives_arch", "derives_adr"]}
         appear={{ arch: up[0] - 4, derives_arch: up[0], adr: up[1] - 4, derives_adr: up[1] }}
-        dim={[{ to: 0.5 }, { at: t2, to: 0.2 }]}
+        dim={[{ to: 0.5 }, { at: t2, to: 0.2 }, { ids: JIRA_SIDE, at: t4 - 8, to: 0.03 }]}
         hi={[
           { ids: ["order"], color: color.human, at: startAt, ring: true },
           { ids: [...HOP1, ...HOP1_NODES], at: hop1 + GAP - 8 },
@@ -92,7 +94,7 @@ export const S11: React.FC = () => {
       />
       <svg {...fullSvg}>
         <Trace pts={[[nx, ny], [nx + 6, ny], [nx + 6, tagY]]} stroke={color.human} width={stroke.thin} at={tagAt} opacity={graphOp} />
-        <Trace pts={[[RESULT_X + 828, gcRowY], [RESULT_X + 905, gcRowY], [RESULT_X + 905, 590]]} stroke={color.human} width={stroke.thin} at={vsAt + 2} />
+        <Trace pts={[[RESULT_X + 828, gcRowY], [RESULT_X + 905, gcRowY], [RESULT_X + 905, 572]]} stroke={color.human} width={stroke.thin} at={vsAt + 2} />
       </svg>
       <Note x={tagX} y={tagY} h={40} align="right" text="extract · via: reg · 태그 없음" c={color.human} p={tagP} />
 
@@ -129,7 +131,7 @@ export const S11: React.FC = () => {
         px={28}
         rowH={ROW_H}
         owner="agent"
-        cols={[{ w: 148, code: true }, { w: 324, code: true }, { w: 421, code: true }]}
+        cols={[{ w: 156, code: true }, { w: 322, code: true }, { w: 421, code: true }]}
         rows={(
           [
             ["Assertion", "a_gc_no_starve", "rtl/rcv/prio_q_sva.sv"],
@@ -148,7 +150,7 @@ export const S11: React.FC = () => {
           ...(i === 4 ? { mark: t5, markC: color.human } : {}),
         }))}
       />
-      <Note x={RESULT_X + 931} y={590} align="right" text="extract · via: reg · 태그 없음" c={color.human} p={tagP2} />
+      <Note x={RESULT_X + 931} y={572} align="right" text="extract · via: reg · 태그 없음" c={color.human} p={tagP2} />
 
       {/* ── Jira 의 답 ── */}
       <Table
@@ -168,9 +170,9 @@ export const S11: React.FC = () => {
           { cells: ["VER-543", "prio_q_ratio_test", "승인"], at: jiraAt + 15, c: color.inkSoft },
         ]}
       />
-      <T x={120} y={392} text="이슈 4건" px={60} weight={800} at={countAt} />
+      <T x={120} y={384} text="이슈 4건" px={60} weight={800} at={countAt} />
       {/* 그래프의 답을 세면 */}
-      <div style={{ position: "absolute", left: lerp(120, RESULT_X + 24, m7), top: 592, display: "flex", gap: 18, ...sans(60, 800), whiteSpace: "nowrap" }}>
+      <div style={{ position: "absolute", left: lerp(120, RESULT_X + 24, m7), top: 562, display: "flex", gap: 18, ...sans(60, 800), whiteSpace: "nowrap" }}>
         <span style={{ color: color.agent, opacity: progress(frame, within("s11.4", 0.08), DUR.enter) }}>심볼 9</span>
         <span style={{ color: color.agent, opacity: progress(frame, within("s11.4", 0.5), DUR.enter) }}>· 파일 8</span>
         <span style={{ color: color.human, opacity: progress(frame, up[2] + 24, DUR.enter) * (1 - progress(frame, t7 - 4, 8)) }}>· 조항 3</span>
@@ -179,7 +181,7 @@ export const S11: React.FC = () => {
       {/* ── 대비 ── */}
       <Table
         x={96}
-        y={646}
+        y={652}
         w={1728}
         title={"\"host 4 : gc 1 을 바꾸면?\" (예시)"}
         at={vsAt}
