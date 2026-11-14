@@ -18,8 +18,10 @@ const UNTAGGED = ["throttle_update", "stats_dump", "a_full_gc_bp"];
 
 // 승인된 후보: 같은 길을 확정 엣지로 다시 그린다
 const CONFIRMED: GEdge[] = [
-  { id: "c_gc", from: "throttle_update", to: "order", rel: "implements", origin: "tag", pts: [[950, 588], [930, 588], [930, 248]], labelAt: [930, 300] },
-  { id: "c_full", from: "a_full_gc_bp", to: "full", rel: "verifies", origin: "tag", pts: [[546, 670], [582, 670], [582, 308], [980, 308], [980, 200], [1010, 200]], labelAt: [860, 308] },
+  { id: "c_gc", from: "throttle_update", to: "order", rel: "implements", origin: "tag", pts: [[950, 588], [930, 588], [930, 248]], labelAt: [930, 418] },
+  { id: "c_full", from: "a_full_gc_bp", to: "full", rel: null, origin: "tag", pts: [[546, 670], [582, 670], [582, 308], [980, 308], [980, 200], [1010, 200]] },
+  // 후보 2 의 이름표 자리만 옮긴다(field 의 작은 글자와 겹치지 않게)
+  { id: "p_gc", from: "throttle_update", to: "order", rel: "proposed", origin: "proposed", pts: [[950, 588], [930, 588], [930, 248]], labelAt: [930, 418] },
 ];
 
 const LX = 124;
@@ -100,8 +102,8 @@ export const S8: React.FC = () => {
       </div>
 
       {/* ── AGENT 레인 ── */}
-      <Lane x={96} y={140} w={814} h={416} c={color.agent} label="AGENT" p={progress(frame, agentAt, DUR.enter)} />
-      <Box x={LX} y={152} w={676} h={58} c={color.agent} fill={withAlpha(color.agent, 0.1)} p={progress(frame, t2, DUR.enter)} center={false} style={{ gap: 12, paddingLeft: 16 }}>
+      <Lane x={96} y={140} w={830} h={416} c={color.agent} label="AGENT" p={progress(frame, agentAt, DUR.enter)} />
+      <Box x={LX} y={152} w={700} h={58} c={color.agent} fill={withAlpha(color.agent, 0.1)} p={progress(frame, t2, DUR.enter)} center={false} style={{ gap: 12, paddingLeft: 16 }}>
         <AgentIcon size={32} color={color.agent} />
         <div style={{ ...sans(30, 600), whiteSpace: "nowrap" }}>
           <span style={{ ...mono(28, 700), letterSpacing: "0", color: color.agent }}>trace-agent</span> · 조항 · 코드 · commit 메시지를 읽음
@@ -126,7 +128,7 @@ export const S8: React.FC = () => {
       />
 
       {/* ── HUMAN 레인 ── */}
-      <Lane x={96} y={610} w={814} h={282} c={color.human} label="HUMAN" p={progress(frame, t4, DUR.enter)} />
+      <Lane x={96} y={610} w={830} h={282} c={color.human} label="HUMAN" p={progress(frame, t4, DUR.enter)} />
       <Box x={LX} y={622} w={470} h={58} c={color.human} fill={withAlpha(color.human, 0.1)} p={progress(frame, t4 + 4, DUR.enter)} center={false} style={{ gap: 12, paddingLeft: 16 }}>
         <HumanIcon size={32} color={color.human} />
         <div style={{ ...sans(30, 600), whiteSpace: "nowrap" }}>블록 담당 · MR !2341 승인</div>

@@ -32,6 +32,9 @@ const ROWS = [
   ["이 함수는 왜 있는가", "commit 메시지"],
 ] as const;
 
+const col = (c: number): number => 120 + c * 15.6;
+const row = (i: number): number => 124 + 64 + i * 39 + 14;
+
 export const S2: React.FC = () => {
   const frame = useCurrentFrame();
   const { cue, within } = useCues();
@@ -93,13 +96,23 @@ export const S2: React.FC = () => {
         at={c2}
         lines={[
           "REQ-207  요구사항  REQ-QOS-07 · P99.99 ≤ 2 ms",
-          { text: " └─ is implemented by ─ FEAT-338  우선 큐", mark: implAt, unmark: testAt },
-          "      │                  계약 HSI-RCV-010",
-          { text: "      ├─ tested by ─ VER-541  a_host_first", mark: testAt, unmark: c3 },
-          { text: "      ├─ tested by ─ VER-542  a_gc_no_starve", mark: testAt, unmark: c3 },
-          { text: "      └─ tested by ─ VER-543  prio_q_ratio_test", mark: testAt, unmark: c3 },
+          { text: "    is implemented by   FEAT-338  우선 큐", mark: implAt, unmark: testAt },
+          "                         계약 HSI-RCV-010",
+          { text: "         tested by   VER-541  a_host_first", mark: testAt, unmark: c3 },
+          { text: "         tested by   VER-542  a_gc_no_starve", mark: testAt, unmark: c3 },
+          { text: "         tested by   VER-543  prio_q_ratio_test", mark: testAt, unmark: c3 },
         ]}
       />
+
+      {/* 트리의 가지(글꼴에 없는 선 문자를 대신 그린다) */}
+      <svg {...fullSvg} opacity={progress(frame, c2 + 12, 12)}>
+        <path
+          d={`M ${col(1.5)} ${row(0) + 16} V ${row(1)} H ${col(3.3)} M ${col(21.7)} ${row(1)} H ${col(23.3)} M ${col(6.5)} ${row(1) + 16} V ${row(5)} H ${col(8.3)} M ${col(6.5)} ${row(3)} H ${col(8.3)} M ${col(6.5)} ${row(4)} H ${col(8.3)} ${[3, 4, 5].map((i) => `M ${col(18.7)} ${row(i)} H ${col(20.3)}`).join(" ")}`}
+          fill="none"
+          stroke={color.inkDim}
+          strokeWidth={stroke.thin}
+        />
+      </svg>
 
       <At x={1824} y={FLOOR - 52} right p={progress(frame, c3 + 14, DUR.enter)} style={tx(34, 800)}>
         Jira의 바닥 · 이슈 단위
