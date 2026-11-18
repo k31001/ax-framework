@@ -13,7 +13,7 @@ SSD 컨트롤러 SoC를 설계·검증하는 팀의 AI Transformation(AX) 전략
 | 5대 전환 4 시스템 | `video/shift4-system.mp4` | 3:39 |
 | 5대 전환 5 문화 | `video/shift5-culture.mp4` | 3:31 |
 | 구조 설계 편 | `video/arch-architecture.mp4` | 9:16 |
-| 추적성 편 | `video/trace-knowledge-graph.mp4` | 8:20 |
+| 추적성 편 | `video/trace-knowledge-graph.mp4` | 9:37 |
 
 ## 문서
 

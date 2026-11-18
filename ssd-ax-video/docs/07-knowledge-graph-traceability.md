@@ -3,6 +3,7 @@
 > 상태: 초안 (2026-11-14). `05-jira-traceability.md` 의 Jira 모델 **아래 계층**을 다룬다. 대본은 `src/shifts/trace/script.json`.
 > 예제는 구조 설계 편(`06-architecture-exploration.md`)의 과제를 잇는다. 차세대 데이터센터 SSD 컨트롤러, read 오류 복구, host 우선 큐다.
 > 이슈 키, 경로, 코드, 질의 결과, 건수는 모두 흐름을 보여 주기 위한 예시다. 팀의 실제 Jira와 저장소는 조회하지 않았다. 공개 자료에서 온 내용은 9장에 출처와 확인 수준을 적었다.
+> 2026-11-18 보탬: 3.5 "고칠 수 없는 외부 문서(표준 스펙)". 대본의 s10, s11 이 이 절이다.
 > `REQ-207` 처럼 접두어와 숫자만 있으면 Jira 키, `HSI-RCV-010` 처럼 영역 약어가 있으면 git 산출물의 ID다. 이 문서에서 `#` 뒤는 그 산출물 안의 조항이다(`HSI-RCV-010#order`).
 
 ## 1. 한 줄 요약
@@ -57,6 +58,9 @@ REQ-207  요구사항  REQ-QOS-07 · P99.99 read ≤ 2 ms
 | `Func` | FW 함수 | `gc::throttle_update` | 파일, 줄 범위, 소유 팀 | git |
 | `Test` | 테스트 코드 | `prio_q_ratio_test` | 환경(sim, formal, vp, emu) | git |
 | `Commit`, `MR` | 변경 | `9f3c2e1`, `MR !2334` | 작성자, 시각, 제목의 이슈 키 | git |
+| `Spec` | 외부 문서의 판본 하나 (3.5) | `NVME-BASE-2.1` | 발행처, 판본, 발행일, 파일 hash | git의 색인 파일 (문서 자체는 고치지 않는다) |
+| `StdClause` | 외부 문서의 조항. 필드 정의 하나, 또는 shall·should·may 문장 하나 (3.5) | `NVME-BASE-2.1#SMART.CW.NDR` | 종류(field, shall, should, may), 적용 조건, 절·Figure·쪽 번호, 본문 hash. 본문은 없다 | git의 색인 파일 |
+| `Change` | 표준의 변경 문서 (NVMe의 TP, ECN) | `TP4163`, `ECN123` | 종류, 제목, 필수·선택 | git의 색인 파일 |
 
 **줄이 아니라 심볼이 단위다.** 이유는 셋이다.
 
@@ -85,6 +89,10 @@ REQ-207  요구사항  REQ-QOS-07 · P99.99 read ≤ 2 ms
 | `HAS_FIELD` | Reg → Field | register의 구성 | SystemRDL 컴파일러 |
 | `CHANGES` | Commit → 심볼 | 이 commit이 이 심볼을 고침 | git diff와 심볼의 줄 범위 |
 | `PROPOSED` | 심볼 → Clause | 에이전트가 낸 링크 후보. 확정이 아님 | 에이전트 (3.3의 ③) |
+| `PART_OF` | StdClause → Spec | 조항이 이 판본에 속함 | 색인 파일 |
+| `DERIVES_FROM` (확장) | Clause → StdClause | 사내 요구사항이 표준 조항에서 유도됨 | 사내 요구사항의 `derives_from:` 줄 |
+| `SUPERSEDES` | Spec → Spec, StdClause → StdClause | 새 판본(조항)이 옛 것을 잇는다. 속성 `change`: same, changed, new, removed | 본문 hash가 같으면 도구(`method: extract`), 아니면 표준 담당이 확정한 대응 파일(`method: tag`) |
+| `INCORPORATES` | Spec → Change | 이 판본이 이 TP·ECN을 포함 | 판본의 머리말 |
 
 **엣지마다 출처를 싣는다.** 그래프의 값은 "이 링크를 얼마나 믿어도 되는가"를 엣지가 스스로 말하는 데 있다.
 
@@ -215,6 +223,146 @@ Community 판에 없는 것이 이 용도에서 얼마나 아픈지 따져 본�
 | DB 없이 파일 | 노드·엣지를 파일로 내고 CI에서 메모리에 올려 검사. 이 규모에서는 된다 | [제안] |
 
 **결론.** 시작은 Neo4j Community 판 한 대다. 이유는 속성 그래프가 엣지 출처와 맞고, Cypher를 아는 사람과 자료가 많고, vector 색인이 같은 서버에 있어서다. 그런데 DB는 갈아 끼울 수 있게 둔다. 추출기는 DB가 아니라 중립적인 파일(노드와 엣지의 목록)을 내고, 적재기가 그것을 DB에 넣는다. 첫 블록의 CI 검사는 DB 없이 파일만으로도 돈다. **DB를 고르는 데 쓸 시간은 스키마와 추출 파이프라인에 써야 한다.**
+
+### 3.5 고칠 수 없는 외부 문서(표준 스펙)
+
+3.3의 태그는 우리가 고칠 수 있는 파일에만 달 수 있다. NVMe Base Specification 같은 표준 문서는 받아서 읽을 뿐 고칠 수 없다. 그래도 방법은 같다. **문서를 고치지 않고 문서 바깥에 조항 색인을 만들고, 그 색인을 그래프의 노드로 쓴다.** 태그는 우리 코드와 우리 문서에만 달고, 표준은 가리키기만 한다. 이 절은 3.3의 네 단계에 다섯째 단계를 더하는 것이 아니다. 같은 네 단계가 "우리 것이 아닌 원본"에 적용되는 모습이다.
+
+**판본을 고정한다.** 표준 문서의 판본 하나가 `Spec` 노드 하나다. `NVME-BASE-2.1` 과 `NVME-BASE-2.3` 은 다른 노드이고, 받은 PDF의 hash를 속성으로 싣는다. 우리 제품이 어느 판본을 기준으로 하는지는 사내 요구사항이 정한다.
+
+**색인의 형식.** 색인은 git의 파일이다. 본문은 싣지 않고 위치와 hash만 둔다.
+
+```yaml
+# spec/nvme-base-2.1/clauses.yaml
+doc: NVME-BASE-2.1           # 판본 = 노드
+title: NVM Express Base Specification, Revision 2.1
+issued: 2024-08-05
+file_sha256: 4e31f826…       # 받은 PDF. 문서는 고치지 않는다
+clauses:
+  - id: SMART.CW.NDR         # 이름으로 지은 식별자
+    kind: field              # field | shall | should | may
+    applies: mandatory       # 또는 optional-feature:<이름>. 표준 담당이 적는다
+    at: {sec: 5.1.12.1.3, fig: 206, page: 209}
+    text_sha256: 9a41c07e…   # 본문은 싣지 않는다 (hash 값은 예시)
+  - id: SMART.CW.AMRO#shall-1
+    kind: shall
+    applies: mandatory
+    at: {sec: 5.1.12.1.3, fig: 206, page: 209}
+    text_sha256: 5d20e3b1…
+```
+
+`doc`, `issued`, `at` 의 값과 `file_sha256` 의 앞 여덟 자리는 공개 PDF에서 확인한 것이다(9장). `text_sha256` 과 `applies` 는 예시다.
+
+**식별자 규칙.**
+
+1. 그래프의 식별자는 `<판본>#<조항>` 이다. 예: `NVME-BASE-2.1#SMART.CW.NDR`. 계약의 `HSI-RCV-010#order` 와 같은 꼴이다.
+2. 조항 부분은 **이름**으로 짓는다. log page·명령·feature의 이름, 필드의 약어, bit의 약어 순이다(`SMART.CW.NDR` = SMART / Health Information log page, Critical Warning 필드, NDR bit). 이름이 없는 bit는 위치로 쓴다(`SMART.CW.bits7-6`).
+3. **절 번호, Figure 번호, 쪽 번호는 모두 속성이다.** 쪽 번호만이 아니라 절과 Figure 번호도 판본마다 바뀐다. 같은 log page가 2.1에서는 5.1.12.1.3절 Figure 206(209쪽), 2.2에서는 5.1.12.1.3절 Figure 207(206쪽), 2.3에서는 5.2.12.1.3절 Figure 210(214쪽)이다. 번호로 식별자를 지으면 판본이 바뀔 때마다 모든 링크가 깨진다. 3.1의 "줄 범위는 속성으로만 둔다"와 같은 이유다.
+4. 한 필드 설명 안의 규범 문장은 따로 쪼갠다. `…#shall-1`, `…#should-1` 처럼 종류와 순번을 붙인다. shall(반드시), should(권장), may(허용)는 준수 판정이 다르기 때문이다. 순번은 그 판본 안에서만 뜻이 있다.
+5. 본문은 저장하지 않는다. 이유는 둘이다. 재배포 조건을 건드리지 않기 위해서(문서의 법적 고지는 비회원에게 열람과 인용만 허용하고 변형을 금한다), 그리고 hash만 있어도 "이 문장이 바뀌었는가"는 알 수 있기 때문이다. 사람이 본문을 보려면 `at` 을 따라 원문을 연다.
+
+**사내 요구사항을 한 단계 거친다.** 코드와 테스트는 표준 조항을 직접 가리키지 않는다. 사내 요구사항(`Clause`)이 `derives_from` 으로 표준 조항을 가리키고, 코드는 3.3의 태그로 그 요구사항을 가리킨다.
+
+```yaml
+# req/REQ-NVME-031.yaml (예시)
+id: REQ-NVME-031
+derives_from:
+  - NVME-BASE-2.1#SMART.CW.NDR
+  - NVME-BASE-2.1#SMART.CW.bits7-6
+support: yes                 # optional 기능이면 지원 여부를 여기 적는다
+reading: >                   # 해석의 기록
+  "significant media related errors" 의 기준을 표준은 정하지 않는다.
+  복구 실패 누적이 사내 기준을 넘으면 bit 2 를 세운다. bits 7:6 은 0.
+ac:
+  - id: AC-1
+    text: Critical Warning 바이트를 위 해석대로 만든다
+```
+
+```cpp
+// fw/smart/smart_log.cpp (예시)
+// @trace implements REQ-NVME-031#AC-1
+uint8_t smart::build_cw(const Health& h) { … }
+```
+
+한 단계를 두는 이유는 셋이다. 표준에는 선택 기능이 많아 "우리는 이것을 지원하는가"를 적을 자리가 필요하다. 표준의 문장에는 해석이 필요한 곳이 있고(위의 "significant"), 그 해석이 설계 결정이다. 그리고 판본이 바뀔 때 고칠 곳이 코드 전체가 아니라 요구사항 한 곳이 된다.
+
+**색인을 만드는 일.** 3.3의 분담 그대로다.
+
+| 일 | 누가 | 그래프에서 |
+|---|---|---|
+| 절 번호, 표·Figure 번호, 필드 표의 행 추출 | 도구 (PDF 추출) | `method: extract` |
+| shall·should·may 문장 분리, 식별자 부여, `applies` 초안 | 에이전트가 MR로 제안 | 확정 전에는 그래프에 넣지 않는다 |
+| 색인 MR의 승인 | 표준 담당 | 승인자가 색인 파일의 git 이력에 남는다 |
+
+**판본이 바뀔 때.** NVMe의 변경은 TP(Technical Proposal)와 ECN으로 나오고, 새 판본은 그 사이에 비준된 것을 포함한다(2.2 = 2.1 + TP4194 + ECN123. 2.3 = 2.2 + TP 5건 + ECN 6건. 머리말에서 확인). 그래서 TP와 ECN도 `Change` 노드로 둔다.
+
+1. 새 판본의 색인을 같은 방법으로 만든다(`spec/nvme-base-2.3/clauses.yaml`).
+2. 옛 조항과 새 조항을 `SUPERSEDES` 로 잇는다. 식별자와 본문 hash가 모두 같으면 도구가 `change: same` 으로 자동 연결한다.
+3. hash가 다르거나 대응하는 조항이 없으면 에이전트가 대응을 제안하고 표준 담당이 확인한다. 확정된 대응은 파일로 남는다.
+
+```yaml
+# spec/nvme-base-2.3/supersedes.yaml (대응 판정은 예시)
+from: NVME-BASE-2.1
+map:
+  - {new: SMART.CW.IPS,  old: SMART.CW.bits7-6, change: changed,
+     by: 표준 담당, why: bit 6 이 Reserved 에서 IPS 로 정의됨}
+  - {new: SMART.CW.bit7, old: SMART.CW.bits7-6, change: changed,
+     by: 표준 담당, why: Reserved 범위가 7:6 에서 7 로 줄어듦}
+```
+
+이 예는 실제 차이에서 왔다. Critical Warning 필드의 bit 7:6은 2.1에서 Reserved이고, 2.3에서는 bit 6이 Indeterminate Personality State(IPS)로 정의됐다(두 PDF에서 확인). NDR bit의 설명은 두 판본에서 글자가 같다.
+
+**질의 예.** 8장의 "스키마 팽창" 대응대로, 새 노드와 엣지로 답하는 질의를 함께 적는다.
+
+```cypher
+// ① 새 판본에서 바뀐 조항에 닿는 우리 코드와 테스트
+MATCH (n:StdClause {doc:'NVME-BASE-2.3'})
+      -[s:SUPERSEDES]->(o:StdClause)
+WHERE s.change <> 'same'
+MATCH (o)<-[:DERIVES_FROM]-(r:Clause)
+      <-[:IMPLEMENTS|VERIFIES]-(x)
+RETURN n.id, r.id, labels(x)[0] AS kind, x.name
+```
+
+```text
+graph@9f3c2e1 (예시) · 4행
+SMART.CW.IPS   REQ-NVME-031#AC-1  Func  smart::build_cw
+SMART.CW.IPS   REQ-NVME-031#AC-1  Test  smart_cw_test
+SMART.CW.bit7  REQ-NVME-031#AC-1  Func  smart::build_cw
+SMART.CW.bit7  REQ-NVME-031#AC-1  Test  smart_cw_test
+```
+
+```cypher
+// ② 준수 범위: mandatory 조항 중 사내 요구사항·구현·검증이 없는 것
+MATCH (c:StdClause {doc:'NVME-BASE-2.1', applies:'mandatory'})
+WHERE c.kind IN ['shall', 'field']
+OPTIONAL MATCH (c)<-[:DERIVES_FROM]-(r:Clause)
+OPTIONAL MATCH (r)<-[:IMPLEMENTS]-(i)
+OPTIONAL MATCH (r)<-[:VERIFIES]-(v)
+WITH c, count(DISTINCT r) AS reqs, count(DISTINCT i) AS impl,
+     count(DISTINCT v) AS checks
+WHERE reqs = 0 OR impl = 0 OR checks = 0
+RETURN c.id, reqs, impl, checks
+```
+
+```cypher
+// ③ 적합성 시험 항목에서 조항과 코드로 (시험 항목이 조항 id 를 싣는다는 가정)
+MATCH (t:Test {name:$item})-[:VERIFIES]->(r:Clause)
+      -[:DERIVES_FROM]->(c:StdClause)
+MATCH (r)<-[:IMPLEMENTS]-(x)
+RETURN c.id, r.id, x.name, x.path
+```
+
+얻는 것은 셋이다. 준수 범위(②), 시험 실패에서 조항과 코드로의 역추적(③), 그리고 해석의 기록(사내 요구사항의 `reading`)이다.
+
+**주의.**
+
+- **PDF 추출은 표와 비트 필드에서 깨지기 쉽다.** 필드 표는 행이 쪽을 넘고, bit 번호와 설명이 다른 줄에 놓인다(이번 확인에서도 그랬다). 문서 전체를 색인하려 하지 말고 우리 요구사항이 닿는 절부터 한다.
+- **hash는 정규화한 글자에 건다.** 줄바꿈과 공백을 정리해야 하고, 문장 안의 교차 참조 번호도 걸림돌이다. AMRO bit의 shall 문장은 2.1과 2.3에서 뜻이 같지만 끝의 참조가 "section 8.1.16.1"에서 "section 8.1.17.1"로 바뀌어 글자가 다르다. 참조 번호를 가리고 hash를 낼지, 그대로 두고 사람이 "뜻 같음"으로 확인할지 정해야 한다. 처음에는 후자가 안전하다.
+- **shall의 적용 조건.** 선택 기능 안의 shall은 그 기능을 지원할 때만 의무다. `applies` 는 도구가 정할 수 없고 표준 담당이 적는다. ②의 결과는 그 값만큼만 믿을 수 있다.
+- **보관과 색인화의 조건.** 표준 문서를 사내 저장소에 두고 색인으로 가공하는 것이 회원사 약관과 문서의 법적 고지에 맞는지는 법무가 확인한다. 본문을 싣지 않는 설계는 이 위험을 줄이려는 것이지 판단을 대신하지 않는다.
+- **같은 방식이 통하는 문서.** NAND 인터페이스 규격(ONFI)과 벤더 데이터시트, PCIe Base Specification, OCP의 데이터센터 NVMe SSD 요구서, 고객 요구서. 3.1에서 "PDF로 오는 고객 요구서는 절 번호와 개정판을 속성으로 싣는다"고 한 것의 일반형이다. 문서마다 배포 조건이 다르므로(NDA 문서 포함) 색인에 실을 수 있는 범위는 문서별로 정한다.
+- **그래프는 여전히 파생물이다.** 원본은 git의 색인 파일과 대응 파일이다. 표준 문서 자체는 그래프에도 git의 색인에도 들어가지 않는다.
 
 ## 4. 예제 한 줄기
 
@@ -491,6 +639,8 @@ trace.propose(from, relation, to, 근거)   # PROPOSED 만 생성
 | 그래프를 원본으로 착각 | 그래프에 직접 쓰는 길을 두지 않는다. 고치려면 Jira나 git을 고친다 |
 | 추출의 사각 | 매크로, 함수 포인터, generate 문, 간접 register 접근은 추출이 놓친다. 놓치는 종류를 문서에 적고 표본으로 잰다 |
 | 권한 | 그래프는 여러 고객 자료의 연결을 한곳에 모은다. 조회는 요청자의 권한으로 거른다 |
+| 외부 문서의 색인이 틀린다 | PDF 추출은 표와 비트 필드에서 깨진다. 닿는 절부터 색인하고, 색인 MR은 표준 담당이 승인한다. 판본마다 파일 hash를 고정한다 |
+| 외부 문서의 배포 조건 | 본문을 싣지 않고 위치와 hash만 둔다. 사내 보관과 색인화의 조건은 법무가 확인한다 (3.5) |
 
 **지키는 선.**
 
@@ -526,6 +676,11 @@ trace.propose(from, relation, to, 근거)   # PROPOSED 만 생성
 | 지식 그래프와 에이전트 기반 formal 검증 | https://arxiv.org/abs/2605.06434 | [S] 초록 요약만 |
 | LLM 기반 요구사항–코드 링크 복원(LiSSA 등) | ICSE 2025, arXiv 2604.22432 외 | [S]. 수치는 프로젝트 요약에서 옴 |
 | Atlassian Data Center 제품의 지원 종료 공지(2029-03-28) | https://www.atlassian.com/licensing/data-center-end-of-life | [S] |
+| NVMe Base Specification 2.1(2024-08-05): SMART / Health Information log page는 5.1.12.1.3절, Figure 206, 209쪽. Critical Warning의 bit 2 NDR, bit 3 AMRO(shall 문장 포함), bit 7:6 Reserved. 머리말의 포함 TP·ECN 목록과 법적 고지 | https://nvmexpress.org/wp-content/uploads/NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified.pdf | [원문] 2026-11-18. PDF를 글자로 뽑아 확인. 파일 sha256 앞 여덟 자리 4e31f826 |
+| NVMe Base Specification 2.2(2025-03-11): 같은 log page가 5.1.12.1.3절, Figure 207, 206쪽. 2.1 + TP4194 + ECN123 | https://nvmexpress.org/wp-content/uploads/NVM-Express-Base-Specification-Revision-2.2-2025.03.11-Ratified.pdf | [원문] 2026-11-18 |
+| NVMe Base Specification 2.3(2025-07-31): 같은 log page가 5.2.12.1.3절, Figure 210, 214쪽. Critical Warning bit 6이 IPS로 정의, bit 7만 Reserved. NDR 설명은 2.1과 같고 AMRO 문장은 참조 절 번호만 다름. 2.2 + TP4202, TP4153, TP4163, TP4199, TP8028 + ECN124, 126~130 | https://nvmexpress.org/wp-content/uploads/NVM-Express-Base-Specification-Revision-2.3-2025.08.01-Ratified.pdf | [원문] 2026-11-18 |
+| 현재 판본은 NVMe Base Specification 2.4(2026-08-04 발표, 규격 11종). TP4163의 제목은 Configurable Device Personality(선택 기능, 2.3에 포함) | https://nvmexpress.org/wp-content/uploads/NVM-Express-Revision-Changes-2026.07.30.pdf , https://nvmexpress.org/specifications/ | 변경 요약 문서 [원문]. 2.4 본문 PDF는 받지 못함 |
+| TP의 비준 절차(세 단계, 비준된 TP는 별도 문서로 관리되다가 다음 판본에 포함) | https://nvmexpress.org/?p=19339 | [S]. ECN의 정의는 이 글에 없음 |
 
 **확인하지 못한 것.**
 
@@ -535,12 +690,19 @@ trace.propose(from, relation, to, 근거)   # PROPOSED 만 생성
 - OpenFastTrace, StrictDoc, sphinx-codelinks가 SystemVerilog와 SystemRDL을 다루는지 확인하지 못했다. 그래서 스캐너를 직접 구축으로 적었다.
 - pyslang의 Python API로 assertion과 elaborated 계층을 어디까지 읽을 수 있는지 문서로 확인하지 못했다.
 - R4J REST API의 트리 조회 endpoint, Neo4j Community 판의 폐쇄망 설치 절차.
+- NVMe Base 2.4 본문에서 SMART / Health Information log page의 절·Figure 번호와 Critical Warning의 변화. 2.4의 PDF 주소를 찾지 못했다.
+- IPS bit가 TP4163에서 왔다는 것은 추정이다. bit 설명이 Configurable Device Personality 절을 가리키고 그 TP가 2.3에 포함됐다는 데서 읽었고, TP 원문은 보지 않았다.
+- 표준 문서를 사내에 보관하고 색인으로 가공해도 되는 조건(회원사 약관). 문서의 법적 고지만 읽었다.
+- 적합성 시험 항목이 조항 번호나 이름을 싣는 형식인지. 3.5의 질의 ③은 그렇다는 가정이다.
+- ONFI, PCIe, OCP 문서의 구조와 배포 조건은 이번에 확인하지 않았다. "같은 방식"은 [제안]이다.
 
 **팀 확인이 필요한 가정.**
 
 | 가정 | 확인할 것 |
 |---|---|
 | 요구사항과 계약이 YAML로 git에 있다 | 1편의 전환이 그 블록에서 되어 있는지. 안 되어 있으면 조항 ID를 문서 절 번호로 시작한다 |
+| 표준 조항마다 사내 요구사항을 한 단계 둔다 (3.5) | 지금 표준 준수를 어디에 적는지(준수 표, 기능 목록). 그것이 사내 요구사항의 자리가 될 수 있는지 |
+| 표준 문서를 사내 저장소에 두고 색인할 수 있다 | 법무. 회원사 약관과 문서별 배포 조건 |
 | FW는 생성된 접근 함수나 header 상수로 register에 접근한다 | 실제 접근 방식. 주소를 직접 계산하는 코드가 많으면 `READS`·`WRITES` 추출이 약해진다 |
 | FW 빌드가 compile DB를 낼 수 있다 | 빌드 시스템과 컴파일러 |
 | RTL을 오픈소스 프런트엔드나 EDA 도구로 elaboration해 계층과 assertion 목록을 낼 수 있다 | 벤더 고유 구문, 암호화 IP, 팀의 EDA 도구가 주는 출력 |
@@ -558,6 +720,10 @@ trace.propose(from, relation, to, 근거)   # PROPOSED 만 생성
 | `BUG-2317` | GC 구간에서 `HOST_BURST` 가 0으로 덮여 host P99.99 초과 |
 | `MR !2334`, `MR !2341` | `BUG-2317` 수정, 태그 제안 |
 | `PRIOQ_CFG` (`HOST_BURST`, `GC_BOOST`) | `rcv_ctrl` 의 우선 큐 설정 register, 0x60 |
+| `NVME-BASE-2.1`, `NVME-BASE-2.3` | 표준 판본 노드(`Spec`). 판본 표기는 실제, 식별자 꼴은 제안 |
+| `SMART.CW.NDR`, `SMART.CW.AMRO#shall-1`, `SMART.CW.bits7-6`, `SMART.CW.IPS`, `SMART.CW.bit7` | 표준 조항 식별자(`StdClause`). 필드와 bit의 이름은 실제, 식별자 꼴은 제안 |
+| `REQ-NVME-031` | 사내 요구사항(예시). Critical Warning 바이트의 해석 |
+| `smart::build_cw`, `smart_cw_test` | 그 요구사항의 구현과 검사(예시) |
 | `a_full_gc_bp` | `HSI-RCV-010#full` 의 assertion (실행 증거 없음) |
 | `rcv::policy_init`, `rcv::stats_dump`, `gc::throttle_update`, `nand::retry_cfg_apply`, `rcv_ctrl::set_host_burst` | FW 함수와 header 심볼 |
 | `trace-agent` | 링크 후보를 제안하는 에이전트 계정 |
