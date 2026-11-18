@@ -16,6 +16,8 @@ import { S14 } from "./S14";
 import { S15 } from "./S15";
 import { S16 } from "./S16";
 import { S17 } from "./S17";
+import { S18 } from "./S18";
+import { S19 } from "./S19";
 
 // 씬 id → 씬 컴포넌트. 여기에 없는 씬은 임시 화면(DraftScene)으로 나온다.
 export const scenes: SceneMap = {
@@ -36,4 +38,6 @@ export const scenes: SceneMap = {
   s15: S15,
   s16: S16,
   s17: S17,
+  s18: S18,
+  s19: S19,
 };

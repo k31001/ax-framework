@@ -1,53 +1,44 @@
 import React from "react";
 import { useCurrentFrame } from "remotion";
-import { DUR, ease, progress } from "../../../video/anim";
-import { CheckIcon } from "../../../video/components/Icons";
+import { DUR, ease, lerp, progress } from "../../../video/anim";
+import { Trace } from "../../../video/components/Trace";
 import { color, fullSvg, mono, sans, stroke, withAlpha } from "../../../video/theme";
 import { CodePanel, ShiftSheet } from "../../lib";
-import { TraceGraph, nodeRect, place } from "./graph";
-import type { GEdge, GNode } from "./graph";
-import { Note, T, Table, useCues } from "./kitB";
+import { Box, Cyl, T, Table, useCues } from "./kitB";
 
-// s12 효과 ② 빈틈 검출.
-// 오른쪽: 계약 HSI-RCV-010 의 조항 넷. 조항마다 검사 → Jira Test → PASS 가 이어지는지 본다.
-//   (조항을 가로로 펴면 #order 의 검사 셋이 들어가지 않아, 조항을 세로로 놓고 사슬을 오른쪽으로 폈다.)
-// 왼쪽: 질의와 결과 표. 위에는 Jira(R4J)의 채워진 칸 한 줄.
-// 끝: s5 의 그래프로 돌아가 조항에 닿지 않는 함수 하나를 찾는다.
+// s12 그래프 DB 선택.
+// 왼쪽: 원통(그래프 DB · Neo4j 기본안) → 엣지 하나의 확대(속성 그래프) → Cypher 한 줄.
+// 오른쪽: 규모 표 → 판 비교 → 사내 MCP 서버를 거치는 조회.
+// 끝: 원통이 작아지고 '스키마'와 '추출 파이프라인'이 커진다.
 
-const V = { x: 916, y: 172, scale: 0.698 } as const;
-const ROW = { host: 150, gc: 250, test: 350, full: 530, bound: 700, fw: 870 } as const;
-
-const clause = (id: string, label: string, y: number): GNode => ({ id, kind: "clause", label, x: 120, y, w: 200, h: 52, px: 28 });
-const NODES: GNode[] = [
-  clause("c_order", "#order", ROW.gc),
-  clause("c_full", "#full", ROW.full),
-  clause("c_bound", "#bound", ROW.bound),
-  clause("c_fw", "#fw_role", ROW.fw),
-  { id: "k_host", kind: "assertion", label: "a_host_first", x: 500, y: ROW.host, w: 256, h: 46 },
-  { id: "k_gc", kind: "assertion", label: "a_gc_no_starve", x: 500, y: ROW.gc, w: 256, h: 46 },
-  { id: "k_test", kind: "test", label: "prio_q_ratio_test", x: 386, y: ROW.test, w: 28, h: 28 },
-  { id: "k_full", kind: "assertion", label: "a_full_gc_bp", x: 500, y: ROW.full, w: 256, h: 46 },
-  ...(["host", "gc", "test"] as const).flatMap((r, i): GNode[] => [
-    { id: `j${i}`, kind: "issue", label: `VER-54${i + 1}`, x: 880, y: ROW[r], w: 160, h: 42 },
-    { id: `e${i}`, kind: "exec", label: "PASS @ VER-631", x: 1085, y: ROW[r], w: 28, h: 28, px: 22, status: "pass" },
-  ]),
+// 원통 안의 그래프 축소판 (0~1 좌표)
+const DOTS: [number, number, string][] = [
+  [0.5, 0.1, color.human],
+  [0.5, 0.34, color.human],
+  [0.5, 0.6, color.agent],
+  [0.2, 0.76, color.agent],
+  [0.34, 0.92, color.agent],
+  [0.74, 0.74, color.agent],
+  [0.84, 0.9, color.agent],
+  [0.1, 0.2, color.ink],
+  [0.1, 0.44, color.ink],
 ];
-const EDGES: GEdge[] = [
-  { id: "v_host", from: "k_host", to: "c_order", rel: null, origin: "tag", pts: [[372, ROW.host], [250, ROW.host], [250, ROW.gc], [220, ROW.gc]] },
-  { id: "v_gc", from: "k_gc", to: "c_order", rel: "verifies", origin: "tag", pts: [[372, ROW.gc], [220, ROW.gc]], labelAt: [316, ROW.gc] },
-  { id: "v_test", from: "k_test", to: "c_order", rel: null, origin: "tag", pts: [[372, ROW.test], [250, ROW.test], [250, ROW.gc], [220, ROW.gc]] },
-  { id: "v_full", from: "k_full", to: "c_full", rel: "verifies", origin: "tag", pts: [[372, ROW.full], [220, ROW.full]], labelAt: [300, ROW.full] },
-  ...(["host", "gc", "test"] as const).flatMap((r, i): GEdge[] => [
-    { id: `t${i}`, from: `j${i}`, to: i === 2 ? "k_test" : i === 0 ? "k_host" : "k_gc", rel: "tracks", origin: "extract", pts: [[800, ROW[r]], [i === 2 ? 678 : 628, ROW[r]]], labelAt: [i === 2 ? 740 : 714, ROW[r]] },
-    { id: `r${i}`, from: `e${i}`, to: `j${i}`, rel: "result", origin: "extract", pts: [[1071, ROW[r]], [960, ROW[r]]], labelAt: [1014, ROW[r]] },
-  ]),
+const LINKS: [number, number, string][] = [
+  [1, 0, color.human],
+  [2, 1, color.human],
+  [3, 1, color.human],
+  [4, 1, color.human],
+  [3, 2, color.agent],
+  [5, 2, color.agent],
+  [6, 2, color.agent],
+  [7, 0, color.agent],
+  [8, 1, color.agent],
+  [8, 7, color.agent],
 ];
-const CHECKS = ["k_host", "k_gc", "k_test", "k_full"];
-const VERIFIES = ["v_host", "v_gc", "v_test", "v_full"];
-const ORDER_CHAIN = ["c_order", "k_host", "k_gc", "k_test", "v_host", "v_gc", "v_test", "j0", "j1", "j2", "t0", "t1", "t2", "r0", "r1", "r2", "e0", "e1", "e2"];
+const PICK = 5; // 확대할 엣지: LINKS[5]
 
-const LX = 96;
-const LW = 800;
+const RX = 980;
+const RW = 844;
 
 export const S12: React.FC = () => {
   const frame = useCurrentFrame();
@@ -59,188 +50,143 @@ export const S12: React.FC = () => {
   const t5 = cue("s12.5");
   const t6 = cue("s12.6");
 
-  const ckAt = within("s12.2", 0.3);
-  const evAt = within("s12.2", 0.62);
-  const r4jAt = t3 + 4;
-  const boundAt = within("s12.4", 0.45);
-  const fullAt = t5 + 10;
-  const neverAt = within("s12.5", 0.5);
-  const orderAt = within("s12.5", 0.8);
-  const leftOut = t6 - 8;
-  const g1 = 1 - progress(frame, t6 - 4, 12, ease.in);
-  const g2 = progress(frame, t6 + 6, 14);
-  const orphanAt = t6 + 18;
-  const whereAt = within("s12.6", 0.4);
-  const rowAt = within("s12.6", 0.62);
+  // 원통: 큰 자리 → 작은 자리
+  const m = progress(frame, t6, DUR.move, ease.inOut);
+  const cyl = { cx: lerp(250, 855, m), top: lerp(190, 336, m), w: lerp(300, 110, m), h: lerp(310, 108, m) };
+  const cylIn = progress(frame, t1, DUR.draw);
+  const inner = progress(frame, t1 + 10, 20) * (1 - m);
+  const gx = (u: number): number => cyl.cx - cyl.w * 0.36 + u * cyl.w * 0.72;
+  const gy = (v: number): number => cyl.top + 44 + v * (cyl.h - 70);
+  const leftOut = t6 - 2;
+  const rightDim = progress(frame, t6, 14, ease.inOut);
 
-  const appear: Record<string, number> = {};
-  ["c_order", "c_full", "c_bound", "c_fw"].forEach((id, i) => (appear[id] = t1 + 12 + i * 6));
-  CHECKS.forEach((id, i) => (appear[id] = ckAt + i * 4));
-  VERIFIES.forEach((id, i) => (appear[id] = ckAt + 8 + i * 4));
-  [0, 1, 2].forEach((i) => {
-    appear[`j${i}`] = evAt + i * 4;
-    appear[`t${i}`] = evAt + 6 + i * 4;
-    appear[`e${i}`] = evAt + 14 + i * 4;
-    appear[`r${i}`] = evAt + 18 + i * 4;
-  });
+  // 엣지 확대
+  const z = progress(frame, t2, DUR.draw) * (1 - progress(frame, leftOut, DUR.exit, ease.in));
+  const tagAt = within("s12.2", 0.42);
+  const tagP = progress(frame, tagAt, DUR.enter) * (1 - progress(frame, leftOut, DUR.exit, ease.in));
+  const pick = LINKS[PICK];
+  const px0 = (gx(DOTS[pick[0]][0]) + gx(DOTS[pick[1]][0])) / 2;
+  const py0 = (gy(DOTS[pick[0]][1]) + gy(DOTS[pick[1]][1])) / 2;
 
-  const at = (gx: number, gy: number) => place(V, gx, gy);
-  const s = V.scale;
-  const bound = progress(frame, boundAt + 4, DUR.enter) * g1;
-  const full = progress(frame, fullAt + 6, DUR.enter) * g1;
-  const fw = progress(frame, t4 + 10, DUR.enter) * g1;
-  const [hx, hy] = at(20, 78);
-  const [bcx, bcy] = at(400, ROW.bound);
-  const [fcx, fcy] = at(400, ROW.fw);
-  const [slx, sly] = at(800, ROW.full - 21);
-  const [pcx, pcy] = at(1085, ROW.full);
-  const gc = nodeRect("throttle_update");
-  const [ox, oy] = place(V, gc.x, gc.y);
-  const orphan = progress(frame, orphanAt, 12);
+  // 질의가 타자되듯
+  const Q = ["MATCH (f:Func)-[w:WRITES]->(x:Field)", "RETURN f.name, w.via, x.name"];
+  const typed = Math.max(0, Math.floor((frame - t3 - 8) * 1.1));
+  const q0 = Q[0].slice(0, typed);
+  const q1 = Q[1].slice(0, Math.max(0, typed - Q[0].length));
 
-  const cell = (text: string, w: number, bold = false): React.ReactNode => (
-    <div style={{ width: w, height: "100%", boxSizing: "border-box", borderLeft: `${stroke.hair}px solid ${color.line}`, display: "flex", alignItems: "center", paddingLeft: 18, ...sans(30, bold ? 700 : 500), whiteSpace: "nowrap" }}>{text}</div>
-  );
+  const sumAt = within("s12.4", 0.3);
+  const oneAt = within("s12.4", 0.68);
+  const rbacAt = within("s12.5", 0.18);
+  const mcpAt = within("s12.5", 0.55);
+  const mcp = progress(frame, mcpAt, DUR.enter);
+
+  const schemaAt = within("s12.6", 0.3);
+  const pipeAt = within("s12.6", 0.46);
+  const fileAt = within("s12.6", 0.66);
 
   return (
     <ShiftSheet>
-      <T x={LX} y={76} text="효과 ② 빈틈 검출" px={40} weight={800} at={t1} />
-
-      {/* ── Jira(R4J): 이슈 수준에서는 채워진 칸 ── */}
-      <div style={{ position: "absolute", left: 470, top: 74, height: 56, boxSizing: "border-box", border: `${stroke.thin}px solid ${color.inkSoft}`, backgroundColor: withAlpha(color.panel, 0.92), display: "flex", alignItems: "center", opacity: progress(frame, r4jAt, DUR.enter), translate: `0px ${(1 - progress(frame, r4jAt, DUR.enter)) * 8}px` }}>
-        <div style={{ width: 324, paddingLeft: 18, boxSizing: "border-box", ...mono(22, 700), color: color.inkSoft }}>R4J · Coverage View</div>
-        {cell("REQ-207 read 지연 보장", 350)}
-        {cell("FEAT-338 우선 큐", 270)}
-        <div style={{ width: 100, height: "100%", boxSizing: "border-box", borderLeft: `${stroke.hair}px solid ${color.line}`, backgroundColor: withAlpha(color.agent, 0.14), display: "flex", alignItems: "center", justifyContent: "center", gap: 8, opacity: progress(frame, within("s12.3", 0.5), 12) }}>
-          <div style={{ ...mono(32, 700), letterSpacing: "0", color: color.agent }}>3</div>
-          <CheckIcon size={28} color={color.agent} />
-        </div>
+      {/* ── 원통 ── */}
+      <T x={100} y={96} text="그래프 DB" px={44} weight={700} at={t1} out={leftOut} />
+      <svg {...fullSvg}>
+        {/* 갈아 끼울 수 있는 자리 */}
+        <rect x={782} y={300} width={146} height={176} fill="none" stroke={color.lineStrong} strokeWidth={stroke.thin} strokeDasharray="8 7" opacity={progress(frame, fileAt, 14)} />
+        <Cyl {...cyl} p={cylIn} />
+        <g opacity={inner}>
+          {LINKS.map(([a, b, c], i) => (
+            <line key={i} x1={gx(DOTS[a][0])} y1={gy(DOTS[a][1])} x2={gx(DOTS[b][0])} y2={gy(DOTS[b][1])} stroke={i === PICK && z > 0 ? color.ink : c} strokeWidth={i === PICK && z > 0 ? stroke.bold : c === color.human ? stroke.trace : stroke.hair} opacity={i === PICK ? 1 : 0.8} />
+          ))}
+          {DOTS.map(([u, v, c], i) => (
+            <rect key={i} x={gx(u) - 9} y={gy(v) - 7} width={18} height={14} fill={color.bg} stroke={c} strokeWidth={stroke.thin} rx={c === color.ink ? 7 : 0} />
+          ))}
+        </g>
+        {/* 확대: 엣지에서 확대 창으로 */}
+        <g opacity={z}>
+          <path d={`M ${px0} ${py0} L 470 270 M ${px0} ${py0} L 470 410`} stroke={color.lineStrong} strokeWidth={stroke.hair} strokeDasharray="5 6" fill="none" />
+          <rect x={470} y={250} width={460} height={180} fill={withAlpha(color.panel, 0.92)} stroke={color.line} strokeWidth={stroke.thin} />
+          <rect x={492} y={352} width={84} height={50} fill={color.bg} stroke={color.agent} strokeWidth={stroke.thin} />
+          <rect x={824} y={352} width={84} height={50} fill={color.bg} stroke={color.agent} strokeWidth={stroke.thin} />
+          <Trace pts={[[576, 377], [824, 377]]} stroke={color.ink} width={stroke.bold} arrow progress={z} />
+        </g>
+        <line x1={700} y1={318} x2={700} y2={318 + 52 * tagP} stroke={color.human} strokeWidth={stroke.thin} opacity={tagP} />
+        {/* MCP 서버를 거치는 조회 */}
+        <g opacity={1 - 0.7 * rightDim}>
+          <Trace pts={[[RX + 236, 826], [RX + 290, 826]]} stroke={color.inkSoft} arrow at={mcpAt + 6} />
+          <Trace pts={[[RX + 660, 826], [RX + 716, 826]]} stroke={color.inkSoft} arrow at={mcpAt + 12} />
+          <Cyl cx={RX + 772} top={794} w={92} h={62} p={progress(frame, mcpAt + 14, 12)} />
+        </g>
+        {/* 끝: 스키마 · 파이프라인 → 중립 파일 → 원통 */}
+        <Trace pts={[[286, 310], [286, 336]]} stroke={color.human} at={pipeAt + 4} />
+        <Trace pts={[[476, 392], [528, 392]]} stroke={color.inkSoft} arrow at={fileAt} />
+        <Trace pts={[[760, 392], [798, 392]]} stroke={color.inkSoft} arrow at={fileAt + 8} />
+      </svg>
+      <T x={250} y={546} text="Neo4j · 기본안" px={36} weight={700} c={color.agent} align="center" at={within("s12.1", 0.5)} out={leftOut} />
+      <T x={470} y={196} text="속성 그래프 · 엣지에도 속성" px={30} weight={700} at={within("s12.2", 0.1)} out={leftOut} />
+      <div style={{ position: "absolute", left: 480, top: 270, width: 440, height: 46, boxSizing: "border-box", border: `${stroke.thin}px solid ${color.human}`, backgroundColor: withAlpha(color.human, 0.1), display: "flex", alignItems: "center", justifyContent: "center", ...mono(24, 700), letterSpacing: "0", color: color.human, opacity: tagP, translate: `0px ${(1 - tagP) * 8}px` }}>
+        {"{method, commit, approved_by}"}
       </div>
 
-      {/* ── 조항별 사슬 ── */}
-      <TraceGraph
-        {...V}
-        show={[]}
-        bands={false}
-        opacity={g1}
-        extraNodes={NODES}
-        extraEdges={EDGES}
-        appear={appear}
-        hi={[
-          { ids: ["j0", "j1", "j2"], at: within("s12.3", 0.45), out: t4 - 4, ring: true },
-          { ids: ["c_bound"], color: color.problem, at: boundAt, ring: true },
-          { ids: ["c_full"], color: color.problem, at: fullAt, ring: true },
-          { ids: ORDER_CHAIN, at: orderAt },
-          { ids: ["e0", "e1", "e2"], color: color.agent, at: orderAt, fill: true },
-        ]}
-        dim={[{ ids: ORDER_CHAIN, at: boundAt, out: orderAt, to: 0.5 }]}
-      />
-      <div style={{ position: "absolute", left: hx, top: hy - 22, ...mono(30, 700), letterSpacing: "0", color: color.human, opacity: progress(frame, t1 + 8, 12) * g1 }}>HSI-RCV-010</div>
-      <svg {...fullSvg}>
-        {/* #bound: 검사가 없다 */}
-        <g opacity={bound} fill="none" stroke={color.problem} strokeWidth={stroke.thin} strokeDasharray="7 6">
-          <line x1={at(220, 0)[0]} y1={bcy} x2={bcx - 22} y2={bcy} />
-          <circle cx={bcx} cy={bcy} r={20} />
-        </g>
-        {/* #fw_role: 구현 태그만 */}
-        <g opacity={fw * 0.8} fill="none" stroke={color.lineStrong} strokeWidth={stroke.thin} strokeDasharray="7 6">
-          <line x1={at(220, 0)[0]} y1={fcy} x2={fcx - 22} y2={fcy} />
-          <circle cx={fcx} cy={fcy} r={20} />
-        </g>
-        {/* #full: Jira Test 와 PASS 의 자리가 비어 있다 */}
-        <g opacity={full} fill="none" stroke={color.problem} strokeWidth={stroke.thin} strokeDasharray="7 6">
-          <line x1={at(628, 0)[0]} y1={pcy} x2={slx} y2={pcy} />
-          <rect x={slx} y={sly} width={160 * s} height={42 * s} rx={21 * s} />
-          <line x1={slx + 160 * s} y1={pcy} x2={pcx - 14} y2={pcy} />
-          <circle cx={pcx} cy={pcy} r={14} />
-        </g>
-        {/* 고아 코드 */}
-        <rect x={ox - 8} y={oy - 8} width={gc.w * s + 16} height={gc.h * s + 16} fill="none" stroke={color.problem} strokeWidth={stroke.trace} strokeDasharray="8 6" opacity={orphan} />
-      </svg>
-      <Note x={bcx + 34} y={bcy - 22} h={44} text="검사 없음" c={color.problem} border={false} weight={700} p={bound} />
-      <Note x={1824} y={at(0, ROW.full + 40)[1]} h={42} align="right" text="Xray Test 미등록 · 실행된 적 없음" c={color.problem} p={progress(frame, neverAt, DUR.enter) * g1} />
+      {/* ── Cypher ── */}
+      <CodePanel x={96} y={612} w={834} title="CYPHER" px={30} at={t3} out={leftOut} owner="none" lines={[{ text: q0, at: t3 }, { text: q1, at: t3, tone: "dim" }]} />
 
-      {/* ── s5 의 그래프: 조항에 닿지 않는 코드 ── */}
-      {g2 > 0 ? (
-        <TraceGraph
-          {...V}
-          opacity={g2}
-          dim={[{ to: 0.32 }]}
-          hi={[
-            { ids: ["throttle_update"], color: color.problem, at: orphanAt },
-            { ids: ["writes_gc", "field", "impl_field", "order"], at: whereAt - 6 },
-          ]}
-          walks={[{ at: whereAt - 10, steps: [["writes_gc"], ["impl_field"]], gap: 22, out: whereAt + 50 }]}
-        />
-      ) : null}
-
-      {/* ── 질의 1: 조항마다 검사와 통과 증거를 센다 ── */}
-      <CodePanel
-        x={LX}
-        y={172}
-        w={LW}
-        title="CYPHER"
-        px={26}
-        at={t2}
-        out={leftOut}
-        lines={[
-          "MATCH (c:Clause {doc:'HSI-RCV-010'})",
-          { text: "OPTIONAL MATCH (c)<-[:VERIFIES]-(v)", mark: ckAt, unmark: evAt, markTone: "human" },
-          { text: "OPTIONAL MATCH (v)<-[:TRACKS]-(t:Issue)", mark: evAt, unmark: t3 },
-          { text: "    <-[:RESULT {status:'PASS'}]-(:Exec)", mark: evAt, unmark: t3 },
-          "RETURN c.id AS clause,",
-          "       count(DISTINCT v) AS checks,",
-          "       count(DISTINCT t) AS passed",
-        ]}
-      />
+      {/* ── 규모 ── */}
       <Table
-        x={LX}
-        y={541}
-        w={LW}
-        title="graph@9f3c2e1"
-        titlePx={22}
+        x={RX}
+        y={96}
+        w={RW}
+        title="우리 그래프의 규모 (자릿수 가정)"
         at={t4}
-        out={leftOut}
         rowH={44}
-        owner="agent"
-        cols={[{ w: 336, code: true }, { w: 112, code: true }, { w: 112, code: true }, { w: 210 }]}
-        head={["clause", "checks", "passed", ""]}
+        dim={Math.max(progress(frame, t5, 14, ease.inOut) * 0.6, rightDim)}
+        cols={[{ w: 320 }, { w: 480 }]}
         rows={[
-          { cells: ["HSI-RCV-010#bound", "0", "0", { t: "← 검증 없음", c: color.problem, weight: 700 }], at: t4 + 8, mark: boundAt, markC: color.problem },
-          { cells: ["HSI-RCV-010#full", "1", "0", { t: "← 실행 증거 없음", c: frame >= fullAt ? color.problem : color.inkDim, weight: 700 }], at: t4 + 12, mark: fullAt, markC: color.problem },
-          { cells: ["HSI-RCV-010#fw_role", "0", "0", { t: "← 구현 태그만", c: color.inkDim }], at: t4 + 16, c: color.inkSoft },
-          { cells: ["HSI-RCV-010#order", "3", "3", ""], at: t4 + 20, mark: orderAt },
+          { cells: ["Jira 이슈", "1만 ~ 10만"], at: t4 + 8, c: color.inkSoft },
+          { cells: ["register · field", "1만 ~ 10만"], at: t4 + 13, c: color.inkSoft },
+          { cells: ["RTL module · port", "10만 안팎"], at: t4 + 18, c: color.inkSoft },
+          { cells: ["FW 함수 · 심볼", "1만 ~ 10만"], at: t4 + 23, c: color.inkSoft },
+          { cells: [{ t: "합계", weight: 700 }, { t: "노드 10만 ~ 100만 · 엣지 그 10배", weight: 700 }], at: sumAt, mark: sumAt },
+          { cells: ["", { t: "→ 서버 한 대", c: color.agent, weight: 700 }], at: oneAt },
         ]}
       />
 
-      {/* ── 질의 2: 어느 조항에도 닿지 않는 함수 ── */}
-      <CodePanel
-        x={LX}
-        y={172}
-        w={LW}
-        title="CYPHER"
-        px={26}
-        at={t6}
-        lines={[
-          "MATCH (f:Func)-[w:WRITES]->(:Field)",
-          "      -[:IMPLEMENTS]->(c:Clause)",
-          { text: "WHERE NOT (f)-[:IMPLEMENTS]->(:Clause)", mark: whereAt, markTone: "problem" },
-          "RETURN f.name, f.owner, w.via, c.id",
+      {/* ── 판 비교 ── */}
+      <Table
+        x={RX}
+        y={456}
+        w={RW}
+        title="Neo4j (2026-11 확인)"
+        at={t5}
+        rowH={44}
+        dim={rightDim}
+        cols={[{ w: 340 }, { w: 230 }, { w: 230 }]}
+        head={["", "Community", "Enterprise"]}
+        rows={[
+          { cells: ["라이선스", "GPLv3", "상용"], at: t5 + 8, c: color.inkSoft },
+          { cells: ["vector 색인", "있음", "있음"], at: t5 + 12, c: color.inkSoft },
+          { cells: [{ t: "RBAC", weight: 700 }, { t: "없음", c: color.problem, weight: 700, u: color.problem }, "있음"], at: t5 + 16, mark: rbacAt, markC: color.problem },
+          { cells: ["online backup · 군집", "없음", "있음"], at: t5 + 20, c: color.inkSoft },
         ]}
       />
-      <Table
-        x={LX}
-        y={430}
-        w={LW}
-        title="graph@9f3c2e1"
-        titlePx={22}
-        at={rowAt}
-        px={28}
-        rowH={46}
-        owner="agent"
-        cols={[{ w: 314, code: true }, { w: 100, code: true }, { w: 66, code: true }, { w: 280, code: true }]}
-        rows={[{ cells: [{ t: "gc::throttle_update", c: color.problem, weight: 700 }, "FW GC", "reg", "HSI-RCV-010#order"], at: rowAt + 6, mark: rowAt + 6, markC: color.problem }]}
-      />
+      <Box x={RX} y={786} w={236} h={80} c={color.inkSoft} p={mcp * (1 - 0.7 * rightDim)}>
+        <div style={{ ...sans(30, 600), whiteSpace: "nowrap" }}>사람 · 에이전트</div>
+      </Box>
+      <Box x={RX + 296} y={774} w={364} h={104} c={color.human} fill={withAlpha(color.human, 0.07)} p={progress(frame, mcpAt + 6, DUR.enter) * (1 - 0.7 * rightDim)} style={{ flexDirection: "column", gap: 2 }}>
+        <div style={{ ...sans(30, 700), whiteSpace: "nowrap" }}>사내 MCP 서버</div>
+        <div style={{ ...sans(30, 500), whiteSpace: "nowrap", color: color.human }}>정해진 질의 · 권한 필터</div>
+      </Box>
+
+      {/* ── 실제 일: 스키마와 추출 파이프라인 ── */}
+      <Box x={96} y={200} w={380} h={110} c={color.human} bw={stroke.bold} fill={withAlpha(color.human, 0.08)} p={progress(frame, schemaAt, DUR.enter)}>
+        <div style={{ ...sans(44, 700), whiteSpace: "nowrap" }}>스키마</div>
+      </Box>
+      <Box x={96} y={336} w={380} h={112} c={color.human} bw={stroke.bold} fill={withAlpha(color.human, 0.08)} p={progress(frame, pipeAt, DUR.enter)}>
+        <div style={{ ...sans(44, 700), whiteSpace: "nowrap" }}>추출 파이프라인</div>
+      </Box>
+      <Box x={530} y={336} w={230} h={112} c={color.inkSoft} p={progress(frame, fileAt + 4, DUR.enter)} style={{ flexDirection: "column", gap: 2 }}>
+        <div style={{ ...sans(30, 700), whiteSpace: "nowrap" }}>중립 파일</div>
+        <div style={{ ...sans(30, 500), whiteSpace: "nowrap", color: color.inkSoft }}>노드 · 엣지 목록</div>
+      </Box>
+      <T x={930} y={496} text="Memgraph · Apache AGE · RDF · 파일" px={30} weight={500} c={color.inkDim} align="right" at={fileAt + 14} />
     </ShiftSheet>
   );
 };

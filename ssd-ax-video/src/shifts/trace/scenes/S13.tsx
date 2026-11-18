@@ -1,69 +1,29 @@
 import React from "react";
 import { useCurrentFrame } from "remotion";
-import { ease, lerp, progress } from "../../../video/anim";
-import { color, fullSvg, stroke, withAlpha } from "../../../video/theme";
+import { DUR, ease, lerp, progress } from "../../../video/anim";
+import { HumanIcon } from "../../../video/components/Icons";
+import { Trace } from "../../../video/components/Trace";
+import { color, fullSvg, sans, stroke, withAlpha } from "../../../video/theme";
 import { CodePanel, ShiftSheet } from "../../lib";
-import { TraceGraph, nodeRect, place } from "./graph";
-import type { GEdge, GNode, GraphView } from "./graph";
-import { Box, Grid, T, useCues, vis } from "./kitC";
+import { JIRA_EDGES, TraceGraph, place } from "./graph";
+import { Box, Note, T, Table, useCues } from "./kitB";
 
-// S13 효과 ③ 버그 역추적: 실패 → 버그 → field(값 0) → 조항 → 쓰는 함수 셋 → 원인 함수 하나 → 같은 형태의 코드 한 곳 더.
+// s13 효과 ① 변경 영향 분석 (이 편의 정점).
+// 1) 질의(왼쪽)가 그래프(오른쪽) 위를 걸어간다: #order → 구현·검증 5개 → register 접근 4개.
+// 2) 질의가 결과 표로 바뀐다(9행). GC 담당의 태그 없는 함수가 표와 그래프에서 함께 켜진다. 위쪽 조항 셋.
+// 3) 그래프가 물러나고 답 둘이 나란히 선다: Jira 의 답(이슈 4건) 대 그래프의 답(9행), 아래에 대비 표.
 
-const TX = {
-  title: "효과 ③ 버그 역추적",
-  bug: [
-    "BUG-2317  버그   상태: 초안   triage-agent",
-    "GC 구간에서 host P99.99 2.4 ms (예시)",
-    "발견   emulation · VER-530 FAIL @ VER-640",
-    "signature  prio_q / soft 큐 대기 급증",
-    "           PRIOQ_CFG.HOST_BURST = 0",
-  ],
-  query: [
-    "MATCH (b:Issue {key:'BUG-2317'})",
-    "      -[:OBSERVED_AT]->(f:Field)",
-    "MATCH (f)-[:IMPLEMENTS]->(c:Clause)",
-    "MATCH (fn:Func)-[x:READS|WRITES]->(f)",
-    "RETURN c.id, type(x) AS access, x.via,",
-    "       fn.name, fn.owner",
-  ],
-  head: ["access", "via", "func", "owner", ""],
-  rows: [
-    ["WRITES", "accessor", "rcv::policy_init", "FW 복구", ""],
-    ["WRITES", "reg", "gc::throttle_update", "FW GC", "←"],
-    ["READS", "accessor", "rcv::stats_dump", "FW 복구", ""],
-  ],
-  code: ["bus.write(PRIOQ_CFG,", "          (backlog > kHigh) << 8);", "// GC_BOOST 를 켜면서 HOST_BURST 를 0 으로 덮음"],
-  noteA: "host_cnt < 0 은 성립 안 함 · 조건을 못 만난 통과",
-  noteB: "값의 범위 없음 · 계약의 빈칸",
-  query3: [
-    "MATCH (fn:Func)-[:WRITES {via:'reg'}]->",
-    "      (f:Field)<-[:HAS_FIELD]-(r:Reg)",
-    "WITH fn, r, count(f) AS fields",
-    "     WHERE fields > 1",
-    "RETURN fn.name, r.name, fields",
-  ],
-  rows3: [
-    ["gc::throttle_update", "PRIOQ_CFG", "2"],
-    ["nand::retry_cfg_apply", "RETRY_CFG", "3"],
-  ],
-  notYet: "아직 실패 안 함",
-  fix: "MR !2334 · 계약에 범위 1~8 · FW는 접근 함수 사용 · 태그 추가",
-} as const;
+const V = { x: 868, y: 150, scale: 0.735 } as const;
+const HOP1 = ["impl_field", "impl_prio_q", "ver_host", "ver_gc", "ver_test"];
+const HOP1_NODES = ["field", "prio_q", "a_host_first", "a_gc_no_starve", "ratio_test"];
+const HOP2 = ["reads_prio_q", "gen_shb", "writes_policy", "writes_gc", "reads_stats"];
+const HOP2_NODES = ["set_host_burst", "policy_init", "throttle_update", "stats_dump"];
+const GAP = 36;
+// 결과 표가 덮는 자리(JIRA 띠)의 노드와 엣지
+const JIRA_SIDE = ["REQ-207", "FEAT-338", "VER-541", "VER-542", "VER-543", "BUG-2317", "pass", ...JIRA_EDGES];
 
-const VIEW: GraphView = { x: 800, y: 104, scale: 0.8 };
-const LX = 96;
-const LW = 688;
-const TOP = 150;
-
-const VIA_REG = "writes {via:'reg'}";
-const EXTRA_NODES: GNode[] = [
-  { id: "retry_apply", kind: "func", label: "nand::retry_cfg_apply", x: 1118, y: 290, w: 360, h: 46, px: 24, problem: true },
-  { id: "retry_cfg", kind: "reg", label: "RETRY_CFG", x: 1118, y: 366, w: 220, h: 40, problem: true },
-];
-const EXTRA_EDGES: GEdge[] = [
-  { id: "writes_gc", from: "throttle_update", to: "field", rel: VIA_REG, origin: "extract", pts: [[950, 600], [670, 600], [670, 398]], labelAt: [810, 600] },
-  { id: "writes_retry", from: "retry_apply", to: "retry_cfg", rel: VIA_REG, origin: "extract", problem: true, pts: [[1118, 313], [1118, 346]], labelAt: [1118, 329] },
-];
+const RESULT_X = 893; // 3) 에서 결과 표가 옮겨 가는 자리
+const ROW_H = 38;
 
 export const S13: React.FC = () => {
   const frame = useCurrentFrame();
@@ -76,152 +36,164 @@ export const S13: React.FC = () => {
   const t6 = cue("s13.6");
   const t7 = cue("s13.7");
 
-  const bugAt = within("s13.2", 0.38);
-  const zeroAt = t3 + 22;
-  const walk1 = within("s13.4", 0.12);
-  const walk2 = within("s13.4", 0.5);
-  const causeAt = t5 + 2;
-  const codeAt = within("s13.5", 0.34);
-  const coverAt = within("s13.5", 0.62);
-  const noteA = within("s13.5", 0.86);
-  const noteB = noteA + 16;
-  const leftOut5 = t6 - 10;
-  const foundAt = within("s13.6", 0.58);
-  const ringGo = progress(frame, foundAt - 4, 26, ease.inOut);
+  const startAt = within("s13.2", 0.5);
+  const hop1 = t3 + 4;
+  const hop2 = within("s13.3", 0.5);
+  const restAt = within("s13.3", 0.86);
+  const queryOut = t4 - 10;
+  const tagAt = within("s13.5", 0.42);
+  const up = [within("s13.6", 0.06), within("s13.6", 0.36), within("s13.6", 0.66)];
 
-  // 같은 형태를 찾는 고리: 원인 함수에서 새로 나온 한 쌍으로 옮겨 간다
-  const src = nodeRect("throttle_update");
-  const ringFrom = { x: src.x - 9, y: src.y - 9, w: src.w + 18, h: src.h + 18 };
-  const ringTo = { x: 926, y: 255, w: 384, h: 143 };
-  const ring = {
-    x: lerp(ringFrom.x, ringTo.x, ringGo),
-    y: lerp(ringFrom.y, ringTo.y, ringGo),
-    w: lerp(ringFrom.w, ringTo.w, ringGo),
-    h: lerp(ringFrom.h, ringTo.h, ringGo),
-  };
-  const [rx, ry] = place(VIEW, ring.x, ring.y);
-  const ringOn = progress(frame, t6 + 4, 12);
-  const s = VIEW.scale ?? 1;
-  const [tagX, tagY] = place(VIEW, 952, 203);
+  // 3) 답 둘이 나란히
+  const m7 = progress(frame, t7, DUR.move, ease.inOut);
+  const graphOp = 1 - progress(frame, t7 - 2, 14, ease.in);
+  const jiraAt = t7 + 10;
+  const countAt = within("s13.7", 0.2);
+  const vsAt = t7 + 26;
+  const listAt = within("s13.7", 0.5);
+
+  const [tagX, tagY] = place(V, 1300, 697);
+  const [nx, ny] = place(V, 1290, 600);
+  const tagP = progress(frame, tagAt, DUR.enter) * graphOp;
+  const tagP2 = progress(frame, vsAt + 6, DUR.enter);
+  const gcRowY = 150 + 44 + 8 + 4 * ROW_H + ROW_H / 2;
 
   return (
     <ShiftSheet>
-      <T x={LX} y={78} px={40} weight={800} at={t1 - 4}>{TX.title}</T>
+      <T x={96} y={76} text="효과 ① 변경 영향" px={40} weight={800} at={t1} />
+      {/* s3 의 질문이 돌아온다 */}
+      <Box x={470} y={74} w={404} h={54} c={color.human} fill={withAlpha(color.human, 0.07)} p={progress(frame, within("s13.1", 0.45), DUR.enter)} style={{ gap: 12 }}>
+        <HumanIcon size={30} color={color.human} />
+        <div style={{ ...sans(30, 600), whiteSpace: "nowrap" }}>그 4가 어디어디에 있지?</div>
+      </Box>
 
       {/* ── 그래프 ── */}
       <TraceGraph
-        {...VIEW}
-        add={["observed"]}
-        extraNodes={EXTRA_NODES}
-        extraEdges={EXTRA_EDGES}
-        appear={{ observed: t3 + 4, retry_apply: foundAt + 12, retry_cfg: foundAt + 18, writes_retry: foundAt + 24 }}
-        dim={[{ at: t1 + 6, to: 0.36 }]}
-        subText={frame >= zeroAt ? { field: "= 0" } : {}}
+        {...V}
+        opacity={graphOp}
+        add={["arch", "adr", "derives_arch", "derives_adr"]}
+        appear={{ arch: up[0] - 4, derives_arch: up[0], adr: up[1] - 4, derives_adr: up[1] }}
+        dim={[{ to: 0.5 }, { at: t2, to: 0.2 }, { ids: JIRA_SIDE, at: t4 - 8, to: 0.03 }]}
         hi={[
-          { ids: ["fail"], color: color.problem, at: t2 + 2, out: t6 - 8, ring: true },
-          { ids: ["BUG-2317"], color: color.problem, at: bugAt, out: t6 - 8, ring: true },
-          { ids: ["observed"], at: t3 + 4, out: t6 - 8 },
-          { ids: ["field"], color: color.problem, at: zeroAt - 6, ring: true },
-          { ids: ["throttle_update"], color: color.problem, at: causeAt - 6, fill: true },
-          { ids: ["writes_gc"], color: color.problem, at: causeAt - 6 },
-          { ids: ["a_host_first"], at: noteA, out: t6 - 8, ring: true },
-          { ids: ["order"], at: noteB, out: t6 - 8, ring: true },
-          { ids: ["retry_apply", "retry_cfg", "writes_retry"], at: foundAt },
-          { ids: ["retry_apply"], color: color.problem, at: t7, blink: true },
+          { ids: ["order"], color: color.human, at: startAt, ring: true },
+          { ids: [...HOP1, ...HOP1_NODES], at: hop1 + GAP - 8 },
+          { ids: [...HOP2, ...HOP2_NODES], at: hop2 + GAP - 8 },
+          { ids: ["throttle_update"], color: color.human, at: t5, out: t6 - 4, blink: true, ring: true },
+          { ids: ["throttle_update"], color: color.human, at: t5, ring: true },
+          { ids: ["derives_arch", "arch"], at: up[0] + 12 },
+          { ids: ["derives_adr", "adr"], at: up[1] + 12 },
+          { ids: ["derives", "ac1"], at: up[2] + 12 },
         ]}
         walks={[
-          { at: walk1, steps: [["impl_field"]], color: color.problem, gap: 22, out: t6 - 8 },
-          { at: walk2, steps: [{ edges: ["writes_policy", "writes_gc", "reads_stats"], reverse: true }], color: color.problem, gap: 26, out: causeAt + 4 },
+          { at: hop1, steps: [{ edges: HOP1, reverse: true }], gap: GAP, out: hop1 + GAP + 14 },
+          { at: hop2, steps: [{ edges: HOP2, reverse: true }], gap: GAP, out: hop2 + GAP + 14 },
+          { at: up[0], steps: [["derives_arch"]], gap: 24, color: color.human, out: up[0] + 40 },
+          { at: up[1], steps: [["derives_adr"]], gap: 24, color: color.human, out: up[1] + 40 },
+          { at: up[2], steps: [["derives"]], gap: 24, color: color.human, out: up[2] + 40 },
         ]}
       />
       <svg {...fullSvg}>
-        <rect x={rx} y={ry} width={ring.w * s} height={ring.h * s} fill={withAlpha(color.problem, 0.05 * ringGo)} stroke={color.problem} strokeWidth={stroke.trace} strokeDasharray="9 7" opacity={ringOn} />
+        <Trace pts={[[nx, ny], [nx + 6, ny], [nx + 6, tagY]]} stroke={color.human} width={stroke.thin} at={tagAt} opacity={graphOp} />
+        <Trace pts={[[RESULT_X + 828, gcRowY], [RESULT_X + 905, gcRowY], [RESULT_X + 905, 572]]} stroke={color.human} width={stroke.thin} at={vsAt + 2} />
       </svg>
-      <T x={tagX} y={tagY} px={30} weight={800} c={color.problem} at={t7 + 2}>{TX.notYet}</T>
+      <Note x={tagX} y={tagY} h={40} align="right" text="extract · via: reg · 태그 없음" c={color.human} p={tagP} />
 
-      {/* ── 왼쪽: 버그 카드 → 질의 → 결과와 원인 → 같은 형태 질의 ── */}
+      {/* ── 질의 ── */}
       <CodePanel
-        x={LX}
-        y={TOP}
-        w={LW}
-        title="JIRA · BUG-2317"
-        owner="agent"
+        x={96}
+        y={150}
+        w={688}
+        title="CYPHER"
         px={26}
-        at={t2 + 6}
-        out={t4 - 8}
-        lines={TX.bug.map((text, i) => (i === 4 ? { text, tone: "problem" as const, mark: t3, markTone: "problem" as const } : i === 0 ? { text, tone: "plain" as const } : { text, tone: i === 3 ? ("dim" as const) : ("plain" as const) }))}
+        at={t2}
+        out={queryOut}
+        lines={[
+          { text: "MATCH (c:Clause {id:'HSI-RCV-010#order'})", at: t2 + 6, mark: startAt, unmark: t3, markTone: "human" },
+          { text: "      <-[:IMPLEMENTS|VERIFIES]-(s)", at: within("s13.2", 0.25), mark: t3, unmark: hop2, markTone: "human" },
+          { text: "OPTIONAL MATCH", at: hop2 - 6 },
+          { text: "  (s)<-[:READS|WRITES|GENERATED_FROM]-(u)", at: hop2 - 3, mark: hop2 },
+          { text: "WITH collect(DISTINCT s)", at: restAt, tone: "dim" },
+          { text: "     + collect(DISTINCT u) AS hit", at: restAt + 2, tone: "dim" },
+          { text: "UNWIND hit AS n", at: restAt + 4, tone: "dim" },
+          { text: "RETURN DISTINCT labels(n)[0] AS kind,", at: restAt + 6 },
+          { text: "       n.name AS name, n.path AS path", at: restAt + 8 },
+        ]}
       />
-      <CodePanel
-        x={LX}
-        y={TOP}
-        w={LW}
-        title="back_trace.cypher"
-        px={26}
+
+      {/* ── 결과: 9행 ── */}
+      <Table
+        x={lerp(96, RESULT_X, m7)}
+        y={150}
+        w={931}
+        title="graph@9f3c2e1 (예시) · 9행"
+        titlePx={22}
         at={t4}
-        out={t5 - 8}
-        lines={[
-          { text: TX.query[0], at: t4 + 6, mark: t4 + 8, unmark: walk1, markTone: "problem" },
-          { text: TX.query[1], at: t4 + 9, mark: t4 + 8, unmark: walk1, markTone: "problem" },
-          { text: TX.query[2], at: walk1 - 4, mark: walk1, unmark: walk2, markTone: "problem" },
-          { text: TX.query[3], at: walk2 - 4, mark: walk2, unmark: within("s13.4", 0.9), markTone: "problem" },
-          { text: TX.query[4], at: within("s13.4", 0.82), tone: "dim" },
-          { text: TX.query[5], at: within("s13.4", 0.82) + 3, tone: "dim" },
+        px={28}
+        rowH={ROW_H}
+        owner="agent"
+        cols={[{ w: 156, code: true }, { w: 322, code: true }, { w: 421, code: true }]}
+        rows={(
+          [
+            ["Assertion", "a_gc_no_starve", "rtl/rcv/prio_q_sva.sv"],
+            ["Assertion", "a_host_first", "rtl/rcv/prio_q_sva.sv"],
+            ["CSymbol", "set_host_burst", "fw/include/rcv_ctrl_hsi.hpp"],
+            ["Field", "PRIOQ_CFG.HOST_BURST", "hsi/rdl/rcv_ctrl.rdl"],
+            ["Func", "gc::throttle_update", "fw/gc/gc_throttle.cpp"],
+            ["Func", "rcv::policy_init", "fw/rcv/rcv_policy.cpp"],
+            ["Func", "rcv::stats_dump", "fw/rcv/rcv_stats.cpp"],
+            ["Module", "prio_q", "rtl/rcv/prio_q.sv"],
+            ["Test", "prio_q_ratio_test", "dv/rcv/tests/"],
+          ] as const
+        ).map(([kind, name, path], i) => ({
+          cells: [{ t: kind, c: color.inkDim }, { t: name, weight: i === 4 ? 700 : 500, c: i === 4 && frame >= t5 ? color.human : undefined }, { t: path, c: color.inkSoft }],
+          at: t4 + 8 + i * 9,
+          ...(i === 4 ? { mark: t5, markC: color.human } : {}),
+        }))}
+      />
+      <Note x={RESULT_X + 931} y={572} align="right" text="extract · via: reg · 태그 없음" c={color.human} p={tagP2} />
+
+      {/* ── Jira 의 답 ── */}
+      <Table
+        x={96}
+        y={150}
+        w={640}
+        title="JIRA"
+        titlePx={22}
+        at={jiraAt}
+        px={28}
+        rowH={ROW_H}
+        cols={[{ w: 150, code: true }, { w: 316, code: true }, { w: 130 }]}
+        rows={[
+          { cells: ["FEAT-338", { t: "우선 큐", code: false }, "구현 중"], at: jiraAt + 6, c: color.inkSoft },
+          { cells: ["VER-541", "a_host_first", "승인"], at: jiraAt + 9, c: color.inkSoft },
+          { cells: ["VER-542", "a_gc_no_starve", "승인"], at: jiraAt + 12, c: color.inkSoft },
+          { cells: ["VER-543", "prio_q_ratio_test", "승인"], at: jiraAt + 15, c: color.inkSoft },
         ]}
       />
+      <T x={120} y={384} text="이슈 4건" px={60} weight={800} at={countAt} />
+      {/* 그래프의 답을 세면 */}
+      <div style={{ position: "absolute", left: lerp(120, RESULT_X + 24, m7), top: 562, display: "flex", gap: 18, ...sans(60, 800), whiteSpace: "nowrap" }}>
+        <span style={{ color: color.agent, opacity: progress(frame, within("s13.4", 0.08), DUR.enter) }}>심볼 9</span>
+        <span style={{ color: color.agent, opacity: progress(frame, within("s13.4", 0.5), DUR.enter) }}>· 파일 8</span>
+        <span style={{ color: color.human, opacity: progress(frame, up[2] + 24, DUR.enter) * (1 - progress(frame, t7 - 4, 8)) }}>· 조항 3</span>
+      </div>
 
-      <Box x={LX} y={TOP} w={LW} h={208} at={t5 - 2} out={leftOut5} />
-      <Grid
-        x={LX + 16}
-        y={TOP + 8}
-        cols={[108, 140, 312, 92, 20]}
-        rows={[TX.head, ...TX.rows]}
-        rowH={48}
-        px={26}
-        code
-        at={t5}
-        out={leftOut5}
-        rowAt={(r) => t5 + r * 4}
-        marks={{ 2: { at: causeAt, c: color.problem } }}
-      />
-      <CodePanel
-        x={LX}
-        y={TOP + 224}
-        w={LW}
-        title="fw/gc/gc_throttle.cpp"
-        px={26}
-        at={codeAt - 6}
-        out={leftOut5}
-        lines={[
-          { text: TX.code[0], at: codeAt },
-          { text: TX.code[1], at: codeAt + 3 },
-          { text: TX.code[2], at: coverAt, tone: "problem", mark: coverAt + 4, markTone: "problem" },
+      {/* ── 대비 ── */}
+      <Table
+        x={96}
+        y={652}
+        w={1728}
+        title={"\"host 4 : gc 1 을 바꾸면?\" (예시)"}
+        at={vsAt}
+        rowH={44}
+        cols={[{ w: 204 }, { w: 593 }, { w: 800 }]}
+        head={["", "Jira만", "그래프"]}
+        rows={[
+          { cells: [{ t: "나오는 것", c: color.inkSoft }, { t: "이슈 4건", weight: 700 }, { t: "심볼 9 · 파일 8 · 조항 3", weight: 700, c: color.agent }], at: vsAt + 8, mark: listAt },
+          { cells: [{ t: "빠지는 것", c: color.inkSoft }, { t: "FW 함수 · field", c: color.problem }, "태그도 접근도 없는 코드"], at: vsAt + 14 },
+          { cells: [{ t: "하는 일", c: color.inkSoft }, "MR을 열어 훑기", "질의 한 번 + 사람 확인"], at: vsAt + 20 },
         ]}
       />
-      <T x={LX} y={598} px={22} weight={700} c={color.agent} at={noteA} out={leftOut5} code>a_host_first</T>
-      <T x={LX} y={628} px={30} weight={500} c={color.inkDim} at={noteA} out={leftOut5}>{TX.noteA}</T>
-      <T x={LX} y={690} px={22} weight={700} c={color.human} at={noteB} out={leftOut5} code>HSI-RCV-010#order</T>
-      <T x={LX} y={720} px={30} weight={500} c={color.inkDim} at={noteB} out={leftOut5}>{TX.noteB}</T>
-
-      <CodePanel x={LX} y={TOP} w={LW} title="same_shape.cypher" px={26} at={t6} lines={TX.query3.map((text, i) => ({ text, at: t6 + 6 + i * 4, ...(i < 2 ? { mark: t6 + 14, markTone: "problem" as const } : {}) }))} />
-      <Box x={LX} y={TOP + 291} w={LW} h={120} at={within("s13.6", 0.4)} c={frame >= foundAt ? color.problem : color.lineStrong} />
-      <Grid
-        x={LX + 24}
-        y={TOP + 303}
-        cols={[370, 200, 40]}
-        rows={TX.rows3}
-        rowH={48}
-        px={26}
-        code
-        noHead
-        at={within("s13.6", 0.4)}
-        rowAt={(r) => (r === 0 ? within("s13.6", 0.4) + 4 : foundAt)}
-        marks={{ 1: { at: foundAt + 2, c: color.problem } }}
-      />
-      <svg {...fullSvg}>
-        <line x1={LX} x2={LX + 1728 * progress(frame, within("s13.7", 0.55) - 4, 20, ease.inOut)} y1={832} y2={832} stroke={color.line} strokeWidth={stroke.hair} />
-      </svg>
-      <T x={LX} y={846} px={22} weight={700} c={color.human} at={within("s13.7", 0.55)} code style={{ opacity: vis(frame, within("s13.7", 0.55)) }}>FIX</T>
-      <T x={LX + 70} y={840} px={30} weight={600} at={within("s13.7", 0.55)}>{TX.fix}</T>
     </ShiftSheet>
   );
 };

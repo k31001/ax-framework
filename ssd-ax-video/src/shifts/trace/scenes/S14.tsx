@@ -1,244 +1,245 @@
 import React from "react";
 import { useCurrentFrame } from "remotion";
-import { ease, lerp, progress } from "../../../video/anim";
-import { AgentIcon } from "../../../video/components/Icons";
-import { Trace } from "../../../video/components/Trace";
-import { color, fullSvg, mono, stroke, withAlpha } from "../../../video/theme";
+import { DUR, ease, progress } from "../../../video/anim";
+import { CheckIcon } from "../../../video/components/Icons";
+import { color, fullSvg, mono, sans, stroke, withAlpha } from "../../../video/theme";
 import { CodePanel, ShiftSheet } from "../../lib";
-import { TraceGraph, place } from "./graph";
-import type { GraphView } from "./graph";
-import { Box, Grid, T, useCues, vis } from "./kitC";
+import { TraceGraph, nodeRect, place } from "./graph";
+import type { GEdge, GNode } from "./graph";
+import { Note, T, Table, useCues } from "./kitB";
 
-// S14 효과 ④ 에이전트의 맥락: 지금(저장소 전체를 긁는다) 대 그래프(부분 그래프만 받는다) → MR 댓글 → 공개 근거.
+// s14 효과 ② 빈틈 검출.
+// 오른쪽: 계약 HSI-RCV-010 의 조항 넷. 조항마다 검사 → Jira Test → PASS 가 이어지는지 본다.
+//   (조항을 가로로 펴면 #order 의 검사 셋이 들어가지 않아, 조항을 세로로 놓고 사슬을 오른쪽으로 폈다.)
+// 왼쪽: 질의와 결과 표. 위에는 Jira(R4J)의 채워진 칸 한 줄.
+// 끝: s5 의 그래프로 돌아가 조항에 닿지 않는 함수 하나를 찾는다.
 
-const TX = {
-  title: "효과 ④ 에이전트의 맥락",
-  agent: "에이전트",
-  now: "지금",
-  graph: "그래프",
-  grep: [
-    "$ grep -rn HOST_BURST .",
-    "fw/include/rcv_ctrl_hsi.hpp   (생성물)",
-    "docs/api/rcv_ctrl.md          (문서)",
-    "build/rcv_ctrl_regs.sv        (생성물)",
-    "logs/emu_run_231.log          (로그)",
-    "…  겹치고 섞인 결과 · 통째 쓰기는 안 나옴",
-  ],
-  tool: [
-    "trace.subgraph(",
-    "  seed='rcv_ctrl.PRIOQ_CFG.HOST_BURST', hops=2)",
-    "→ 노드 14 · 엣지 19 · 파일 8 (예시)",
-    "  각 노드: 종류 · 이름 · 경로 · 줄 범위",
-    "  각 엣지: 종류 · method · commit",
-  ],
-  opened: "에이전트에게 연 것: 이름 붙은 질의 · 부분 그래프 · 제안. 그래프 쓰기 없음",
-  mr: [
-    "[에이전트 · req-agent · 영향 분석]  MR !2334",
-    "변경      gc::throttle_update (fw/gc/)",
-    "닿는 조항 HSI-RCV-010#order (HOST_BURST 쓰기)",
-    "요구사항  REQ-207 (REQ-QOS-07 AC-1) · FEAT-338",
-    "다시 볼 것 VER-541 · VER-542 · VER-543 → 선택 실행",
-    "근거      graph@9f3c2e1 · 질의 impact_v1",
-    "확인 못 한 것  제안 링크 2건은 제외함",
-  ],
-  evidence: "공개 근거 (2026-11 확인)",
-  rows: [
-    ["코드 그래프 + 에이전트", "연구 있음 · 뚜렷한 우위는 아님"],
-    ["스펙 · RTL 그래프 → SVA", "연구 있음"],
-    ["SoC 추적 그래프의 효과", "공개 수치 없음 → 직접 측정"],
-  ],
-} as const;
+const V = { x: 916, y: 172, scale: 0.698 } as const;
+const ROW = { host: 150, gc: 250, test: 350, full: 530, bound: 700, fw: 870 } as const;
 
-const AG = { x: 940, y: 250, s: 72 } as const;
-const VIEW: GraphView = { x: 1262, y: 196, scale: 0.43 };
-const REST: GraphView = { x: 1030, y: 222, scale: 0.18 };
+const clause = (id: string, label: string, y: number): GNode => ({ id, kind: "clause", label, x: 120, y, w: 200, h: 52, px: 28 });
+const NODES: GNode[] = [
+  clause("c_order", "#order", ROW.gc),
+  clause("c_full", "#full", ROW.full),
+  clause("c_bound", "#bound", ROW.bound),
+  clause("c_fw", "#fw_role", ROW.fw),
+  { id: "k_host", kind: "assertion", label: "a_host_first", x: 500, y: ROW.host, w: 256, h: 46 },
+  { id: "k_gc", kind: "assertion", label: "a_gc_no_starve", x: 500, y: ROW.gc, w: 256, h: 46 },
+  { id: "k_test", kind: "test", label: "prio_q_ratio_test", x: 386, y: ROW.test, w: 28, h: 28 },
+  { id: "k_full", kind: "assertion", label: "a_full_gc_bp", x: 500, y: ROW.full, w: 256, h: 46 },
+  ...(["host", "gc", "test"] as const).flatMap((r, i): GNode[] => [
+    { id: `j${i}`, kind: "issue", label: `VER-54${i + 1}`, x: 880, y: ROW[r], w: 160, h: 42 },
+    { id: `e${i}`, kind: "exec", label: "PASS @ VER-631", x: 1085, y: ROW[r], w: 28, h: 28, px: 22, status: "pass" },
+  ]),
+];
+const EDGES: GEdge[] = [
+  { id: "v_host", from: "k_host", to: "c_order", rel: null, origin: "tag", pts: [[372, ROW.host], [250, ROW.host], [250, ROW.gc], [220, ROW.gc]] },
+  { id: "v_gc", from: "k_gc", to: "c_order", rel: "verifies", origin: "tag", pts: [[372, ROW.gc], [220, ROW.gc]], labelAt: [316, ROW.gc] },
+  { id: "v_test", from: "k_test", to: "c_order", rel: null, origin: "tag", pts: [[372, ROW.test], [250, ROW.test], [250, ROW.gc], [220, ROW.gc]] },
+  { id: "v_full", from: "k_full", to: "c_full", rel: "verifies", origin: "tag", pts: [[372, ROW.full], [220, ROW.full]], labelAt: [300, ROW.full] },
+  ...(["host", "gc", "test"] as const).flatMap((r, i): GEdge[] => [
+    { id: `t${i}`, from: `j${i}`, to: i === 2 ? "k_test" : i === 0 ? "k_host" : "k_gc", rel: "tracks", origin: "extract", pts: [[800, ROW[r]], [i === 2 ? 678 : 628, ROW[r]]], labelAt: [i === 2 ? 740 : 714, ROW[r]] },
+    { id: `r${i}`, from: `e${i}`, to: `j${i}`, rel: "result", origin: "extract", pts: [[1071, ROW[r]], [960, ROW[r]]], labelAt: [1014, ROW[r]] },
+  ]),
+];
+const CHECKS = ["k_host", "k_gc", "k_test", "k_full"];
+const VERIFIES = ["v_host", "v_gc", "v_test", "v_full"];
+const ORDER_CHAIN = ["c_order", "k_host", "k_gc", "k_test", "v_host", "v_gc", "v_test", "j0", "j1", "j2", "t0", "t1", "t2", "r0", "r1", "r2", "e0", "e1", "e2"];
 
-const HOP0 = ["field"];
-const HOP1 = ["order", "prio_q", "set_host_burst", "policy_init", "throttle_update", "stats_dump", "impl_field", "reads_prio_q", "gen_shb", "writes_policy", "writes_gc", "reads_stats"];
-const HOP2 = ["ac1", "FEAT-338", "a_host_first", "a_gc_no_starve", "ratio_test", "derives", "trk_feat", "ver_host", "ver_gc", "ver_test", "impl_prio_q"];
-const SUB = [...HOP0, ...HOP1, ...HOP2];
-
-// 저장소의 파일 격자
-const COLS = 22;
-const ROWS = 9;
-const CELL = { x: 96, y: 214, w: 24, h: 16, dx: 30, dy: 26 } as const;
-const HITS = Array.from({ length: 16 }, (_, k) => ({ c: (k * 7 + 3) % COLS, r: (k * 5 + 2) % ROWS }));
+const LX = 96;
+const LW = 800;
 
 export const S14: React.FC = () => {
   const frame = useCurrentFrame();
-  const { cue, within, end } = useCues();
+  const { cue, within } = useCues();
   const t1 = cue("s14.1");
   const t2 = cue("s14.2");
   const t3 = cue("s14.3");
   const t4 = cue("s14.4");
   const t5 = cue("s14.5");
+  const t6 = cue("s14.6");
 
-  const leftOut = t4 - 10;
-  const leftV = vis(frame, t2 - 4, leftOut);
-  const seedAt = t3 + 6;
-  const hopAt = within("s14.3", 0.3);
-  const takeAt = within("s14.3", 0.62);
-  const take = progress(frame, takeAt, 26, ease.inOut);
-  const rightDim = 1 - 0.5 * progress(frame, t4 - 6, 16, ease.inOut);
-  const graphOut = t5 - 10;
-  const graphV = vis(frame, t3 - 6, graphOut);
-  const hitAt = (k: number): number => t2 + 6 + Math.round(((end("s14.2") - t2 - 12) * k) / HITS.length);
-  const field = place(VIEW, 586, 370);
+  const ckAt = within("s14.2", 0.3);
+  const evAt = within("s14.2", 0.62);
+  const r4jAt = t3 + 4;
+  const boundAt = within("s14.4", 0.45);
+  const fullAt = t5 + 10;
+  const neverAt = within("s14.5", 0.5);
+  const orderAt = within("s14.5", 0.8);
+  const leftOut = t6 - 8;
+  const g1 = 1 - progress(frame, t6 - 4, 12, ease.in);
+  const g2 = progress(frame, t6 + 6, 14);
+  const orphanAt = t6 + 18;
+  const whereAt = within("s14.6", 0.4);
+  const rowAt = within("s14.6", 0.62);
 
-  const moving: GraphView = { x: lerp(VIEW.x, REST.x, take), y: lerp(VIEW.y, REST.y, take), scale: lerp(VIEW.scale ?? 1, REST.scale ?? 1, take) };
-  const mrAt = [t4 + 6, within("s14.4", 0.16), within("s14.4", 0.3), within("s14.4", 0.52), within("s14.4", 0.72), within("s14.4", 0.86), within("s14.4", 0.94)];
-  const rowAt = [t5 + 6, t5 + 14, within("s14.5", 0.34)];
-  const measureAt = within("s14.5", 0.6);
+  const appear: Record<string, number> = {};
+  ["c_order", "c_full", "c_bound", "c_fw"].forEach((id, i) => (appear[id] = t1 + 12 + i * 6));
+  CHECKS.forEach((id, i) => (appear[id] = ckAt + i * 4));
+  VERIFIES.forEach((id, i) => (appear[id] = ckAt + 8 + i * 4));
+  [0, 1, 2].forEach((i) => {
+    appear[`j${i}`] = evAt + i * 4;
+    appear[`t${i}`] = evAt + 6 + i * 4;
+    appear[`e${i}`] = evAt + 14 + i * 4;
+    appear[`r${i}`] = evAt + 18 + i * 4;
+  });
+
+  const at = (gx: number, gy: number) => place(V, gx, gy);
+  const s = V.scale;
+  const bound = progress(frame, boundAt + 4, DUR.enter) * g1;
+  const full = progress(frame, fullAt + 6, DUR.enter) * g1;
+  const fw = progress(frame, t4 + 10, DUR.enter) * g1;
+  const [hx, hy] = at(20, 78);
+  const [bcx, bcy] = at(400, ROW.bound);
+  const [fcx, fcy] = at(400, ROW.fw);
+  const [slx, sly] = at(800, ROW.full - 21);
+  const [pcx, pcy] = at(1085, ROW.full);
+  const gc = nodeRect("throttle_update");
+  const [ox, oy] = place(V, gc.x, gc.y);
+  const orphan = progress(frame, orphanAt, 12);
+
+  const cell = (text: string, w: number, bold = false): React.ReactNode => (
+    <div style={{ width: w, height: "100%", boxSizing: "border-box", borderLeft: `${stroke.hair}px solid ${color.line}`, display: "flex", alignItems: "center", paddingLeft: 18, ...sans(30, bold ? 700 : 500), whiteSpace: "nowrap" }}>{text}</div>
+  );
 
   return (
     <ShiftSheet>
-      <T x={96} y={78} px={40} weight={800} at={t1 - 4}>{TX.title}</T>
+      <T x={LX} y={76} text="효과 ② 빈틈 검출" px={40} weight={800} at={t1} />
 
-      {/* ── 에이전트 ── */}
-      <T x={AG.x + AG.s / 2} y={204} px={30} weight={700} c={color.agent} align="center" at={within("s14.1", 0.4)}>{TX.agent}</T>
-      <div style={{ position: "absolute", left: AG.x, top: AG.y, opacity: vis(frame, within("s14.1", 0.4)) }}>
-        <AgentIcon size={AG.s} color={color.agent} />
-      </div>
-      <div style={{ position: "absolute", left: AG.x - 20, top: AG.y + AG.s + 8, width: AG.s + 40, textAlign: "center", ...mono(22, 700), color: color.agent, opacity: vis(frame, within("s14.1", 0.4) + 4) }}>AGENT</div>
-
-      {/* ── 지금: 저장소 전체를 긁는다 ── */}
-      {leftV > 0 ? (
-        <div style={{ opacity: leftV }}>
-          <T x={96} y={150} px={34} weight={800} c={color.inkSoft} at={t2 - 4}>{TX.now}</T>
-          <svg {...fullSvg}>
-            {Array.from({ length: COLS * ROWS }, (_, i) => {
-              const c = i % COLS;
-              const r = Math.floor(i / COLS);
-              const k = HITS.findIndex((h) => h.c === c && h.r === r);
-              const on = k < 0 ? 0 : progress(frame, hitAt(k) + 6, 8);
-              return (
-                <rect
-                  key={i}
-                  x={CELL.x + c * CELL.dx}
-                  y={CELL.y + r * CELL.dy}
-                  width={CELL.w}
-                  height={CELL.h}
-                  fill={on > 0 ? withAlpha(color.agent, 0.45 * on) : withAlpha(color.inkDim, 0.1)}
-                  stroke={on > 0 ? color.agent : color.line}
-                  strokeWidth={1.5}
-                  opacity={progress(frame, t2 - 4 + (c + r) * 0.6, 10)}
-                />
-              );
-            })}
-            {HITS.map((h, k) => {
-              const p = progress(frame, hitAt(k), 10, ease.out);
-              const fade = 1 - 0.6 * progress(frame, hitAt(k) + 14, 16, ease.inOut);
-              const tx = CELL.x + h.c * CELL.dx + CELL.w / 2;
-              const ty = CELL.y + h.r * CELL.dy + CELL.h / 2;
-              return p <= 0 ? null : <line key={k} x1={AG.x - 6} y1={AG.y + AG.s / 2} x2={lerp(AG.x - 6, tx, p)} y2={lerp(AG.y + AG.s / 2, ty, p)} stroke={color.agent} strokeWidth={stroke.hair} opacity={fade} />;
-            })}
-            <line x1={120} x2={120 + 600 * progress(frame, within("s14.2", 0.84) + 8, 16)} y1={793} y2={793} stroke={color.problem} strokeWidth={stroke.thin} strokeDasharray="7 6" />
-          </svg>
-          <CodePanel
-            x={96}
-            y={500}
-            w={664}
-            title="terminal"
-            px={26}
-            at={t2 + 2}
-            lines={TX.grep.map((text, i) =>
-              i === 0
-                ? { text, at: t2 + 8 }
-                : i === 5
-                  ? { text, at: within("s14.2", 0.84), tone: "problem" as const }
-                  : { text, at: within("s14.2", 0.22 + i * 0.13), tone: "dim" as const },
-            )}
-          />
+      {/* ── Jira(R4J): 이슈 수준에서는 채워진 칸 ── */}
+      <div style={{ position: "absolute", left: 470, top: 74, height: 56, boxSizing: "border-box", border: `${stroke.thin}px solid ${color.inkSoft}`, backgroundColor: withAlpha(color.panel, 0.92), display: "flex", alignItems: "center", opacity: progress(frame, r4jAt, DUR.enter), translate: `0px ${(1 - progress(frame, r4jAt, DUR.enter)) * 8}px` }}>
+        <div style={{ width: 324, paddingLeft: 18, boxSizing: "border-box", ...mono(22, 700), color: color.inkSoft }}>R4J · Coverage View</div>
+        {cell("REQ-207 read 지연 보장", 350)}
+        {cell("FEAT-338 우선 큐", 270)}
+        <div style={{ width: 100, height: "100%", boxSizing: "border-box", borderLeft: `${stroke.hair}px solid ${color.line}`, backgroundColor: withAlpha(color.agent, 0.14), display: "flex", alignItems: "center", justifyContent: "center", gap: 8, opacity: progress(frame, within("s14.3", 0.5), 12) }}>
+          <div style={{ ...mono(32, 700), letterSpacing: "0", color: color.agent }}>3</div>
+          <CheckIcon size={28} color={color.agent} />
         </div>
+      </div>
+
+      {/* ── 조항별 사슬 ── */}
+      <TraceGraph
+        {...V}
+        show={[]}
+        bands={false}
+        opacity={g1}
+        extraNodes={NODES}
+        extraEdges={EDGES}
+        appear={appear}
+        hi={[
+          { ids: ["j0", "j1", "j2"], at: within("s14.3", 0.45), out: t4 - 4, ring: true },
+          { ids: ["c_bound"], color: color.problem, at: boundAt, ring: true },
+          { ids: ["c_full"], color: color.problem, at: fullAt, ring: true },
+          { ids: ORDER_CHAIN, at: orderAt },
+          { ids: ["e0", "e1", "e2"], color: color.agent, at: orderAt, fill: true },
+        ]}
+        dim={[{ ids: ORDER_CHAIN, at: boundAt, out: orderAt, to: 0.5 }]}
+      />
+      <div style={{ position: "absolute", left: hx, top: hy - 22, ...mono(30, 700), letterSpacing: "0", color: color.human, opacity: progress(frame, t1 + 8, 12) * g1 }}>HSI-RCV-010</div>
+      <svg {...fullSvg}>
+        {/* #bound: 검사가 없다 */}
+        <g opacity={bound} fill="none" stroke={color.problem} strokeWidth={stroke.thin} strokeDasharray="7 6">
+          <line x1={at(220, 0)[0]} y1={bcy} x2={bcx - 22} y2={bcy} />
+          <circle cx={bcx} cy={bcy} r={20} />
+        </g>
+        {/* #fw_role: 구현 태그만 */}
+        <g opacity={fw * 0.8} fill="none" stroke={color.lineStrong} strokeWidth={stroke.thin} strokeDasharray="7 6">
+          <line x1={at(220, 0)[0]} y1={fcy} x2={fcx - 22} y2={fcy} />
+          <circle cx={fcx} cy={fcy} r={20} />
+        </g>
+        {/* #full: Jira Test 와 PASS 의 자리가 비어 있다 */}
+        <g opacity={full} fill="none" stroke={color.problem} strokeWidth={stroke.thin} strokeDasharray="7 6">
+          <line x1={at(628, 0)[0]} y1={pcy} x2={slx} y2={pcy} />
+          <rect x={slx} y={sly} width={160 * s} height={42 * s} rx={21 * s} />
+          <line x1={slx + 160 * s} y1={pcy} x2={pcx - 14} y2={pcy} />
+          <circle cx={pcx} cy={pcy} r={14} />
+        </g>
+        {/* 고아 코드 */}
+        <rect x={ox - 8} y={oy - 8} width={gc.w * s + 16} height={gc.h * s + 16} fill="none" stroke={color.problem} strokeWidth={stroke.trace} strokeDasharray="8 6" opacity={orphan} />
+      </svg>
+      <Note x={bcx + 34} y={bcy - 22} h={44} text="검사 없음" c={color.problem} border={false} weight={700} p={bound} />
+      <Note x={1824} y={at(0, ROW.full + 40)[1]} h={42} align="right" text="Xray Test 미등록 · 실행된 적 없음" c={color.problem} p={progress(frame, neverAt, DUR.enter) * g1} />
+
+      {/* ── s5 의 그래프: 조항에 닿지 않는 코드 ── */}
+      {g2 > 0 ? (
+        <TraceGraph
+          {...V}
+          opacity={g2}
+          dim={[{ to: 0.32 }]}
+          hi={[
+            { ids: ["throttle_update"], color: color.problem, at: orphanAt },
+            { ids: ["writes_gc", "field", "impl_field", "order"], at: whereAt - 6 },
+          ]}
+          walks={[{ at: whereAt - 10, steps: [["writes_gc"], ["impl_field"]], gap: 22, out: whereAt + 50 }]}
+        />
       ) : null}
 
-      {/* ── 그래프: 출발점에서 두 걸음 안의 부분 그래프만 ── */}
-      <div style={{ opacity: rightDim }}>
-        <T x={1262} y={150} px={34} weight={800} c={color.agent} at={t3 - 4} out={graphOut}>{TX.graph}</T>
-        {graphV > 0 ? (
-          <>
-            <TraceGraph
-              {...VIEW}
-              opacity={graphV}
-              nodeLabels={false}
-              edgeLabels={false}
-              subs={false}
-              dim={[{ at: t3 + 2, to: 0.3 }]}
-              hi={[
-                { ids: HOP0, at: seedAt + 12, ring: true, fill: true },
-                { ids: HOP1, at: hopAt },
-                { ids: HOP2, at: hopAt + 12 },
-              ]}
-            />
-            <svg {...fullSvg} opacity={graphV * (1 - 0.8 * take)}>
-              <Trace pts={[[AG.x + AG.s + 6, AG.y + AG.s / 2], [1216, AG.y + AG.s / 2], [1216, field[1]], [field[0] - 4, field[1]]]} stroke={color.agent} width={stroke.bold} arrow at={seedAt} duration={20} />
-            </svg>
-          </>
-        ) : null}
-        {/* 떼어져 에이전트에게 오는 덩어리 */}
-        {frame >= takeAt && frame < graphOut + 10 ? (
-          <TraceGraph {...moving} show={SUB} bands={false} nodeLabels={false} edgeLabels={false} subs={false} opacity={vis(frame, takeAt, graphOut, 8)} />
-        ) : null}
-
-        <CodePanel
-          x={1024}
-          y={556}
-          w={800}
-          title="MCP · trace.subgraph"
-          owner="agent"
-          px={26}
-          at={t3}
-          lines={[
-            { text: TX.tool[0], at: t3 + 6 },
-            { text: TX.tool[1], at: t3 + 9, mark: seedAt + 10, unmark: takeAt, markTone: "agent" },
-            { text: TX.tool[2], at: takeAt, tone: "agent", mark: takeAt + 4, markTone: "agent" },
-            { text: TX.tool[3], at: takeAt + 8, tone: "dim" },
-            { text: TX.tool[4], at: takeAt + 12, tone: "dim" },
-          ]}
-        />
-        <T x={1024} y={846} px={28} weight={500} c={color.inkDim} at={within("s14.3", 0.9)}>{TX.opened}</T>
-      </div>
-
-      {/* ── MR 댓글 ── */}
-      <svg {...fullSvg}>
-        <Trace pts={[[AG.x - 4, AG.y + AG.s / 2], [906, AG.y + AG.s / 2]]} stroke={color.agent} width={stroke.bold} arrow at={t4} />
-      </svg>
+      {/* ── 질의 1: 조항마다 검사와 통과 증거를 센다 ── */}
       <CodePanel
-        x={96}
-        y={230}
-        w={804}
-        title="MR !2334 · review"
-        owner="agent"
+        x={LX}
+        y={172}
+        w={LW}
+        title="CYPHER"
         px={26}
-        at={t4 - 2}
-        lines={TX.mr.map((text, i) => ({
-          text,
-          at: mrAt[i],
-          tone: i === 0 ? ("agent" as const) : i === 6 ? ("dim" as const) : ("plain" as const),
-          ...(i === 3 ? { mark: mrAt[3] + 4, markTone: "human" as const } : {}),
-        }))}
+        at={t2}
+        out={leftOut}
+        lines={[
+          "MATCH (c:Clause {doc:'HSI-RCV-010'})",
+          { text: "OPTIONAL MATCH (c)<-[:VERIFIES]-(v)", mark: ckAt, unmark: evAt, markTone: "human" },
+          { text: "OPTIONAL MATCH (v)<-[:TRACKS]-(t:Issue)", mark: evAt, unmark: t3 },
+          { text: "    <-[:RESULT {status:'PASS'}]-(:Exec)", mark: evAt, unmark: t3 },
+          "RETURN c.id AS clause,",
+          "       count(DISTINCT v) AS checks,",
+          "       count(DISTINCT t) AS passed",
+        ]}
+      />
+      <Table
+        x={LX}
+        y={541}
+        w={LW}
+        title="graph@9f3c2e1"
+        titlePx={22}
+        at={t4}
+        out={leftOut}
+        rowH={44}
+        owner="agent"
+        cols={[{ w: 336, code: true }, { w: 112, code: true }, { w: 112, code: true }, { w: 210 }]}
+        head={["clause", "checks", "passed", ""]}
+        rows={[
+          { cells: ["HSI-RCV-010#bound", "0", "0", { t: "← 검증 없음", c: color.problem, weight: 700 }], at: t4 + 8, mark: boundAt, markC: color.problem },
+          { cells: ["HSI-RCV-010#full", "1", "0", { t: "← 실행 증거 없음", c: frame >= fullAt ? color.problem : color.inkDim, weight: 700 }], at: t4 + 12, mark: fullAt, markC: color.problem },
+          { cells: ["HSI-RCV-010#fw_role", "0", "0", { t: "← 구현 태그만", c: color.inkDim }], at: t4 + 16, c: color.inkSoft },
+          { cells: ["HSI-RCV-010#order", "3", "3", ""], at: t4 + 20, mark: orderAt },
+        ]}
       />
 
-      {/* ── 공개 근거 ── */}
-      <Box x={1040} y={150} w={784} h={256} c={color.ink} at={t5} />
-      <T x={1064} y={166} px={30} weight={700} at={t5 + 2}>{TX.evidence}</T>
-      <svg {...fullSvg}>
-        <line x1={1040} x2={1040 + 784 * progress(frame, t5 + 4, 20, ease.inOut)} y1={220} y2={220} stroke={color.line} strokeWidth={stroke.hair} />
-      </svg>
-      <Grid
-        x={1064}
-        y={230}
-        cols={[346, 390]}
-        rows={TX.rows.map(([a, b], i) => [
-          { text: a, weight: 600, c: i === 2 && frame >= measureAt ? color.ink : color.inkSoft },
-          { text: b, weight: i === 2 ? 700 : 500, c: i === 2 ? color.human : color.inkSoft },
-        ])}
-        rowH={56}
+      {/* ── 질의 2: 어느 조항에도 닿지 않는 함수 ── */}
+      <CodePanel
+        x={LX}
+        y={172}
+        w={LW}
+        title="CYPHER"
+        px={26}
+        at={t6}
+        lines={[
+          "MATCH (f:Func)-[w:WRITES]->(:Field)",
+          "      -[:IMPLEMENTS]->(c:Clause)",
+          { text: "WHERE NOT (f)-[:IMPLEMENTS]->(:Clause)", mark: whereAt, markTone: "problem" },
+          "RETURN f.name, f.owner, w.via, c.id",
+        ]}
+      />
+      <Table
+        x={LX}
+        y={430}
+        w={LW}
+        title="graph@9f3c2e1"
+        titlePx={22}
+        at={rowAt}
         px={28}
-        noHead
-        at={t5}
-        rowAt={(r) => rowAt[r]}
-        marks={{ 2: { at: measureAt, c: color.human } }}
+        rowH={46}
+        owner="agent"
+        cols={[{ w: 314, code: true }, { w: 100, code: true }, { w: 66, code: true }, { w: 280, code: true }]}
+        rows={[{ cells: [{ t: "gc::throttle_update", c: color.problem, weight: 700 }, "FW GC", "reg", "HSI-RCV-010#order"], at: rowAt + 6, mark: rowAt + 6, markC: color.problem }]}
       />
     </ShiftSheet>
   );

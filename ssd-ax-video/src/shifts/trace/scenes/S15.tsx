@@ -1,138 +1,227 @@
 import React from "react";
 import { useCurrentFrame } from "remotion";
-import { ease, progress } from "../../../video/anim";
-import { HumanIcon } from "../../../video/components/Icons";
-import { Trace } from "../../../video/components/Trace";
-import { color, fullSvg, mono, sans, stroke, withAlpha } from "../../../video/theme";
+import { ease, lerp, progress } from "../../../video/anim";
+import { color, fullSvg, stroke, withAlpha } from "../../../video/theme";
 import { CodePanel, ShiftSheet } from "../../lib";
-import { Box, GNode, MiniGraph, T, useCues, vis } from "./kitC";
+import { TraceGraph, nodeRect, place } from "./graph";
+import type { GEdge, GNode, GraphView } from "./graph";
+import { Box, Grid, T, useCues, vis } from "./kitC";
 
-// S15 Jira와의 관계: 두 층의 단면도. 위층 Jira(사람과 에이전트가 만나는 곳), 아래층 그래프(조항과 코드).
-// 그래프의 결과는 위로(댓글 · remote link), Xray 의 판정은 아래로(복사)만 흐른다.
+// S15 효과 ③ 버그 역추적: 실패 → 버그 → field(값 0) → 조항 → 쓰는 함수 셋 → 원인 함수 하나 → 같은 형태의 코드 한 곳 더.
 
 const TX = {
-  upper: "Jira · 사람과 에이전트가 만나는 곳",
-  lower: "그래프 · 조항과 코드",
-  acts: ["지시", "질문", "승인"],
-  feat: "FEAT-338",
-  includes: ["그래프는 Jira 이슈를", "노드로 포함"],
-  issue: [
-    "FEAT-338  설계 기능           상태: 구현 중",
-    "우선 큐 · 계약 HSI-RCV-010",
-    "링크  implements REQ-207 · tested by VER-541 외 2",
-    "      추적 그래프에서 보기 ↗",
-    "댓글",
-    "  req-agent  [에이전트 · req-agent · 영향 분석]",
-    "     MR !2334 · 닿는 조항 #order · 다시 볼 것 3건",
-    "     근거 graph@9f3c2e1",
+  title: "효과 ③ 버그 역추적",
+  bug: [
+    "BUG-2317  버그   상태: 초안   triage-agent",
+    "GC 구간에서 host P99.99 2.4 ms (예시)",
+    "발견   emulation · VER-530 FAIL @ VER-640",
+    "signature  prio_q / soft 큐 대기 급증",
+    "           PRIOQ_CFG.HOST_BURST = 0",
   ],
-  comment: "댓글",
-  remote: "remote link",
-  xray: ["VER-631 · PASS 3", "올린 계정 ci-import"],
-  copy: "복사",
-  verdict: "판정은 Xray · 그래프는 옆에 놓을 뿐",
+  query: [
+    "MATCH (b:Issue {key:'BUG-2317'})",
+    "      -[:OBSERVED_AT]->(f:Field)",
+    "MATCH (f)-[:IMPLEMENTS]->(c:Clause)",
+    "MATCH (fn:Func)-[x:READS|WRITES]->(f)",
+    "RETURN c.id, type(x) AS access, x.via,",
+    "       fn.name, fn.owner",
+  ],
+  head: ["access", "via", "func", "owner", ""],
+  rows: [
+    ["WRITES", "accessor", "rcv::policy_init", "FW 복구", ""],
+    ["WRITES", "reg", "gc::throttle_update", "FW GC", "←"],
+    ["READS", "accessor", "rcv::stats_dump", "FW 복구", ""],
+  ],
+  code: ["bus.write(PRIOQ_CFG,", "          (backlog > kHigh) << 8);", "// GC_BOOST 를 켜면서 HOST_BURST 를 0 으로 덮음"],
+  noteA: "host_cnt < 0 은 성립 안 함 · 조건을 못 만난 통과",
+  noteB: "값의 범위 없음 · 계약의 빈칸",
+  query3: [
+    "MATCH (fn:Func)-[:WRITES {via:'reg'}]->",
+    "      (f:Field)<-[:HAS_FIELD]-(r:Reg)",
+    "WITH fn, r, count(f) AS fields",
+    "     WHERE fields > 1",
+    "RETURN fn.name, r.name, fields",
+  ],
+  rows3: [
+    ["gc::throttle_update", "PRIOQ_CFG", "2"],
+    ["nand::retry_cfg_apply", "RETRY_CFG", "3"],
+  ],
+  notYet: "아직 실패 안 함",
+  fix: "MR !2334 · 계약에 범위 1~8 · FW는 접근 함수 사용 · 태그 추가",
 } as const;
 
-const UP = { y: 72, h: 430 } as const;
-const LOW = { y: 552, h: 346 } as const;
-const PANEL = { x: 640, y: 92, w: 800 } as const;
-const MG = { x: 480, y: 568, s: 2 } as const;
-const CHIP_X = MG.x + 20 * MG.s; // 두 층의 FEAT-338 이 같은 세로선에 놓인다
-const LOW_CHIP_Y = MG.y + 54 * MG.s;
-const PASS = { x: MG.x + 124 * MG.s, y: MG.y + 148 * MG.s } as const;
+const VIEW: GraphView = { x: 800, y: 104, scale: 0.8 };
+const LX = 96;
+const LW = 688;
+const TOP = 150;
+
+const VIA_REG = "writes {via:'reg'}";
+const EXTRA_NODES: GNode[] = [
+  { id: "retry_apply", kind: "func", label: "nand::retry_cfg_apply", x: 1118, y: 290, w: 360, h: 46, px: 24, problem: true },
+  { id: "retry_cfg", kind: "reg", label: "RETRY_CFG", x: 1118, y: 366, w: 220, h: 40, problem: true },
+];
+const EXTRA_EDGES: GEdge[] = [
+  { id: "writes_gc", from: "throttle_update", to: "field", rel: VIA_REG, origin: "extract", pts: [[950, 600], [670, 600], [670, 398]], labelAt: [810, 600] },
+  { id: "writes_retry", from: "retry_apply", to: "retry_cfg", rel: VIA_REG, origin: "extract", problem: true, pts: [[1118, 313], [1118, 346]], labelAt: [1118, 329] },
+];
 
 export const S15: React.FC = () => {
   const frame = useCurrentFrame();
   const { cue, within } = useCues();
   const t1 = cue("s15.1");
   const t2 = cue("s15.2");
+  const t3 = cue("s15.3");
   const t4 = cue("s15.4");
-  const sameAt = within("s15.2", 0.5);
-  const linkAt = within("s15.3", 0.12);
-  const commentAt = within("s15.3", 0.5);
-  const copyAt = within("s15.4", 0.45);
-  const lowP = progress(frame, t2 - 2, 20, ease.inOut);
-  const upDim = 1;
+  const t5 = cue("s15.5");
+  const t6 = cue("s15.6");
+  const t7 = cue("s15.7");
+
+  const bugAt = within("s15.2", 0.38);
+  const zeroAt = t3 + 22;
+  const walk1 = within("s15.4", 0.12);
+  const walk2 = within("s15.4", 0.5);
+  const causeAt = t5 + 2;
+  const codeAt = within("s15.5", 0.34);
+  const coverAt = within("s15.5", 0.62);
+  const noteA = within("s15.5", 0.86);
+  const noteB = noteA + 16;
+  const leftOut5 = t6 - 10;
+  const foundAt = within("s15.6", 0.58);
+  const ringGo = progress(frame, foundAt - 4, 26, ease.inOut);
+
+  // 같은 형태를 찾는 고리: 원인 함수에서 새로 나온 한 쌍으로 옮겨 간다
+  const src = nodeRect("throttle_update");
+  const ringFrom = { x: src.x - 9, y: src.y - 9, w: src.w + 18, h: src.h + 18 };
+  const ringTo = { x: 926, y: 255, w: 384, h: 143 };
+  const ring = {
+    x: lerp(ringFrom.x, ringTo.x, ringGo),
+    y: lerp(ringFrom.y, ringTo.y, ringGo),
+    w: lerp(ringFrom.w, ringTo.w, ringGo),
+    h: lerp(ringFrom.h, ringTo.h, ringGo),
+  };
+  const [rx, ry] = place(VIEW, ring.x, ring.y);
+  const ringOn = progress(frame, t6 + 4, 12);
+  const s = VIEW.scale ?? 1;
+  const [tagX, tagY] = place(VIEW, 952, 203);
 
   return (
     <ShiftSheet>
-      {/* ── 두 층 ── */}
-      <svg {...fullSvg}>
-        <rect x={96} y={UP.y} width={1728} height={UP.h} fill={withAlpha(color.panel, 0.35)} stroke={color.ink} strokeWidth={stroke.thin} opacity={vis(frame, t1 - 6) * upDim} />
-        <rect x={96} y={LOW.y} width={1728} height={LOW.h} fill={withAlpha(color.agent, 0.04 * lowP)} stroke={color.agent} strokeWidth={stroke.thin} strokeDasharray="10 7" opacity={0.25 + 0.75 * lowP} />
-      </svg>
-      <T x={120} y={90} px={30} weight={700} at={t1 - 4}>{TX.upper}</T>
-      <T x={120} y={570} px={30} weight={700} c={color.agent} at={t2}>{TX.lower}</T>
+      <T x={LX} y={78} px={40} weight={800} at={t1 - 4}>{TX.title}</T>
 
-      {/* ── 위층: 사람, 이슈 화면 ── */}
-      <div style={{ position: "absolute", left: 124, top: 196, opacity: vis(frame, t1 + 4) }}>
-        <HumanIcon size={72} color={color.human} />
-      </div>
-      <div style={{ position: "absolute", left: 110, top: 276, width: 100, textAlign: "center", ...mono(22, 700), color: color.human, opacity: vis(frame, t1 + 4) }}>HUMAN</div>
-      {TX.acts.map((a, i) => (
-        <React.Fragment key={a}>
-          <Box x={236} y={160 + i * 70} w={116} h={52} c={color.human} at={t1 + 10 + i * 6}>
-            <span style={{ ...sans(30, 700), color: color.human }}>{a}</span>
-          </Box>
-        </React.Fragment>
-      ))}
+      {/* ── 그래프 ── */}
+      <TraceGraph
+        {...VIEW}
+        add={["observed"]}
+        extraNodes={EXTRA_NODES}
+        extraEdges={EXTRA_EDGES}
+        appear={{ observed: t3 + 4, retry_apply: foundAt + 12, retry_cfg: foundAt + 18, writes_retry: foundAt + 24 }}
+        dim={[{ at: t1 + 6, to: 0.36 }]}
+        subText={frame >= zeroAt ? { field: "= 0" } : {}}
+        hi={[
+          { ids: ["fail"], color: color.problem, at: t2 + 2, out: t6 - 8, ring: true },
+          { ids: ["BUG-2317"], color: color.problem, at: bugAt, out: t6 - 8, ring: true },
+          { ids: ["observed"], at: t3 + 4, out: t6 - 8 },
+          { ids: ["field"], color: color.problem, at: zeroAt - 6, ring: true },
+          { ids: ["throttle_update"], color: color.problem, at: causeAt - 6, fill: true },
+          { ids: ["writes_gc"], color: color.problem, at: causeAt - 6 },
+          { ids: ["a_host_first"], at: noteA, out: t6 - 8, ring: true },
+          { ids: ["order"], at: noteB, out: t6 - 8, ring: true },
+          { ids: ["retry_apply", "retry_cfg", "writes_retry"], at: foundAt },
+          { ids: ["retry_apply"], color: color.problem, at: t7, blink: true },
+        ]}
+        walks={[
+          { at: walk1, steps: [["impl_field"]], color: color.problem, gap: 22, out: t6 - 8 },
+          { at: walk2, steps: [{ edges: ["writes_policy", "writes_gc", "reads_stats"], reverse: true }], color: color.problem, gap: 26, out: causeAt + 4 },
+        ]}
+      />
       <svg {...fullSvg}>
-        {TX.acts.map((a, i) => (
-          <Trace key={a} pts={[[352, 186 + i * 70], [PANEL.x - 4, 186 + i * 70]]} stroke={color.human} arrow at={t1 + 16 + i * 6} />
-        ))}
-        <line x1={CHIP_X + 80} x2={PANEL.x} y1={442} y2={442} stroke={color.ink} strokeWidth={stroke.thin} opacity={vis(frame, t1 + 8)} />
-        {/* 같은 이슈: 위층의 칩과 아래층 그래프의 칩 */}
-        <Trace pts={[[CHIP_X, 464], [CHIP_X, LOW_CHIP_Y - 22]]} stroke={color.ink} dash="6 7" at={sameAt} duration={20} />
+        <rect x={rx} y={ry} width={ring.w * s} height={ring.h * s} fill={withAlpha(color.problem, 0.05 * ringGo)} stroke={color.problem} strokeWidth={stroke.trace} strokeDasharray="9 7" opacity={ringOn} />
       </svg>
-      <GNode shape="chip" cx={CHIP_X} cy={442} w={160} h={44} c={color.ink} label={TX.feat} px={24} at={t1 + 6} hot={progress(frame, sameAt, 12)} />
+      <T x={tagX} y={tagY} px={30} weight={800} c={color.problem} at={t7 + 2}>{TX.notYet}</T>
+
+      {/* ── 왼쪽: 버그 카드 → 질의 → 결과와 원인 → 같은 형태 질의 ── */}
       <CodePanel
-        x={PANEL.x}
-        y={PANEL.y}
-        w={PANEL.w}
-        title="JIRA · FEAT-338"
+        x={LX}
+        y={TOP}
+        w={LW}
+        title="JIRA · BUG-2317"
+        owner="agent"
         px={26}
-        at={t1}
+        at={t2 + 6}
+        out={t4 - 8}
+        lines={TX.bug.map((text, i) => (i === 4 ? { text, tone: "problem" as const, mark: t3, markTone: "problem" as const } : i === 0 ? { text, tone: "plain" as const } : { text, tone: i === 3 ? ("dim" as const) : ("plain" as const) }))}
+      />
+      <CodePanel
+        x={LX}
+        y={TOP}
+        w={LW}
+        title="back_trace.cypher"
+        px={26}
+        at={t4}
+        out={t5 - 8}
         lines={[
-          { text: TX.issue[0], at: t1 + 8 },
-          { text: TX.issue[1], at: t1 + 11 },
-          { text: TX.issue[2], at: t1 + 14, tone: "dim" },
-          { text: TX.issue[3], at: linkAt + 14, tone: "agent", mark: linkAt + 14, markTone: "agent" },
-          { text: TX.issue[4], at: t1 + 17, tone: "dim" },
-          { text: TX.issue[5], at: commentAt + 14, tone: "agent", mark: commentAt + 14, markTone: "agent" },
-          { text: TX.issue[6], at: commentAt + 18, mark: commentAt + 14, markTone: "agent" },
-          { text: TX.issue[7], at: commentAt + 22, mark: commentAt + 14, markTone: "agent" },
+          { text: TX.query[0], at: t4 + 6, mark: t4 + 8, unmark: walk1, markTone: "problem" },
+          { text: TX.query[1], at: t4 + 9, mark: t4 + 8, unmark: walk1, markTone: "problem" },
+          { text: TX.query[2], at: walk1 - 4, mark: walk1, unmark: walk2, markTone: "problem" },
+          { text: TX.query[3], at: walk2 - 4, mark: walk2, unmark: within("s15.4", 0.9), markTone: "problem" },
+          { text: TX.query[4], at: within("s15.4", 0.82), tone: "dim" },
+          { text: TX.query[5], at: within("s15.4", 0.82) + 3, tone: "dim" },
         ]}
       />
 
-      {/* ── 아래층: 그래프 축소판 ── */}
-      <MiniGraph x={MG.x} y={MG.y} s={MG.s} nodes={progress(frame, t2 + 2, 22)} extract={progress(frame, t2 + 12, 30, ease.inOut)} tag={progress(frame, t2 + 22, 30, ease.inOut)} opacity={vis(frame, t2 + 2)} />
-      <GNode shape="chip" cx={CHIP_X} cy={LOW_CHIP_Y} w={160} h={44} c={color.ink} label={TX.feat} px={24} at={t2 + 8} hot={progress(frame, sameAt + 14, 12)} />
-      {TX.includes.map((s, i) => (
-        <T key={i} x={120} y={660 + i * 40} px={30} weight={600} c={color.inkSoft} at={sameAt + 8 + i * 3}>{s}</T>
-      ))}
+      <Box x={LX} y={TOP} w={LW} h={208} at={t5 - 2} out={leftOut5} />
+      <Grid
+        x={LX + 16}
+        y={TOP + 8}
+        cols={[108, 140, 312, 92, 20]}
+        rows={[TX.head, ...TX.rows]}
+        rowH={48}
+        px={26}
+        code
+        at={t5}
+        out={leftOut5}
+        rowAt={(r) => t5 + r * 4}
+        marks={{ 2: { at: causeAt, c: color.problem } }}
+      />
+      <CodePanel
+        x={LX}
+        y={TOP + 224}
+        w={LW}
+        title="fw/gc/gc_throttle.cpp"
+        px={26}
+        at={codeAt - 6}
+        out={leftOut5}
+        lines={[
+          { text: TX.code[0], at: codeAt },
+          { text: TX.code[1], at: codeAt + 3 },
+          { text: TX.code[2], at: coverAt, tone: "problem", mark: coverAt + 4, markTone: "problem" },
+        ]}
+      />
+      <T x={LX} y={598} px={22} weight={700} c={color.agent} at={noteA} out={leftOut5} code>a_host_first</T>
+      <T x={LX} y={628} px={30} weight={500} c={color.inkDim} at={noteA} out={leftOut5}>{TX.noteA}</T>
+      <T x={LX} y={690} px={22} weight={700} c={color.human} at={noteB} out={leftOut5} code>HSI-RCV-010#order</T>
+      <T x={LX} y={720} px={30} weight={500} c={color.inkDim} at={noteB} out={leftOut5}>{TX.noteB}</T>
 
-      {/* ── 아래에서 위로: remote link, 댓글 ── */}
+      <CodePanel x={LX} y={TOP} w={LW} title="same_shape.cypher" px={26} at={t6} lines={TX.query3.map((text, i) => ({ text, at: t6 + 6 + i * 4, ...(i < 2 ? { mark: t6 + 14, markTone: "problem" as const } : {}) }))} />
+      <Box x={LX} y={TOP + 291} w={LW} h={120} at={within("s15.6", 0.4)} c={frame >= foundAt ? color.problem : color.lineStrong} />
+      <Grid
+        x={LX + 24}
+        y={TOP + 303}
+        cols={[370, 200, 40]}
+        rows={TX.rows3}
+        rowH={48}
+        px={26}
+        code
+        noHead
+        at={within("s15.6", 0.4)}
+        rowAt={(r) => (r === 0 ? within("s15.6", 0.4) + 4 : foundAt)}
+        marks={{ 1: { at: foundAt + 2, c: color.problem } }}
+      />
       <svg {...fullSvg}>
-        <Trace pts={[[800, 612], [800, 490]]} stroke={color.agent} width={stroke.bold} arrow at={linkAt} duration={18} />
-        <Trace pts={[[1030, 612], [1030, 490]]} stroke={color.agent} width={stroke.bold} arrow at={commentAt} duration={22} />
+        <line x1={LX} x2={LX + 1728 * progress(frame, within("s15.7", 0.55) - 4, 20, ease.inOut)} y1={832} y2={832} stroke={color.line} strokeWidth={stroke.hair} />
       </svg>
-      <T x={818} y={508} px={30} weight={700} c={color.agent} at={linkAt + 6}>{TX.remote}</T>
-      <T x={1048} y={508} px={30} weight={700} c={color.agent} at={commentAt + 6}>{TX.comment}</T>
-
-      {/* ── 위에서 아래로: Xray 의 판정을 복사 ── */}
-      <Box x={1470} y={100} w={330} h={150} c={color.ink} at={t4} style={{ flexDirection: "column", alignItems: "flex-start", justifyContent: "center", padding: "0 20px", gap: 6 }}>
-        <span style={{ ...mono(22, 700), color: color.inkDim }}>XRAY · TEST EXEC</span>
-        <span style={{ ...mono(30, 700), color: color.ink }}>{TX.xray[0]}</span>
-        <span style={{ ...sans(28, 500), color: color.inkSoft }}>{TX.xray[1]}</span>
-      </Box>
-      <svg {...fullSvg}>
-        <Trace pts={[[1640, 250], [1640, PASS.y], [PASS.x + 26, PASS.y]]} stroke={color.agent} width={stroke.bold} arrow at={copyAt} duration={34} easing={ease.inOut} />
-        <circle cx={PASS.x} cy={PASS.y} r={22} fill={withAlpha(color.agent, 0.3)} stroke={color.agent} strokeWidth={stroke.trace} opacity={vis(frame, copyAt + 30)} />
-        <path d={`M ${PASS.x - 9} ${PASS.y} l 7 7 l 12 -14`} fill="none" stroke={color.agent} strokeWidth={stroke.bold} opacity={vis(frame, copyAt + 34)} />
-      </svg>
-      <T x={PASS.x - 34} y={PASS.y - 14} px={22} weight={700} c={color.agent} align="right" at={copyAt + 32} code>PASS</T>
-      <T x={1658} y={508} px={30} weight={700} c={color.agent} at={copyAt + 8}>{TX.copy}</T>
-      <T x={1060} y={790} px={30} weight={700} at={within("s15.4", 0.72)}>{TX.verdict}</T>
+      <T x={LX} y={846} px={22} weight={700} c={color.human} at={within("s15.7", 0.55)} code style={{ opacity: vis(frame, within("s15.7", 0.55)) }}>FIX</T>
+      <T x={LX + 70} y={840} px={30} weight={600} at={within("s15.7", 0.55)}>{TX.fix}</T>
     </ShiftSheet>
   );
 };
